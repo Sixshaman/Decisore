@@ -2,12 +2,12 @@ package com.sixshaman.advancedunforgetter;
 
 import javax.xml.datatype.Duration;
 
-public class ScheduledTask
+class ScheduledTask
 {
     //The task itself
     private Task mTask;
 
-    //Is it active or paused?
+    //Is it active or paused? If paused, the scheduler can't add it to the task list
     private boolean mActive;
 
     //When to repeat the task

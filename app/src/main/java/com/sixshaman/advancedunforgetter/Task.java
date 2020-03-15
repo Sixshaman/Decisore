@@ -3,7 +3,7 @@ package com.sixshaman.advancedunforgetter;
 import java.util.ArrayList;
 import java.util.Date;
 
-class Task implements TaskSource
+class Task
 {
     //The date when the task was created and added to the task scheduler
     private Date mDateCreated;
@@ -23,6 +23,9 @@ class Task implements TaskSource
     //Task tags (why not?)
     private ArrayList<String> mTags;
 
+    //The task rating / how much the user likes the task. Only for sorting purposes
+    private float mCharm;
+
     //Creates a new unfinished, not added to the list task
     public Task(Date creationDate, String name, String description, ArrayList<String> tags)
     {
@@ -34,6 +37,8 @@ class Task implements TaskSource
         mDateCreated  = creationDate;
         mDateAdded    = null;
         mDateFinished = null;
+
+        mCharm = 0.5f;
     }
 
     //Returns true if tag is in mTags, otherwise returns false
@@ -52,6 +57,11 @@ class Task implements TaskSource
     void setFinishedDate(Date finishDate)
     {
         mDateFinished = finishDate;
+    }
+
+    void setCharm(float charm)
+    {
+        mCharm = charm;
     }
 
     //Returns the date when the task was created
@@ -90,9 +100,8 @@ class Task implements TaskSource
         return mTags;
     }
 
-    @Override
-    public Task obtainTask()
+    float getCharm()
     {
-        return this;
+        return mCharm;
     }
 }
