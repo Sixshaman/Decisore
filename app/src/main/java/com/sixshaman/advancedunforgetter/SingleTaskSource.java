@@ -1,9 +1,11 @@
 package com.sixshaman.advancedunforgetter;
 
-//Contains a single
+import java.time.LocalDateTime;
+
+//A task source that contains a single task
 public class SingleTaskSource implements TaskSource
 {
-    //A task that this task source can give
+    //The task that this source can provide
     private ScheduledTask mTask;
 
     //The state of the source. After returning the task the source declares itself EMPTY if it's a repeated task or FINISHED if
@@ -19,10 +21,10 @@ public class SingleTaskSource implements TaskSource
     @Override
     public ScheduledTask obtainTask()
     {
-        if(mState == SourceState.SOURCE_STATE_REGULAR)
+        if(getState() == SourceState.SOURCE_STATE_REGULAR)
         {
             //Becomes invalid if it's not a repeated task
-            if(mTask.getRepeatProbability() == 0.0f) //Uhm... Since I always assign 0 directly, I probably don't have to concider precision error margin
+            if(mTask.getRepeatProbability() == 0.0f) //Uhm... Since I always assign 0 directly, I probably don't have to consider precision error margin
             {
                 mState = SourceState.SOURCE_STATE_FINISHED;
             }
@@ -42,6 +44,19 @@ public class SingleTaskSource implements TaskSource
     @Override
     public SourceState getState()
     {
-        return mState;
+        if(mState == SourceState.SOURCE_STATE_EMPTY)
+        {
+            //We need to update the task state to check if it's available again
+            if(LocalDateTime.now().isAfter(mTask.getTask().getAddedDate()))
+            {
+                mState = SourceState.SOURCE_STATE_REGULAR;
+            }
+
+            return mState;
+        }
+        else
+        {
+            return mState;
+        }
     }
 }

@@ -1,7 +1,7 @@
 package com.sixshaman.advancedunforgetter;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 
 class Task
 {
@@ -9,13 +9,13 @@ class Task
     private long mId;
 
     //The date when the task was created and added to the task scheduler
-    private Date mDateCreated;
+    private LocalDateTime mDateCreated;
 
     //The date when the task was added to the main task list
-    private Date mDateAdded;
+    private LocalDateTime mDateAdded;
 
     //The date when the task was finished and added to the archive
-    private Date mDateFinished;
+    private LocalDateTime mDateFinished;
 
     //The task name
     private String mName;
@@ -30,7 +30,7 @@ class Task
     private float mCharm;
 
     //Creates a new unfinished, not added to the list task
-    public Task(long id, Date creationDate, String name, String description, ArrayList<String> tags)
+    public Task(long id, LocalDateTime creationDate, String name, String description, ArrayList<String> tags)
     {
         mId = id;
 
@@ -53,13 +53,13 @@ class Task
     }
 
     //Sets the list addition date
-    void setAddedDate(Date listAddDate)
+    void setAddedDate(LocalDateTime listAddDate)
     {
         mDateAdded = listAddDate;
     }
 
     //Sets the finish date
-    void setFinishedDate(Date finishDate)
+    void setFinishedDate(LocalDateTime finishDate)
     {
         mDateFinished = finishDate;
     }
@@ -75,19 +75,19 @@ class Task
     }
 
     //Returns the date when the task was created
-    Date getCreatedDate()
+    LocalDateTime getCreatedDate()
     {
         return mDateCreated;
     }
 
     //Returns the date when the task was added to the list
-    Date getAddedDate()
+    LocalDateTime getAddedDate()
     {
         return mDateAdded;
     }
 
     //Returns the date when the task was finished and moved to the archive
-    Date getFinishedDate()
+    LocalDateTime getFinishedDate()
     {
         return mDateFinished;
     }
