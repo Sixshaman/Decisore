@@ -5,6 +5,9 @@ import java.util.Date;
 
 class Task
 {
+    //The task ID
+    private long mId;
+
     //The date when the task was created and added to the task scheduler
     private Date mDateCreated;
 
@@ -27,8 +30,10 @@ class Task
     private float mCharm;
 
     //Creates a new unfinished, not added to the list task
-    public Task(Date creationDate, String name, String description, ArrayList<String> tags)
+    public Task(long id, Date creationDate, String name, String description, ArrayList<String> tags)
     {
+        mId = id;
+
         mName        = name;
         mDescription = description;
 
@@ -62,6 +67,11 @@ class Task
     void setCharm(float charm)
     {
         mCharm = charm;
+    }
+
+    long getId()
+    {
+        return mId;
     }
 
     //Returns the date when the task was created

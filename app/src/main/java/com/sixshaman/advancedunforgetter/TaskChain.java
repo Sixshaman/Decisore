@@ -7,6 +7,9 @@ public class TaskChain implements TaskSource
     //The tasks that this chain will provide one-by-one. Since Java doesn't have any non-deque Queue implementation, we will use ArrayDeque
     private ArrayDeque<ScheduledTask> mTasks;
 
+    //The id of the task that was most recently provided by this chain.
+    private long mLastProvidedTaskId;
+
     //Creates a new task chain
     TaskChain()
     {
@@ -47,7 +50,7 @@ public class TaskChain implements TaskSource
     - If it's a one-time task (repeat probability is 0), nothing else is needed.
     - If it's a strictly periodic task (repeat probability is 1), the new task is added to the scheduler. It has the same creation date, but the list add date is the current one + period.
     - If it's not a strictly periodic task (0 < repeat probability < 1), then ULTRARANDOM ALGORITHM decides the next list add date and a new task with it is added to the scheduler.
-    
+
     */
 
     @Override
