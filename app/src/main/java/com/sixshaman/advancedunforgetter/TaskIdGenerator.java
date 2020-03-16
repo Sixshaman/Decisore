@@ -1,16 +1,16 @@
 package com.sixshaman.advancedunforgetter;
 
-public class TaskIdGenerator
+class TaskIdGenerator
 {
     private long mNextGivenId;
 
     //Constructs a new task id generator
-    public TaskIdGenerator()
+    TaskIdGenerator()
     {
-
+        mNextGivenId = 0;
     }
 
-    public long getNextId()
+    long getNextId()
     {
         long currId = mNextGivenId;
 

@@ -11,7 +11,7 @@ public class TaskChain implements TaskSource
     private long mLastProvidedTaskId;
 
     //Creates a new task chain
-    public TaskChain()
+    TaskChain()
     {
         mTasks              = new ArrayDeque<ScheduledTask>();
         mLastProvidedTaskId = 0;

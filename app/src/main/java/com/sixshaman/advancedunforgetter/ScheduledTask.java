@@ -2,6 +2,7 @@ package com.sixshaman.advancedunforgetter;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Random;
 
 class ScheduledTask
@@ -29,7 +30,7 @@ class ScheduledTask
     }
 
     //Reschedules the task to the new add date
-    public void reschedule()
+    void reschedule(LocalDateTime referenceTime)
     {
         //Cannot reschedule non-repeated tasks and won't reschedule paused tasks
         if(mRepeatProbability == 0.0f || !mIsActive)
@@ -42,24 +43,23 @@ class ScheduledTask
 
         if(mRepeatProbability == 1.0f) //If it's a strictly repeated task, just add the duration
         {
-            mTask.setAddedDate(LocalDateTime.now().plusHours(mRepeatDuration.toHours()));
+            LocalDateTime nextDateTime = referenceTime.plusHours(mRepeatDuration.toHours());
+            nextDateTime = nextDateTime.truncatedTo(ChronoUnit.HOURS);
+            mTask.setAddedDate(nextDateTime);
         }
         else //If it's a time-to-time task, set a random date
         {
-            Random random = new Random();
-
-            //Time-to-time tasks are repeated using normal distribution with mean set to mRepeatDuration
-            float repeatMean   = (float)mRepeatDuration.toHours();
-            float repeatStdDev = repeatMean * mRepeatProbability;
-
-            float randomHoursToAdd = (float)(random.nextGaussian() * repeatStdDev + repeatMean);
-            if(randomHoursToAdd < 1.0f)
+            //Time-to-time tasks are repeated using normal distribution
+            long randomHoursToAdd = RandomUtils.getInstance().getRandomGauss(mRepeatDuration.toHours(), mRepeatProbability);
+            if(randomHoursToAdd < 1)
             {
                 //Clamp the value just in case
-                randomHoursToAdd = 1.0f;
+                randomHoursToAdd = 1;
             }
 
-            mTask.setAddedDate(LocalDateTime.now().plusHours((long)randomHoursToAdd));
+            LocalDateTime nextDateTime = referenceTime.plusHours(randomHoursToAdd);
+            nextDateTime = nextDateTime.truncatedTo(ChronoUnit.HOURS);
+            mTask.setAddedDate(nextDateTime);
         }
     }
 
