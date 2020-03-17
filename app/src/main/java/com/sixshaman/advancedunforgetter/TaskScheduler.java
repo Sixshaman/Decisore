@@ -19,13 +19,14 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
+//The class to schedule all deferred tasks. The model for the scheduler UI
 public class TaskScheduler
 {
     //The list of all the tasks scheduled to be done later
     private ArrayList<ScheduledTask> mScheduledTasks;
 
-    //The list of all the task chains
-    private ArrayList<TaskChain> mTaskChains;
+    //The list of all the task pools. Task chains are included here too - all task chains implicitly create a pool
+    private ArrayList<TaskPool> mTaskPools;
 
     //Generated task ids
     private TaskIdGenerator mIdGenerator;
@@ -35,7 +36,7 @@ public class TaskScheduler
     {
         mScheduledTasks = new ArrayList<>();
 
-        mTaskChains = new ArrayList<>();
+        mTaskPools = new ArrayList<>();
 
         mIdGenerator = new TaskIdGenerator();
     }
@@ -46,6 +47,8 @@ public class TaskScheduler
         ArrayList<ScheduledTask> changedScheduledTasks = new ArrayList<>(); //Rebuild task list after each update
 
         LocalDateTime currentDateTime = LocalDateTime.now();
+
+        //Update scheduled tasks first
         for(ScheduledTask scheduledTask: mScheduledTasks)
         {
             if(scheduledTask.isActive()) //Only check active tasks
@@ -74,6 +77,8 @@ public class TaskScheduler
                 changedScheduledTasks.add(scheduledTask);
             }
         }
+
+
 
         mScheduledTasks = changedScheduledTasks;
     }
@@ -138,11 +143,47 @@ public class TaskScheduler
         mScheduledTasks.add(scheduledTask);
     }
 
-    public TaskChain addTaskChain()
+    //Creates a new one-time immediate task and adds it to the selected task chain
+    public void addImmediateChainedTask(TaskChain chain, String taskName, String taskDescription, ArrayList<String> taskTags)
     {
-        TaskChain taskChain = new TaskChain();
-        mTaskChains.add(taskChain);
-        return taskChain;
+        long          taskId      = mIdGenerator.getNextId();
+        LocalDateTime currentTime = LocalDateTime.now();
+
+        Task task = new Task(taskId, currentTime, taskName, taskDescription, taskTags);
+        task.setAddedDate(currentTime);
+
+        //Since it's a one-time task, it doesn't have a repeat duration
+        Duration repeatDuration = Duration.ofHours(0);
+        ScheduledTask scheduledTask = new ScheduledTask(task, repeatDuration, 0.0f);
+
+        //Don't add to mScheduledTasks, since this one will be maintaied by the chain
+        chain.addTaskToChain(scheduledTask);
+    }
+
+    //Creates a new one-time deferred task and adds it to the selected task chain
+    public void addDeferredChainedTask(TaskChain chain, LocalDateTime deferTime, String taskName, String taskDescription, ArrayList<String> taskTags)
+    {
+        long          taskId      = mIdGenerator.getNextId();
+        LocalDateTime currentTime = LocalDateTime.now();
+
+        //Check just in case
+        if(deferTime.isAfter(currentTime))
+        {
+            Task task = new Task(taskId, currentTime, taskName, taskDescription, taskTags);
+            task.setAddedDate(deferTime);
+
+            //Since it's a one-time task, it doesn't have a repeat duration
+            Duration repeatDuration = Duration.ofHours(0);
+            ScheduledTask scheduledTask = new ScheduledTask(task, repeatDuration, 0.0f);
+
+            //Don't add to mScheduledTasks, since this one will be maintaied by the chain
+            chain.addTaskToChain(scheduledTask);
+        }
+    }
+
+    public void addTaskPool()
+    {
+        
     }
 
     private void moveTaskToMainList(Task task)

@@ -19,9 +19,9 @@ public class SingleTaskSource implements TaskSource
     }
 
     @Override
-    public ScheduledTask obtainTask()
+    public ScheduledTask obtainTask(LocalDateTime referenceTime)
     {
-        if(getState() == SourceState.SOURCE_STATE_REGULAR)
+        if(getState(referenceTime) == SourceState.SOURCE_STATE_REGULAR)
         {
             //Becomes invalid if it's not a repeated task
             if(mTask.getRepeatProbability() == 0.0f) //Uhm... Since I always assign 0 directly, I probably don't have to consider precision error margin
@@ -42,17 +42,19 @@ public class SingleTaskSource implements TaskSource
     }
 
     @Override
-    public SourceState getState()
+    public SourceState getState(LocalDateTime referenceTime)
     {
         if(mState == SourceState.SOURCE_STATE_EMPTY)
         {
             //We need to update the task state to check if it's available again
-            if(LocalDateTime.now().isAfter(mTask.getTask().getAddedDate()))
+            if(referenceTime.isAfter(mTask.getTask().getAddedDate()))
             {
-                mState = SourceState.SOURCE_STATE_REGULAR;
+                return SourceState.SOURCE_STATE_REGULAR;
             }
-
-            return mState;
+            else
+            {
+                return SourceState.SOURCE_STATE_EMPTY;
+            }
         }
         else
         {

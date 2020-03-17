@@ -1,5 +1,7 @@
 package com.sixshaman.advancedunforgetter;
 
+import java.time.LocalDateTime;
+
 interface TaskSource
 {
     enum SourceState
@@ -15,8 +17,8 @@ interface TaskSource
     }
 
     //Obtains a single task
-    ScheduledTask obtainTask();
+    ScheduledTask obtainTask(LocalDateTime referenceTime);
 
     //Gets the task source state
-    SourceState getState();
+    SourceState getState(LocalDateTime referenceTime);
 }
