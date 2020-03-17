@@ -14,21 +14,17 @@ public class TaskChain implements TaskSource
     //The tasks that this chain will provide one-by-one. Since Java doesn't have any non-deque Queue implementation, we will use ArrayDeque
     private ArrayDeque<ScheduledTask> mTasks;
 
-    //The id of the task that was most recently provided by this chain.
-    private long mLastProvidedTaskId;
-
     //Creates a new task chain
     TaskChain(String name, String description)
     {
         mName        = name;
         mDescription = description;
 
-        mTasks              = new ArrayDeque<ScheduledTask>();
-        mLastProvidedTaskId = 0;
+        mTasks = new ArrayDeque<ScheduledTask>();
     }
 
     //Adds a task to the chain
-    public void addTaskToChain(ScheduledTask task)
+    void addTaskToChain(ScheduledTask task)
     {
         if(mTasks != null) //mTasks can be null if the chain is finished
         {
@@ -36,22 +32,15 @@ public class TaskChain implements TaskSource
         }
     }
 
-    public long getLastProvidedTaskId()
-    {
-        return mLastProvidedTaskId;
-    }
-
     @Override
-    public ScheduledTask obtainTask(LocalDateTime referenceTime)
+    public Task obtainTask(LocalDateTime referenceTime)
     {
         if(mTasks != null && !mTasks.isEmpty())
         {
             Task firstTask = mTasks.getFirst().getTask();
-
             if(referenceTime.isAfter(firstTask.getAddedDate()))
             {
-                mLastProvidedTaskId = firstTask.getId();
-                return mTasks.removeFirst();
+                return mTasks.removeFirst().getTask();
             }
             else
             {
@@ -77,8 +66,8 @@ public class TaskChain implements TaskSource
         }
         else
         {
-            Task firstTask = mTasks.getFirst().getTask();
-            if(referenceTime.isAfter(firstTask.getAddedDate())) //Also return EMPTY state if we can't provide the first task at this time
+            ScheduledTask firstTask = mTasks.getFirst();
+            if(firstTask.isActive() && referenceTime.isAfter(firstTask.getTask().getAddedDate())) //Also return EMPTY state if we can't provide the first task at this time
             {
                 return SourceState.SOURCE_STATE_REGULAR;
             }

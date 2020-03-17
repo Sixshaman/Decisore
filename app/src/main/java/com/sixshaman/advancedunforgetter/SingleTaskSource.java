@@ -12,14 +12,14 @@ public class SingleTaskSource implements TaskSource
     private SourceState mState;
 
     //Creates a task source from a task
-    public SingleTaskSource(ScheduledTask task)
+    SingleTaskSource(ScheduledTask task)
     {
         mTask  = task;
         mState = SourceState.SOURCE_STATE_REGULAR;
     }
 
     @Override
-    public ScheduledTask obtainTask(LocalDateTime referenceTime)
+    public Task obtainTask(LocalDateTime referenceTime)
     {
         if(getState(referenceTime) == SourceState.SOURCE_STATE_REGULAR)
         {
@@ -30,10 +30,11 @@ public class SingleTaskSource implements TaskSource
             }
             else
             {
+                mTask.reschedule(referenceTime);
                 mState = SourceState.SOURCE_STATE_EMPTY;
             }
 
-            return mTask;
+            return mTask.getTask();
         }
         else
         {
@@ -47,7 +48,7 @@ public class SingleTaskSource implements TaskSource
         if(mState == SourceState.SOURCE_STATE_EMPTY)
         {
             //We need to update the task state to check if it's available again
-            if(referenceTime.isAfter(mTask.getTask().getAddedDate()))
+            if(mTask.isActive() && referenceTime.isAfter(mTask.getTask().getAddedDate()))
             {
                 return SourceState.SOURCE_STATE_REGULAR;
             }

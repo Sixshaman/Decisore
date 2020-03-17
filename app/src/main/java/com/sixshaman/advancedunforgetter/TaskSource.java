@@ -17,7 +17,7 @@ interface TaskSource
     }
 
     //Obtains a single task
-    ScheduledTask obtainTask(LocalDateTime referenceTime);
+    Task obtainTask(LocalDateTime referenceTime);
 
     //Gets the task source state
     SourceState getState(LocalDateTime referenceTime);
