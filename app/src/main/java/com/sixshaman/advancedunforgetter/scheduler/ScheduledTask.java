@@ -1,9 +1,10 @@
-package com.sixshaman.advancedunforgetter;
+package com.sixshaman.advancedunforgetter.scheduler;
 
+import com.sixshaman.advancedunforgetter.utils.Task;
+import com.sixshaman.advancedunforgetter.utils.RandomUtils;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Random;
 
 class ScheduledTask
 {

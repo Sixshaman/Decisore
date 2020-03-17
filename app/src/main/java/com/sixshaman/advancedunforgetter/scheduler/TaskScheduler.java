@@ -1,4 +1,4 @@
-package com.sixshaman.advancedunforgetter;
+package com.sixshaman.advancedunforgetter.scheduler;
 
 /*
 
@@ -15,6 +15,8 @@ After removing the task from the scheduler:
 
 */
 
+import com.sixshaman.advancedunforgetter.utils.TaskIdGenerator;
+import com.sixshaman.advancedunforgetter.utils.Task;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -41,7 +43,7 @@ public class TaskScheduler
     //Updates the task scheduler: adds all ready-to-be-done tasks to the main list, reschedules tasks, updates chains and pools
     public void update()
     {
-        ArrayList<TaskPool> changedPools = new ArrayList<TaskPool>(); //Rebuild task pool list after each update
+        ArrayList<TaskPool> changedPools = new ArrayList<>(); //Rebuild task pool list after each update
 
         LocalDateTime currentDateTime = LocalDateTime.now();
         for(TaskPool pool: mTaskPools)

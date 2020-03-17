@@ -1,10 +1,10 @@
-package com.sixshaman.advancedunforgetter;
+package com.sixshaman.advancedunforgetter.utils;
 
 import java.time.LocalDateTime;
 import java.util.Random;
 
 //Singleton class to hold an instance of Random
-class RandomUtils
+public class RandomUtils
 {
     private Random mRandomGenerator;
 
@@ -21,13 +21,13 @@ class RandomUtils
     }
 
     //Gets the singleton instance
-    static RandomUtils getInstance()
+    public static RandomUtils getInstance()
     {
         return RandomUtilsHolder.INSTANCE;
     }
 
     //Returns a new number using normal distribution with mean as mean and mean * stdDevPart as standard deviation
-    long getRandomGauss(long mean, float stdDevPart)
+    public long getRandomGauss(long mean, float stdDevPart)
     {
         double gaussMean   = (double)mean;
         double gaussStdDev = gaussMean * stdDevPart;
@@ -36,7 +36,7 @@ class RandomUtils
         return (long)gaussDistribResult;
     }
 
-    long getRandomUniform(long min, long max)
+    public long getRandomUniform(long min, long max)
     {
         return mRandomGenerator.nextLong() % (max - min + 1) + min;
     }

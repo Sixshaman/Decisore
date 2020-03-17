@@ -1,5 +1,6 @@
-package com.sixshaman.advancedunforgetter;
+package com.sixshaman.advancedunforgetter.scheduler;
 
+import com.sixshaman.advancedunforgetter.utils.Task;
 import java.time.LocalDateTime;
 
 interface TaskSource

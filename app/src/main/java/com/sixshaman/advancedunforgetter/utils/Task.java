@@ -1,9 +1,9 @@
-package com.sixshaman.advancedunforgetter;
+package com.sixshaman.advancedunforgetter.utils;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
-class Task
+public class Task
 {
     //The task ID
     private long mId;
@@ -47,70 +47,70 @@ class Task
     }
 
     //Returns true if tag is in mTags, otherwise returns false
-    boolean isTagMatched(String tag)
+    public boolean isTagMatched(String tag)
     {
         return mTags.contains(tag);
     }
 
     //Sets the list addition date
-    void setAddedDate(LocalDateTime listAddDate)
+    public void setAddedDate(LocalDateTime listAddDate)
     {
         mDateAdded = listAddDate;
     }
 
     //Sets the finish date
-    void setFinishedDate(LocalDateTime finishDate)
+    public void setFinishedDate(LocalDateTime finishDate)
     {
         mDateFinished = finishDate;
     }
 
-    void setCharm(float charm)
+    public void setCharm(float charm)
     {
         mCharm = charm;
     }
 
-    long getId()
+    public long getId()
     {
         return mId;
     }
 
     //Returns the date when the task was created
-    LocalDateTime getCreatedDate()
+    public LocalDateTime getCreatedDate()
     {
         return mDateCreated;
     }
 
     //Returns the date when the task was added to the list
-    LocalDateTime getAddedDate()
+    public LocalDateTime getAddedDate()
     {
         return mDateAdded;
     }
 
     //Returns the date when the task was finished and moved to the archive
-    LocalDateTime getFinishedDate()
+    public LocalDateTime getFinishedDate()
     {
         return mDateFinished;
     }
 
     //Returns the task name
-    String getName()
+    public String getName()
     {
         return mName;
     }
 
     //Returns the task description
-    String getDescription()
+    public String getDescription()
     {
         return mDescription;
     }
 
     //Returns the task tags
-    ArrayList<String> getTags()
+    public ArrayList<String> getTags()
     {
         return mTags;
     }
 
-    float getCharm()
+    public float getCharm()
     {
         return mCharm;
     }

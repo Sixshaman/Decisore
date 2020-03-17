@@ -1,5 +1,6 @@
-package com.sixshaman.advancedunforgetter;
+package com.sixshaman.advancedunforgetter.scheduler;
 
+import com.sixshaman.advancedunforgetter.utils.Task;
 import java.time.LocalDateTime;
 import java.util.ArrayDeque;
 
@@ -20,7 +21,7 @@ public class TaskChain implements TaskSource
         mName        = name;
         mDescription = description;
 
-        mTasks = new ArrayDeque<ScheduledTask>();
+        mTasks = new ArrayDeque<>();
     }
 
     //Adds a task to the chain

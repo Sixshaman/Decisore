@@ -1,10 +1,11 @@
-package com.sixshaman.advancedunforgetter;
+package com.sixshaman.advancedunforgetter.scheduler;
 
+import com.sixshaman.advancedunforgetter.utils.RandomUtils;
+import com.sixshaman.advancedunforgetter.utils.Task;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Random;
 
 //A pool that can randomly choose from several task sources
 public class TaskPool
@@ -33,7 +34,7 @@ public class TaskPool
         mName        = name;
         mDescription = description;
 
-        mTaskSources = new ArrayList<TaskSource>();
+        mTaskSources = new ArrayList<>();
 
         mNextUpdateDate = LocalDateTime.now();
         mNextUpdateDate = mNextUpdateDate.truncatedTo(ChronoUnit.HOURS);
@@ -77,7 +78,7 @@ public class TaskPool
             return null;
         }
 
-        int  randomSourceIndex = (int)RandomUtils.getInstance().getRandomUniform(0, availableSources.size() - 1);
+        int  randomSourceIndex = (int) RandomUtils.getInstance().getRandomUniform(0, availableSources.size() - 1);
         Task resultTask        = availableSources.get(randomSourceIndex).obtainTask(referenceTime);
 
         //Reschedule the pool
