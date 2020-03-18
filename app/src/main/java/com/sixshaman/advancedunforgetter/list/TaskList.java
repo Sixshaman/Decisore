@@ -1,6 +1,7 @@
 package com.sixshaman.advancedunforgetter.list;
 
 import com.sixshaman.advancedunforgetter.archive.TaskArchive;
+import com.sixshaman.advancedunforgetter.ui.TaskListActivity;
 import com.sixshaman.advancedunforgetter.utils.Task;
 
 import java.time.LocalDateTime;
@@ -16,12 +17,21 @@ public class TaskList
     //The archive to move finished tasks into
     private TaskArchive mArchive;
 
+    //Ui representation of this class
+    private TaskListActivity mView;
+
     //Constructs a new task list
     public TaskList(TaskArchive archive)
     {
         mTasks = new ArrayList<>();
 
         mArchive = archive;
+    }
+
+    public void setUiView(TaskListActivity taskListActivity)
+    {
+        mView = taskListActivity;
+        updateUi();
     }
 
     //Adds a task to the list
@@ -57,6 +67,8 @@ public class TaskList
                 throw new RuntimeException("Task already exists");
             }
         }
+
+        updateUi();
     }
 
     //Checks if the task with specified id is in the list
@@ -89,5 +101,16 @@ public class TaskList
 
         task.setFinishedDate(LocalDateTime.now());
         mArchive.addTask(task);
+
+        updateUi();
+    }
+
+    //Updates mView UI from data of this class
+    private void updateUi()
+    {
+        if(mView != null)
+        {
+            //TODO
+        }
     }
 }

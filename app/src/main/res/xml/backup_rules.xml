@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <include domain="external" path="ScheduledTasks.json"/>
+    <include domain="external" path="TodoTasks.json"/>
+    <include domain="external" path="ArchivedTasks.json"/>
+</full-backup-content>
