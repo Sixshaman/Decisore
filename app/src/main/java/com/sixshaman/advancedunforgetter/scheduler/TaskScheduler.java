@@ -15,6 +15,7 @@ After removing the task from the scheduler:
 
 */
 
+import com.sixshaman.advancedunforgetter.list.TaskList;
 import com.sixshaman.advancedunforgetter.utils.TaskIdGenerator;
 import com.sixshaman.advancedunforgetter.utils.Task;
 import java.time.Duration;
@@ -26,18 +27,23 @@ public class TaskScheduler
 {
     //The list of all the task pools.
     //All single tasks are task pools with a single SingleTaskSource
-    //All task chains are task pools with a single TaskChain
+    //All single task chains are task pools with a single TaskChain
     private ArrayList<TaskPool> mTaskPools;
 
     //Generated task ids
     private TaskIdGenerator mIdGenerator;
 
-    //Creates a new task scheduler
-    public TaskScheduler()
+    //The main list of tasks that scheduler adds tasks to
+    private TaskList mMainList;
+
+    //Creates a new task scheduler that is bound to mainList
+    public TaskScheduler(TaskList mainList)
     {
         mTaskPools = new ArrayList<>();
 
         mIdGenerator = new TaskIdGenerator();
+
+        mMainList = mainList;
     }
 
     //Updates the task scheduler: adds all ready-to-be-done tasks to the main list, reschedules tasks, updates chains and pools
@@ -57,7 +63,7 @@ public class TaskScheduler
             else
             {
                 //Only add the task to the main list if the last task provided by the pool is done
-                if(!isTaskInMainList(pool.getLastProvidedTaskId()))
+                if(!mMainList.isTaskInList(pool.getLastProvidedTaskId()))
                 {
                     Task task = pool.getRandomTask(currentDateTime);
                     moveTaskToMainList(task);
@@ -77,7 +83,7 @@ public class TaskScheduler
     //Creates a new one-time task and immediately adds it to the main list
     public void addImmediateTask(String taskName, String taskDescription, ArrayList<String> taskTags)
     {
-        long          taskId      = mIdGenerator.getNextId();
+        long          taskId      = mIdGenerator.generateNextId();
         LocalDateTime currentTime = LocalDateTime.now();
 
         Task task = new Task(taskId, currentTime, taskName, taskDescription, taskTags);
@@ -150,7 +156,7 @@ public class TaskScheduler
                          Duration repeatDuration, float repeatProbability,
                          String taskName, String taskDescription, ArrayList<String> taskTags)
     {
-        long          taskId      = mIdGenerator.getNextId();
+        long          taskId      = mIdGenerator.generateNextId();
         LocalDateTime currentTime = LocalDateTime.now();
 
         Task task                   = new Task(taskId, currentTime, taskName, taskDescription, taskTags);
@@ -187,14 +193,7 @@ public class TaskScheduler
     {
         if(task != null)
         {
-            //TODO
+            mMainList.addTask(task);
         }
-    }
-
-    //Checks if task with given id is in main list
-    private boolean isTaskInMainList(long taskId)
-    {
-        //TODO
-        return false;
     }
 }
