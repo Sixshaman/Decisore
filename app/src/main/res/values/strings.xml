@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Advanced Unforgetter</string>
+    <string name="title_activity_task_list">TaskListActivity</string>
 </resources>
