@@ -1,7 +1,9 @@
 package com.sixshaman.advancedunforgetter.list;
 
+import com.sixshaman.advancedunforgetter.archive.TaskArchive;
 import com.sixshaman.advancedunforgetter.utils.Task;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -11,10 +13,15 @@ public class TaskList
     //All tasks to be done for today, sorted by ids. Or tomorrow. Or within a year. It's up to the user to decide
     private ArrayList<Task> mTasks;
 
+    //The archive to move finished tasks into
+    private TaskArchive mArchive;
+
     //Constructs a new task list
-    public TaskList()
+    public TaskList(TaskArchive archive)
     {
         mTasks = new ArrayList<>();
+
+        mArchive = archive;
     }
 
     //Adds a task to the list
@@ -80,6 +87,7 @@ public class TaskList
             mTasks.remove(index);
         }
 
-        //TODO add to archive
+        task.setFinishedDate(LocalDateTime.now());
+        mArchive.addTask(task);
     }
 }
