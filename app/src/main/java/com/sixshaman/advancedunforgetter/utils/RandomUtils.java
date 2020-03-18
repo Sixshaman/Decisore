@@ -1,9 +1,11 @@
 package com.sixshaman.advancedunforgetter.utils;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
-//Singleton class to hold an instance of Random
+//Singleton class to provide utilities, for example, hold an instance of Random
 public class RandomUtils
 {
     private Random mRandomGenerator;

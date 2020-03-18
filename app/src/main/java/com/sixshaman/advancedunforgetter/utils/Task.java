@@ -1,9 +1,11 @@
 package com.sixshaman.advancedunforgetter.utils;
 
+import android.support.annotation.NonNull;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
-public class Task
+public class Task implements Comparable<Long>
 {
     //The task ID
     private long mId;
@@ -69,6 +71,7 @@ public class Task
         mCharm = charm;
     }
 
+    //Returns the task id
     public long getId()
     {
         return mId;
@@ -113,5 +116,11 @@ public class Task
     public float getCharm()
     {
         return mCharm;
+    }
+
+    @Override
+    public int compareTo(@NonNull Long id)
+    {
+        return Long.compare(mId, id);
     }
 }
