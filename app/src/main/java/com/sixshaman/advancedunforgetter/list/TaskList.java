@@ -2,6 +2,7 @@ package com.sixshaman.advancedunforgetter.list;
 
 import com.sixshaman.advancedunforgetter.archive.TaskArchive;
 import com.sixshaman.advancedunforgetter.ui.TaskListActivity;
+import com.sixshaman.advancedunforgetter.ui.TaskListController;
 import com.sixshaman.advancedunforgetter.utils.Task;
 
 import java.time.LocalDateTime;
@@ -17,8 +18,8 @@ public class TaskList
     //The archive to move finished tasks into
     private TaskArchive mArchive;
 
-    //Ui representation of this class
-    private TaskListActivity mView;
+    //Ui controller for this class
+    private TaskListController mController;
 
     //Constructs a new task list
     public TaskList(TaskArchive archive)
@@ -28,9 +29,9 @@ public class TaskList
         mArchive = archive;
     }
 
-    public void setUiView(TaskListActivity taskListActivity)
+    public void setUiView(TaskListController taskListController)
     {
-        mView = taskListActivity;
+        mController = taskListController;
         updateUi();
     }
 
@@ -108,9 +109,9 @@ public class TaskList
     //Updates mView UI from data of this class
     private void updateUi()
     {
-        if(mView != null)
+        if(mController != null)
         {
-            //TODO
+            //TODO???
         }
     }
 }

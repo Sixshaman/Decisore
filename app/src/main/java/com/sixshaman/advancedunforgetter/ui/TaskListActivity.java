@@ -41,7 +41,7 @@ public class TaskListActivity extends AppCompatActivity
         mTaskList      = new TaskList(mTaskArchive);
         mTaskScheduler = new TaskScheduler(mTaskList);
 
-        mTaskList.setUiView(this);
+        //mTaskList.setUiView(this);
 
         mTaskListView = findViewById(R.id.taskListView);
 
@@ -52,7 +52,7 @@ public class TaskListActivity extends AppCompatActivity
         });
     }
 
-    public void updateTasksUi(ArrayList<String> taskNames)
+    public void updateTasksUi()
     {
 
     }
