@@ -3,9 +3,10 @@
                                              xmlns:app="http://schemas.android.com/apk/res-auto"
                                              xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
                                              android:layout_height="wrap_content"
-                                             android:padding="10dp">
+                                             android:padding="10dp"
+                                             android:id="@+id/layoutTaskView">
 
-    <TextView android:id="@+id/taskName"
+    <TextView android:id="@+id/textTaskName"
               android:text="@string/placeholderTask"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
@@ -19,7 +20,7 @@
             android:text=""
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/checkBox"
+            android:id="@+id/checkBoxTaskDone"
             android:gravity="center"
             android:scaleX="1.5"
             android:scaleY="1.5"

@@ -1,13 +1,11 @@
 package com.sixshaman.advancedunforgetter.list;
 
 import com.sixshaman.advancedunforgetter.archive.TaskArchive;
-import com.sixshaman.advancedunforgetter.ui.TaskListActivity;
-import com.sixshaman.advancedunforgetter.ui.TaskListController;
+import com.sixshaman.advancedunforgetter.ui.TaskListAdapter;
 import com.sixshaman.advancedunforgetter.utils.Task;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 
 public class TaskList
@@ -19,7 +17,7 @@ public class TaskList
     private TaskArchive mArchive;
 
     //Ui controller for this class
-    private TaskListController mController;
+    private TaskListAdapter mAdapter;
 
     //Constructs a new task list
     public TaskList(TaskArchive archive)
@@ -29,10 +27,10 @@ public class TaskList
         mArchive = archive;
     }
 
-    public void setUiView(TaskListController taskListController)
+    public void setUiAdapter(TaskListAdapter taskListController)
     {
-        mController = taskListController;
-        updateUi();
+        mAdapter = taskListController;
+        //updateUi();
     }
 
     //Adds a task to the list
@@ -69,7 +67,7 @@ public class TaskList
             }
         }
 
-        updateUi();
+        mAdapter.addTaskData(task.getName(), task.getDescription(), task.getId());
     }
 
     //Checks if the task with specified id is in the list
@@ -103,15 +101,19 @@ public class TaskList
         task.setFinishedDate(LocalDateTime.now());
         mArchive.addTask(task);
 
-        updateUi();
+        //updateUi();
     }
 
     //Updates mView UI from data of this class
     private void updateUi()
     {
-        if(mController != null)
+        if(mAdapter != null)
         {
-            //TODO???
+            ArrayList<String> taskNames = new ArrayList<>();
+            for(Task task: mTasks)
+            {
+                taskNames.add(task.getName());
+            }
         }
     }
 }
