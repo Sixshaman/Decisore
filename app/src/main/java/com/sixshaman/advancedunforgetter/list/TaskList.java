@@ -39,10 +39,12 @@ public class TaskList
         if(mTasks.isEmpty()) //Special case for the empty list
         {
             mTasks.add(task);
+            mAdapter.addTaskData(mTasks.size() - 1, task.getName(), task.getDescription(), task.getId());
         }
         else if(mTasks.get(mTasks.size() - 1).getId() < task.getId()) //Special case for the trivial insertion that will keep the list sorted anyway
         {
             mTasks.add(task);
+            mAdapter.addTaskData(mTasks.size() - 1, task.getName(), task.getDescription(), task.getId());
         }
         else
         {
@@ -59,6 +61,7 @@ public class TaskList
                 }
 
                 mTasks.set(insertIndex, task);
+                mAdapter.addTaskData(insertIndex, task.getName(), task.getDescription(), task.getId());
             }
             else
             {
@@ -66,8 +69,6 @@ public class TaskList
                 throw new RuntimeException("Task already exists");
             }
         }
-
-        mAdapter.addTaskData(task.getName(), task.getDescription(), task.getId());
     }
 
     //Checks if the task with specified id is in the list
@@ -101,7 +102,7 @@ public class TaskList
         task.setFinishedDate(LocalDateTime.now());
         mArchive.addTask(task);
 
-        //updateUi();
+        mAdapter.removeTaskData(index);
     }
 
     //Updates mView UI from data of this class

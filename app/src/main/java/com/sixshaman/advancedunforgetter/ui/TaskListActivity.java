@@ -27,9 +27,6 @@ public class TaskListActivity extends AppCompatActivity
     //Task archive model
     private TaskArchive mTaskArchive;
 
-    //Task list ui
-    private TaskListAdapter mTaskListView;
-
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -45,19 +42,14 @@ public class TaskListActivity extends AppCompatActivity
         FloatingActionButton buttonNewTask = findViewById(R.id.addNewTask);
         buttonNewTask.setOnClickListener(view ->
         {
-            mTaskScheduler.addImmediateTask("LOL", "", new ArrayList<>());
+            mTaskScheduler.addImmediateTask("LOL", "Haha rzhaka", new ArrayList<>());
         });
 
         RecyclerView recyclerView = findViewById(R.id.taskListView);
-        TaskListAdapter adapter = new TaskListAdapter(this);
-        recyclerView.setAdapter(adapter);
+        TaskListAdapter taskListAdapter = new TaskListAdapter(this);
+        recyclerView.setAdapter(taskListAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        mTaskList.setUiAdapter(adapter);
-    }
-
-    public void updateTasksUi()
-    {
-
+        mTaskList.setUiAdapter(taskListAdapter);
     }
 }

@@ -17,7 +17,7 @@ import java.util.ArrayList;
 public class TaskListAdapter extends RecyclerView.Adapter<TaskListAdapter.TaskViewHolder>
 {
     private ArrayList<String> mTaskNames;
-    private ArrayList<String> mTaskDecriptions;
+    private ArrayList<String> mTaskDescriptions;
 
     private ArrayList<Long> mTaskIds;
 
@@ -26,20 +26,39 @@ public class TaskListAdapter extends RecyclerView.Adapter<TaskListAdapter.TaskVi
     public TaskListAdapter(Context context)
     {
         mTaskNames       = new ArrayList<>();
-        mTaskDecriptions = new ArrayList<>();
+        mTaskDescriptions = new ArrayList<>();
 
         mTaskIds = new ArrayList<>();
 
         mContext = context;
     }
 
-    public void addTaskData(String taskName, String taskDescription, long taskId)
+    public void addTaskData(int position, String taskName, String taskDescription, long taskId)
     {
-        mTaskNames.add(taskName);
-        mTaskDecriptions.add(taskDescription);
-        mTaskIds.add(taskId);
+        if(position >= mTaskIds.size())
+        {
+            position = mTaskIds.size();
+        }
 
-        notifyItemInserted(mTaskIds.size() - 1);
+        mTaskNames.add(position, taskName);
+        mTaskDescriptions.add(position, taskDescription);
+        mTaskIds.add(position, taskId);
+
+        notifyItemInserted(position);
+    }
+
+    public void removeTaskData(int position)
+    {
+        if(position >= mTaskIds.size())
+        {
+            return;
+        }
+
+        mTaskNames.remove(position);
+        mTaskDescriptions.remove(position);
+        mTaskIds.remove(position);
+
+        notifyItemRemoved(position);
     }
 
     @NonNull
@@ -55,9 +74,14 @@ public class TaskListAdapter extends RecyclerView.Adapter<TaskListAdapter.TaskVi
     {
         taskViewHolder.mTextView.setText(mTaskNames.get(position));
 
+        taskViewHolder.mCheckbox.setOnClickListener(view ->
+        {
+
+        });
+
         taskViewHolder.mParentLayout.setOnClickListener(view ->
         {
-            Toast.makeText(mContext, mTaskDecriptions.get(position), Toast.LENGTH_LONG).show();
+            Toast.makeText(mContext, mTaskDescriptions.get(position), Toast.LENGTH_LONG).show();
         });
     }
 
