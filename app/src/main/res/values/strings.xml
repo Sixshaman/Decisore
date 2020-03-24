@@ -2,4 +2,11 @@
     <string name="app_name">Advanced Unforgetter</string>
     <string name="title_activity_task_list">Tasks for today</string>
     <string name="placeholderTask">Task</string>
+    <string name="taskName">Name</string>
+    <string name="taskDescription">Description</string>
+    <string name="newTaskDialogName">New task</string>
+    <string name="taskType">Type:</string>
+    <string name="createTask">DO IT, MOTHERFUCKER!</string>
+
+    <string name="invalidTaskName">Invalid task name</string>
 </resources>
