@@ -27,6 +27,9 @@ public class TaskListActivity extends AppCompatActivity
     //Task archive model
     private TaskArchive mTaskArchive;
 
+    //Task list ui
+    private TaskListAdapter mTaskListView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -42,14 +45,74 @@ public class TaskListActivity extends AppCompatActivity
         FloatingActionButton buttonNewTask = findViewById(R.id.addNewTask);
         buttonNewTask.setOnClickListener(view ->
         {
-            mTaskScheduler.addImmediateTask("LOL", "Haha rzhaka", new ArrayList<>());
+            openAddTaskDialog();
         });
 
         RecyclerView recyclerView = findViewById(R.id.taskListView);
-        TaskListAdapter taskListAdapter = new TaskListAdapter(this);
-        recyclerView.setAdapter(taskListAdapter);
+        TaskListAdapter adapter = new TaskListAdapter(this);
+        recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        mTaskList.setUiAdapter(taskListAdapter);
+        mTaskList.setUiAdapter(adapter);
+    }
+
+    private void openAddTaskDialog()
+    {
+        AlertDialog.Builder alertBuilder = new AlertDialog.Builder(this);
+
+        final LayoutInflater inflater = getLayoutInflater();
+        alertBuilder.setView(inflater.inflate(R.layout.layout_dialog_new_task, null));
+
+        alertBuilder.setTitle(R.string.newTaskDialogName);
+
+        alertBuilder.setPositiveButton(R.string.createTask, (dialogInterface, i) ->
+        {
+            final EditText editTextName         = ((AlertDialog)dialogInterface).findViewById(R.id.editTaskName);
+            final EditText editTextNDescription = ((AlertDialog)dialogInterface).findViewById(R.id.editTaskName);
+
+            final Spinner taskTypeSpinner = ((AlertDialog)dialogInterface).findViewById(R.id.spinnerTaskType);
+
+            assert editTextName         != null;
+            assert editTextNDescription != null;
+            assert taskTypeSpinner      != null;
+
+            String nameText = editTextName.getEditableText().toString();
+            if(nameText.isEmpty())
+            {
+                Toast toast = Toast.makeText(TaskListActivity.this, R.string.invalidTaskName, Toast.LENGTH_SHORT);
+                toast.show();
+            }
+            else
+            {
+                String descriptionText = editTextNDescription.getEditableText().toString();
+
+                int taskTypeIndex = taskTypeSpinner.getSelectedItemPosition();
+                switch(taskTypeIndex)
+                {
+                    //Immediate task
+                    case 0:
+                        mTaskScheduler.addImmediateTask(nameText, descriptionText, new ArrayList<>());
+                        break;
+
+                    //Deferred task
+                    case 1:
+                        break;
+
+                    //Regular task
+                    case 2:
+                        break;
+
+                    //Irregular task
+                    case 3:
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+        });
+
+        AlertDialog dialog = alertBuilder.create();
+        dialog.show();
     }
 }

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="taskTypes">
+        <item>Immediate</item>
+        <item>Deferred</item>
+        <item>Regular</item>
+        <item>Irregular</item>
+    </string-array>
+</resources>

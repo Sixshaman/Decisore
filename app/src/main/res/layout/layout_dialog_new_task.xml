@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                                             xmlns:app="http://schemas.android.com/apk/res-auto"
+                                             xmlns:tools="http://schemas.android.com/tools"
+                                             android:layout_width="wrap_content"
+                                             android:layout_height="wrap_content"
+                                             android:layout_margin="16dp">
+
+    <EditText
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:inputType="textPersonName"
+            android:ems="10"
+            android:id="@+id/editTaskName"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:autofillHints=""
+            android:hint="@string/taskName" app:layout_constraintTop_toTopOf="parent"/>
+
+    <EditText
+            android:layout_width="wrap_content"
+            android:layout_height="200dp"
+            android:inputType="textMultiLine"
+            android:gravity="start|top"
+            android:ems="10"
+            android:id="@+id/editTaskDescription"
+            android:layout_marginTop="8dp"
+            app:layout_constraintTop_toBottomOf="@+id/editTaskName"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:autofillHints=""
+            android:hint="@string/taskDescription"/>
+
+    <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@+id/editTaskDescription" app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" android:layout_marginTop="8dp" android:visibility="visible">
+        <TextView
+                android:text="@string/taskType"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/textViewTaskType"
+                android:layout_marginTop="0dp"
+                android:textSize="18sp"/>
+        <Spinner
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/spinnerTaskType"
+                android:entries="@array/taskTypes"/>
+    </LinearLayout>
+
+</android.support.constraint.ConstraintLayout>
