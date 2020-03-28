@@ -9,13 +9,15 @@
     <EditText
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:inputType="textPersonName"
+            android:inputType="text"
             android:ems="10"
             android:id="@+id/editTaskName"
+            android:hint="@string/taskName"
+            android:autofillHints=""
+            android:importantForAutofill="no"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            android:autofillHints=""
-            android:hint="@string/taskName" app:layout_constraintTop_toTopOf="parent"/>
+            app:layout_constraintTop_toTopOf="parent"/>
 
     <EditText
             android:layout_width="wrap_content"

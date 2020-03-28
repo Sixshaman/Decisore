@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 
 public class TaskList
 {
@@ -53,15 +54,17 @@ public class TaskList
     //Adds a task to the list
     public void addTask(Task task)
     {
+        int addPosition = -1;
+
         if(mTasks.isEmpty()) //Special case for the empty list
         {
             mTasks.add(task);
-            mAdapter.addTaskData(mTasks.size() - 1, task.getName(), task.getDescription(), task.getId());
+            addPosition = mTasks.size() - 1;
         }
         else if(mTasks.get(mTasks.size() - 1).getId() < task.getId()) //Special case for the trivial insertion that will keep the list sorted anyway
         {
             mTasks.add(task);
-            mAdapter.addTaskData(mTasks.size() - 1, task.getName(), task.getDescription(), task.getId());
+            addPosition = mTasks.size() - 1;
         }
         else
         {
@@ -78,14 +81,19 @@ public class TaskList
                 }
 
                 mTasks.set(insertIndex, task);
-                mAdapter.addTaskData(insertIndex, task.getName(), task.getDescription(), task.getId());
-                saveTasks();
+                addPosition = insertIndex;
             }
             else
             {
                 //OH NOOOOOOOOO! THE TASK ALREADY EXISTS! WE CAN LOSE THIS TASK! STOP EVERYTHING, DON'T LET IT SAVE
                 throw new RuntimeException("Task already exists");
             }
+        }
+
+        if(addPosition != -1)
+        {
+            mAdapter.addTaskData(addPosition, task.getName(), task.getDescription(), task.getId());
+            saveTasks();
         }
     }
 
@@ -121,11 +129,14 @@ public class TaskList
         mArchive.addTask(task);
 
         mAdapter.removeTaskData(index);
+        mAdapter.updateOnRemoved(index);
         saveTasks();
     }
 
     public void loadTasks()
     {
+        mTasks.clear();
+
         try
         {
             BufferedReader bufferedReader = new BufferedReader(new FileReader(mConfigFolder + "/" + LIST_FILENAME));
@@ -148,7 +159,7 @@ public class TaskList
                 if(taskObject != null)
                 {
                     Task task = Task.fromJSON(taskObject);
-                    addTask(task);
+                    mTasks.add(task);
                 }
             }
         }
@@ -156,6 +167,15 @@ public class TaskList
         {
             e.printStackTrace();
         }
+
+        mTasks.sort(Comparator.comparingLong(Task::getId));
+
+        for(int i = 0; i < mTasks.size(); i++)
+        {
+            mAdapter.addTaskData(i, mTasks.get(i).getName(), mTasks.get(i).getDescription(), mTasks.get(i).getId());
+        }
+
+        mAdapter.updateAll();
     }
 
     public void saveTasks()

@@ -25,7 +25,7 @@ public class TaskListAdapter extends RecyclerView.Adapter<TaskListAdapter.TaskVi
 
     public TaskListAdapter(Context context)
     {
-        mTaskNames       = new ArrayList<>();
+        mTaskNames        = new ArrayList<>();
         mTaskDescriptions = new ArrayList<>();
 
         mTaskIds = new ArrayList<>();
@@ -43,8 +43,6 @@ public class TaskListAdapter extends RecyclerView.Adapter<TaskListAdapter.TaskVi
         mTaskNames.add(position, taskName);
         mTaskDescriptions.add(position, taskDescription);
         mTaskIds.add(position, taskId);
-
-        notifyItemInserted(position);
     }
 
     public void removeTaskData(int position)
@@ -57,8 +55,21 @@ public class TaskListAdapter extends RecyclerView.Adapter<TaskListAdapter.TaskVi
         mTaskNames.remove(position);
         mTaskDescriptions.remove(position);
         mTaskIds.remove(position);
+    }
 
+    public void updateOnInserted(int position)
+    {
+        notifyItemInserted(position);
+    }
+
+    public void updateOnRemoved(int position)
+    {
         notifyItemRemoved(position);
+    }
+
+    public void updateAll()
+    {
+        notifyDataSetChanged();
     }
 
     @NonNull

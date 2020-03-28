@@ -44,7 +44,6 @@ public class TaskListActivity extends AppCompatActivity
         mTaskScheduler = new TaskScheduler(mTaskList);
 
         mTaskList.setConfigFolder(getExternalFilesDir("/app").getAbsolutePath());
-        mTaskList.loadTasks();
 
         FloatingActionButton buttonNewTask = findViewById(R.id.addNewTask);
         buttonNewTask.setOnClickListener(view ->
@@ -58,6 +57,7 @@ public class TaskListActivity extends AppCompatActivity
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         mTaskList.setUiAdapter(adapter);
+        mTaskList.loadTasks();
     }
 
     private void openAddTaskDialog()

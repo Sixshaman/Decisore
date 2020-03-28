@@ -88,13 +88,24 @@ public class Task implements Comparable<Long>
             result.put(JSON_TASK_TAGS, jsonTagArray);
 
             DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss:nnnnnnnnn");
-            String addedDateString    = dateTimeFormatter.format(mDateAdded);
-            String createdDateString  = dateTimeFormatter.format(mDateCreated);
-            String finishedDateString = dateTimeFormatter.format(mDateFinished);
 
-            result.put(JSON_TASK_ADD_DATE,    addedDateString);
-            result.put(JSON_TASK_CREATE_DATE, createdDateString);
-            result.put(JSON_TASK_FINISH_DATE, finishedDateString);
+            if(mDateCreated != null)
+            {
+                String createdDateString = dateTimeFormatter.format(mDateCreated);
+                result.put(JSON_TASK_CREATE_DATE, createdDateString);
+            }
+
+            if(mDateAdded != null)
+            {
+                String addedDateString = dateTimeFormatter.format(mDateAdded);
+                result.put(JSON_TASK_ADD_DATE, addedDateString);
+            }
+
+            if(mDateFinished != null)
+            {
+                String finishedDateString = dateTimeFormatter.format(mDateFinished);
+                result.put(JSON_TASK_FINISH_DATE, finishedDateString);
+            }
 
             result.put(JSON_TASK_CHARM, Float.toString(mCharm));
         }
@@ -120,7 +131,7 @@ public class Task implements Comparable<Long>
         String addedDateString   = jsonObject.optString(JSON_TASK_ADD_DATE);
         String finishDateString  = jsonObject.optString(JSON_TASK_FINISH_DATE);
 
-        float charm = (float)jsonObject.optDouble(JSON_TASK_CHARM, -1.0);
+        float charm = (float)jsonObject.optDouble(JSON_TASK_CHARM, 0.5);
 
         ArrayList<String> taskTags = new ArrayList<>();
         JSONArray tagsJSONArray = jsonObject.optJSONArray(JSON_TASK_TAGS);
@@ -149,7 +160,7 @@ public class Task implements Comparable<Long>
         LocalDateTime addedDate = null;
         try
         {
-            addedDate = LocalDateTime.parse(addedDateString,   dateTimeFormatter);
+            addedDate = LocalDateTime.parse(addedDateString, dateTimeFormatter);
         }
         catch (DateTimeParseException e)
         {
@@ -186,10 +197,7 @@ public class Task implements Comparable<Long>
             task.setFinishedDate(finishedDate);
         }
 
-        if(charm >= 0.0f)
-        {
-            task.setCharm(charm);
-        }
+        task.setCharm(charm);
 
         return task;
     }
