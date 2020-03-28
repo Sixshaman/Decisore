@@ -1,15 +1,25 @@
 package com.sixshaman.advancedunforgetter.list;
 
+import android.util.JsonWriter;
 import com.sixshaman.advancedunforgetter.archive.TaskArchive;
 import com.sixshaman.advancedunforgetter.ui.TaskListAdapter;
 import com.sixshaman.advancedunforgetter.utils.Task;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 
 public class TaskList
 {
+    private static final String LIST_FILENAME = "TaskList.json";
+
     //All tasks to be done for today, sorted by ids. Or tomorrow. Or within a year. It's up to the user to decide
     private ArrayList<Task> mTasks;
 
@@ -18,6 +28,9 @@ public class TaskList
 
     //Ui controller for this class
     private TaskListAdapter mAdapter;
+
+    //The folder to store the config files
+    private String mConfigFolder;
 
     //Constructs a new task list
     public TaskList(TaskArchive archive)
@@ -30,7 +43,11 @@ public class TaskList
     public void setUiAdapter(TaskListAdapter taskListController)
     {
         mAdapter = taskListController;
-        //updateUi();
+    }
+
+    public void setConfigFolder(String folder)
+    {
+        mConfigFolder = folder;
     }
 
     //Adds a task to the list
@@ -62,6 +79,7 @@ public class TaskList
 
                 mTasks.set(insertIndex, task);
                 mAdapter.addTaskData(insertIndex, task.getName(), task.getDescription(), task.getId());
+                saveTasks();
             }
             else
             {
@@ -103,18 +121,64 @@ public class TaskList
         mArchive.addTask(task);
 
         mAdapter.removeTaskData(index);
+        saveTasks();
     }
 
-    //Updates mView UI from data of this class
-    private void updateUi()
+    public void loadTasks()
     {
-        if(mAdapter != null)
+        try
         {
-            ArrayList<String> taskNames = new ArrayList<>();
+            BufferedReader bufferedReader = new BufferedReader(new FileReader(mConfigFolder + "/" + LIST_FILENAME));
+
+            String line = "";
+            StringBuilder fileContentsStringBuilder = new StringBuilder();
+
+            while((line = bufferedReader.readLine()) != null)
+            {
+                fileContentsStringBuilder.append(line);
+            }
+
+            String fileContents = fileContentsStringBuilder.toString();
+            JSONObject jsonObject = new JSONObject(fileContents);
+
+            JSONArray tasksJsonArray = jsonObject.getJSONArray("TASKS");
+            for(int i = 0; i < tasksJsonArray.length(); i++)
+            {
+                JSONObject taskObject = tasksJsonArray.optJSONObject(i);
+                if(taskObject != null)
+                {
+                    Task task = Task.fromJSON(taskObject);
+                    addTask(task);
+                }
+            }
+        }
+        catch(JSONException | IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    public void saveTasks()
+    {
+        try
+        {
+            JSONObject jsonObject    = new JSONObject();
+            JSONArray tasksJsonArray = new JSONArray();
+
             for(Task task: mTasks)
             {
-                taskNames.add(task.getName());
+                tasksJsonArray.put(task.toJSON());
             }
+
+            jsonObject.put("TASKS", tasksJsonArray);
+
+            FileWriter fileWriter = new FileWriter(mConfigFolder + "/" + LIST_FILENAME);
+            fileWriter.write(jsonObject.toString());
+            fileWriter.close();
+        }
+        catch(JSONException | IOException e)
+        {
+            e.printStackTrace();
         }
     }
 }

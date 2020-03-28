@@ -31,9 +31,6 @@ public class TaskListActivity extends AppCompatActivity
     //Task archive model
     private TaskArchive mTaskArchive;
 
-    //Task list ui
-    private TaskListAdapter mTaskListView;
-
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -45,6 +42,9 @@ public class TaskListActivity extends AppCompatActivity
         mTaskArchive   = new TaskArchive();
         mTaskList      = new TaskList(mTaskArchive);
         mTaskScheduler = new TaskScheduler(mTaskList);
+
+        mTaskList.setConfigFolder(getExternalFilesDir("/app").getAbsolutePath());
+        mTaskList.loadTasks();
 
         FloatingActionButton buttonNewTask = findViewById(R.id.addNewTask);
         buttonNewTask.setOnClickListener(view ->

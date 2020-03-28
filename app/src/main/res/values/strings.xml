@@ -6,6 +6,7 @@
     <string name="taskDescription">Description</string>
     <string name="newTaskDialogName">New task</string>
     <string name="taskType">Type:</string>
+    <string name="startDate">Start date:</string>
     <string name="createTask">DO IT, MOTHERFUCKER!</string>
 
     <string name="invalidTaskName">Invalid task name</string>
