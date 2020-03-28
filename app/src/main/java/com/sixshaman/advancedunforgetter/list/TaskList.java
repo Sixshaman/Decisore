@@ -1,9 +1,7 @@
 package com.sixshaman.advancedunforgetter.list;
 
-import android.util.JsonWriter;
 import com.sixshaman.advancedunforgetter.archive.TaskArchive;
 import com.sixshaman.advancedunforgetter.ui.TaskListAdapter;
-import com.sixshaman.advancedunforgetter.utils.Task;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -22,7 +20,7 @@ public class TaskList
     private static final String LIST_FILENAME = "TaskList.json";
 
     //All tasks to be done for today, sorted by ids. Or tomorrow. Or within a year. It's up to the user to decide
-    private ArrayList<Task> mTasks;
+    private ArrayList<EnlistedTask> mTasks;
 
     //The archive to move finished tasks into
     private TaskArchive mArchive;
@@ -52,10 +50,9 @@ public class TaskList
     }
 
     //Adds a task to the list
-    public void addTask(Task task)
+    public void addTask(EnlistedTask task)
     {
         int addPosition = -1;
-
         if(mTasks.isEmpty()) //Special case for the empty list
         {
             mTasks.add(task);
@@ -117,7 +114,7 @@ public class TaskList
     }
 
     //Removes the task from the list
-    public void moveTaskToArchive(Task task)
+    public void moveTaskToArchive(EnlistedTask task)
     {
         int index = Collections.binarySearch(mTasks, task.getId());
         if(index >= 0)
@@ -125,8 +122,7 @@ public class TaskList
             mTasks.remove(index);
         }
 
-        task.setFinishedDate(LocalDateTime.now());
-        mArchive.addTask(task);
+        mArchive.addTask(task.toArchived(LocalDateTime.now()));
 
         mAdapter.removeTaskData(index);
         mAdapter.updateOnRemoved(index);
@@ -141,7 +137,7 @@ public class TaskList
         {
             BufferedReader bufferedReader = new BufferedReader(new FileReader(mConfigFolder + "/" + LIST_FILENAME));
 
-            String line = "";
+            String line;
             StringBuilder fileContentsStringBuilder = new StringBuilder();
 
             while((line = bufferedReader.readLine()) != null)
@@ -158,7 +154,7 @@ public class TaskList
                 JSONObject taskObject = tasksJsonArray.optJSONObject(i);
                 if(taskObject != null)
                 {
-                    Task task = Task.fromJSON(taskObject);
+                    EnlistedTask task = EnlistedTask.fromJSON(taskObject);
                     mTasks.add(task);
                 }
             }
@@ -168,7 +164,7 @@ public class TaskList
             e.printStackTrace();
         }
 
-        mTasks.sort(Comparator.comparingLong(Task::getId));
+        mTasks.sort(Comparator.comparingLong(EnlistedTask::getId));
 
         for(int i = 0; i < mTasks.size(); i++)
         {
@@ -185,7 +181,7 @@ public class TaskList
             JSONObject jsonObject    = new JSONObject();
             JSONArray tasksJsonArray = new JSONArray();
 
-            for(Task task: mTasks)
+            for(EnlistedTask task: mTasks)
             {
                 tasksJsonArray.put(task.toJSON());
             }

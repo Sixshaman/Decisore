@@ -1,14 +1,12 @@
 package com.sixshaman.advancedunforgetter.archive;
 
-import com.sixshaman.advancedunforgetter.utils.Task;
-
 import java.util.ArrayList;
 
 //The task archive that contains all the finished tasks
 public class TaskArchive
 {
     //The list of all finished task
-    private ArrayList<Task> mFinishedTasks;
+    private ArrayList<ArchivedTask> mFinishedTasks;
 
     //Creates a new task archive
     public TaskArchive()
@@ -16,7 +14,8 @@ public class TaskArchive
         mFinishedTasks = new ArrayList<>();
     }
 
-    public void addTask(Task task)
+    //Adds a task to the archive
+    public void addTask(ArchivedTask task)
     {
         //Forever
         mFinishedTasks.add(task);

@@ -19,6 +19,7 @@ import com.sixshaman.advancedunforgetter.list.TaskList;
 import com.sixshaman.advancedunforgetter.scheduler.TaskScheduler;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class TaskListActivity extends AppCompatActivity
 {
@@ -28,9 +29,6 @@ public class TaskListActivity extends AppCompatActivity
     //Task list (the model of this class)
     private TaskList mTaskList;
 
-    //Task archive model
-    private TaskArchive mTaskArchive;
-
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -39,17 +37,15 @@ public class TaskListActivity extends AppCompatActivity
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        mTaskArchive   = new TaskArchive();
+        //Task archive model
+        TaskArchive mTaskArchive = new TaskArchive();
         mTaskList      = new TaskList(mTaskArchive);
         mTaskScheduler = new TaskScheduler(mTaskList);
 
-        mTaskList.setConfigFolder(getExternalFilesDir("/app").getAbsolutePath());
+        mTaskList.setConfigFolder(Objects.requireNonNull(getExternalFilesDir("/app")).getAbsolutePath());
 
         FloatingActionButton buttonNewTask = findViewById(R.id.addNewTask);
-        buttonNewTask.setOnClickListener(view ->
-        {
-            openAddTaskDialog();
-        });
+        buttonNewTask.setOnClickListener(view -> openAddTaskDialog());
 
         RecyclerView recyclerView = findViewById(R.id.taskListView);
         TaskListAdapter adapter = new TaskListAdapter(this);

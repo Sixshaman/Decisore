@@ -1,7 +1,6 @@
 package com.sixshaman.advancedunforgetter.scheduler;
 
-import com.sixshaman.advancedunforgetter.utils.Task;
-
+import com.sixshaman.advancedunforgetter.list.EnlistedTask;
 import java.time.LocalDateTime;
 
 //A task source that contains a single task
@@ -21,7 +20,7 @@ public class SingleTaskSource implements TaskSource
     }
 
     @Override
-    public Task obtainTask(LocalDateTime referenceTime)
+    public EnlistedTask obtainTask(LocalDateTime referenceTime)
     {
         if(getState(referenceTime) == SourceState.SOURCE_STATE_REGULAR)
         {
@@ -36,7 +35,7 @@ public class SingleTaskSource implements TaskSource
                 mState = SourceState.SOURCE_STATE_EMPTY;
             }
 
-            return mTask.getTask();
+            return mTask.toEnlisted(referenceTime);
         }
         else
         {
@@ -50,7 +49,7 @@ public class SingleTaskSource implements TaskSource
         if(mState == SourceState.SOURCE_STATE_EMPTY)
         {
             //We need to update the task state to check if it's available again
-            if(mTask.isActive() && referenceTime.isAfter(mTask.getTask().getAddedDate()))
+            if(mTask.isActive() && referenceTime.isAfter(mTask.getScheduledEnlistDate()))
             {
                 return SourceState.SOURCE_STATE_REGULAR;
             }

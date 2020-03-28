@@ -1,6 +1,6 @@
 package com.sixshaman.advancedunforgetter.scheduler;
 
-import com.sixshaman.advancedunforgetter.utils.Task;
+import com.sixshaman.advancedunforgetter.list.EnlistedTask;
 import java.time.LocalDateTime;
 import java.util.ArrayDeque;
 
@@ -33,15 +33,25 @@ public class TaskChain implements TaskSource
         }
     }
 
+    public String getName()
+    {
+        return mName;
+    }
+
+    public String getDescription()
+    {
+        return mDescription;
+    }
+
     @Override
-    public Task obtainTask(LocalDateTime referenceTime)
+    public EnlistedTask obtainTask(LocalDateTime referenceTime)
     {
         if(mTasks != null && !mTasks.isEmpty())
         {
-            Task firstTask = mTasks.getFirst().getTask();
-            if(referenceTime.isAfter(firstTask.getAddedDate()))
+            ScheduledTask firstTask = mTasks.getFirst();
+            if(referenceTime.isAfter(firstTask.getScheduledEnlistDate()))
             {
-                return mTasks.removeFirst().getTask();
+                return mTasks.removeFirst().toEnlisted(referenceTime);
             }
             else
             {
@@ -68,7 +78,7 @@ public class TaskChain implements TaskSource
         else
         {
             ScheduledTask firstTask = mTasks.getFirst();
-            if(firstTask.isActive() && referenceTime.isAfter(firstTask.getTask().getAddedDate())) //Also return EMPTY state if we can't provide the first task at this time
+            if(firstTask.isActive() && referenceTime.isAfter(firstTask.getScheduledEnlistDate())) //Also return EMPTY state if we can't provide the first task at this time
             {
                 return SourceState.SOURCE_STATE_REGULAR;
             }

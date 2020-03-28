@@ -85,15 +85,9 @@ public class TaskListAdapter extends RecyclerView.Adapter<TaskListAdapter.TaskVi
     {
         taskViewHolder.mTextView.setText(mTaskNames.get(position));
 
-        taskViewHolder.mCheckbox.setOnClickListener(view ->
-        {
+        taskViewHolder.mCheckbox.setOnClickListener(view -> Toast.makeText(mContext, "HOW TO DO IT???", Toast.LENGTH_LONG).show());
 
-        });
-
-        taskViewHolder.mParentLayout.setOnClickListener(view ->
-        {
-            Toast.makeText(mContext, mTaskDescriptions.get(position), Toast.LENGTH_LONG).show();
-        });
+        taskViewHolder.mParentLayout.setOnClickListener(view -> Toast.makeText(mContext, mTaskDescriptions.get(position), Toast.LENGTH_LONG).show());
     }
 
     @Override
@@ -113,10 +107,10 @@ public class TaskListAdapter extends RecyclerView.Adapter<TaskListAdapter.TaskVi
         {
             super(itemView);
 
-            mTextView = (TextView)itemView.findViewById(R.id.textTaskName);
-            mCheckbox = (CheckBox)itemView.findViewById(R.id.checkBoxTaskDone);
+            mTextView = itemView.findViewById(R.id.textTaskName);
+            mCheckbox = itemView.findViewById(R.id.checkBoxTaskDone);
 
-            mParentLayout = (ConstraintLayout)itemView.findViewById(R.id.layoutTaskView);
+            mParentLayout = itemView.findViewById(R.id.layoutTaskView);
         }
     }
 }

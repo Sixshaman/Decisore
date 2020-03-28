@@ -1,7 +1,7 @@
 package com.sixshaman.advancedunforgetter.scheduler;
 
+import com.sixshaman.advancedunforgetter.list.EnlistedTask;
 import com.sixshaman.advancedunforgetter.utils.RandomUtils;
-import com.sixshaman.advancedunforgetter.utils.Task;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -61,7 +61,7 @@ public class TaskPool
     }
 
     //Gets a task from a random source
-    Task getRandomTask(LocalDateTime referenceTime)
+    EnlistedTask getRandomTask(LocalDateTime referenceTime)
     {
         //Check non-empty sources only
         ArrayList<TaskSource> availableSources = new ArrayList<>();
@@ -78,8 +78,8 @@ public class TaskPool
             return null;
         }
 
-        int  randomSourceIndex = (int) RandomUtils.getInstance().getRandomUniform(0, availableSources.size() - 1);
-        Task resultTask        = availableSources.get(randomSourceIndex).obtainTask(referenceTime);
+        int  randomSourceIndex  = (int) RandomUtils.getInstance().getRandomUniform(0, availableSources.size() - 1);
+        EnlistedTask resultTask = availableSources.get(randomSourceIndex).obtainTask(referenceTime);
 
         //Reschedule the pool
         mNextUpdateDate = referenceTime.plusHours(mRepeatDuration.toHours());
@@ -93,6 +93,16 @@ public class TaskPool
     boolean isSingleSingleTaskPool()
     {
         return (mTaskSources.size() == 1) && (mTaskSources.get(0) instanceof SingleTaskSource);
+    }
+
+    public String getName()
+    {
+        return mName;
+    }
+
+    public String getDescription()
+    {
+        return mDescription;
     }
 
     int getTaskSourceCount()

@@ -15,9 +15,9 @@ After removing the task from the scheduler:
 
 */
 
+import com.sixshaman.advancedunforgetter.list.EnlistedTask;
 import com.sixshaman.advancedunforgetter.list.TaskList;
 import com.sixshaman.advancedunforgetter.utils.TaskIdGenerator;
-import com.sixshaman.advancedunforgetter.utils.Task;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -46,6 +46,11 @@ public class TaskScheduler
         mMainList = mainList;
     }
 
+    public void setLastTaskId(long id)
+    {
+        mIdGenerator.setFirstId(id);
+    }
+
     //Updates the task scheduler: adds all ready-to-be-done tasks to the main list, reschedules tasks, updates chains and pools
     public void update()
     {
@@ -57,7 +62,7 @@ public class TaskScheduler
             if(pool.isSingleSingleTaskPool())
             {
                 //Don't need to check if the last task is done
-                Task task = pool.getRandomTask(currentDateTime);
+                EnlistedTask task = pool.getRandomTask(currentDateTime);
                 moveTaskToMainList(task);
             }
             else
@@ -65,7 +70,7 @@ public class TaskScheduler
                 //Only add the task to the main list if the last task provided by the pool is done
                 if(!mMainList.isTaskInList(pool.getLastProvidedTaskId()))
                 {
-                    Task task = pool.getRandomTask(currentDateTime);
+                    EnlistedTask task = pool.getRandomTask(currentDateTime);
                     moveTaskToMainList(task);
                 }
             }
@@ -86,9 +91,7 @@ public class TaskScheduler
         long          taskId      = mIdGenerator.generateNextId();
         LocalDateTime currentTime = LocalDateTime.now();
 
-        Task task = new Task(taskId, currentTime, taskName, taskDescription, taskTags);
-        task.setAddedDate(currentTime);
-
+        EnlistedTask task = new EnlistedTask(taskId, currentTime, currentTime, taskName, taskDescription, taskTags);
         moveTaskToMainList(task);
     }
 
@@ -159,8 +162,8 @@ public class TaskScheduler
         long          taskId      = mIdGenerator.generateNextId();
         LocalDateTime currentTime = LocalDateTime.now();
 
-        Task task                   = new Task(taskId, currentTime, taskName, taskDescription, taskTags);
-        ScheduledTask scheduledTask = new ScheduledTask(task, repeatDuration, repeatProbability);
+        ScheduledTask scheduledTask = new ScheduledTask(taskId, taskName, taskDescription, currentTime, deferTime,
+                                                        taskTags, repeatDuration, repeatProbability);
 
         //Calculate the next time to do the task
         scheduledTask.reschedule(deferTime);
@@ -189,7 +192,7 @@ public class TaskScheduler
     }
 
     //Moves the task to the main task list
-    private void moveTaskToMainList(Task task)
+    private void moveTaskToMainList(EnlistedTask task)
     {
         if(task != null)
         {

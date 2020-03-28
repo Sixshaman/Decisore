@@ -10,6 +10,11 @@ public class TaskIdGenerator
         mNextGivenId = 0;
     }
 
+    public void setFirstId(long id)
+    {
+        mNextGivenId = id + 1;
+    }
+
     public long generateNextId()
     {
         long currId = mNextGivenId;
