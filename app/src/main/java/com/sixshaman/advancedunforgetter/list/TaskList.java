@@ -51,6 +51,7 @@ public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
         mContext = context;
     }
 
+    //Sets the folder to store the JSON config file
     public void setConfigFolder(String folder)
     {
         mConfigFolder = folder;
@@ -138,6 +139,7 @@ public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
         saveTasks();
     }
 
+    //Loads tasks from JSON config file
     public void loadTasks()
     {
         mTasks.clear();
@@ -177,6 +179,7 @@ public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
         notifyDataSetChanged();
     }
 
+    //Saves tasks in JSON config file
     public void saveTasks()
     {
         try
@@ -201,9 +204,17 @@ public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
         }
     }
 
+    //Returns the largest id for a stored task
     public long getLastTaskId()
     {
-        return mTasks.get(mTasks.size() - 1).getId();
+        if(mTasks.isEmpty())
+        {
+            return -1;
+        }
+        else
+        {
+            return mTasks.get(mTasks.size() - 1).getId();
+        }
     }
 
     @NonNull
@@ -219,10 +230,7 @@ public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
     {
         taskViewHolder.mTextView.setText(mTasks.get(position).getName());
 
-        taskViewHolder.mCheckbox.setOnClickListener(view ->
-        {
-            moveTaskToArchive(mTasks.get(position));
-        });
+        taskViewHolder.mCheckbox.setOnClickListener(view -> moveTaskToArchive(mTasks.get(position)));
 
         taskViewHolder.mParentLayout.setOnClickListener(view -> Toast.makeText(mContext, mTasks.get(position).getDescription(), Toast.LENGTH_LONG).show());
 
