@@ -98,6 +98,7 @@ public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
         if(addPosition != -1)
         {
             notifyItemInserted(addPosition);
+            notifyItemRangeChanged(addPosition, getItemCount());
             saveTasks();
         }
     }
@@ -133,6 +134,7 @@ public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
         mArchive.addTask(task.toArchived(LocalDateTime.now()));
 
         notifyItemRemoved(index);
+        notifyItemRangeChanged(index, getItemCount());
         saveTasks();
     }
 
@@ -217,9 +219,14 @@ public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
     {
         taskViewHolder.mTextView.setText(mTasks.get(position).getName());
 
-        taskViewHolder.mCheckbox.setOnClickListener(view -> moveTaskToArchive(mTasks.get(position)));
+        taskViewHolder.mCheckbox.setOnClickListener(view ->
+        {
+            moveTaskToArchive(mTasks.get(position));
+        });
 
         taskViewHolder.mParentLayout.setOnClickListener(view -> Toast.makeText(mContext, mTasks.get(position).getDescription(), Toast.LENGTH_LONG).show());
+
+        taskViewHolder.mCheckbox.setChecked(false);
     }
 
     @Override
