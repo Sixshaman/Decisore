@@ -1,7 +1,17 @@
 package com.sixshaman.advancedunforgetter.list;
 
+import android.content.Context;
+import android.support.annotation.NonNull;
+import android.support.constraint.ConstraintLayout;
+import android.support.v7.widget.RecyclerView;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.CheckBox;
+import android.widget.TextView;
+import android.widget.Toast;
+import com.sixshaman.advancedunforgetter.R;
 import com.sixshaman.advancedunforgetter.archive.TaskArchive;
-import com.sixshaman.advancedunforgetter.ui.TaskListAdapter;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -15,7 +25,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
-public class TaskList
+public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
 {
     private static final String LIST_FILENAME = "TaskList.json";
 
@@ -25,23 +35,20 @@ public class TaskList
     //The archive to move finished tasks into
     private TaskArchive mArchive;
 
-    //Ui controller for this class
-    private TaskListAdapter mAdapter;
-
     //The folder to store the config files
     private String mConfigFolder;
 
+    //The context for displaying the task list
+    private Context mContext;
+
     //Constructs a new task list
-    public TaskList(TaskArchive archive)
+    public TaskList(TaskArchive archive, Context context)
     {
         mTasks = new ArrayList<>();
 
         mArchive = archive;
-    }
 
-    public void setUiAdapter(TaskListAdapter taskListController)
-    {
-        mAdapter = taskListController;
+        mContext = context;
     }
 
     public void setConfigFolder(String folder)
@@ -83,13 +90,14 @@ public class TaskList
             else
             {
                 //OH NOOOOOOOOO! THE TASK ALREADY EXISTS! WE CAN LOSE THIS TASK! STOP EVERYTHING, DON'T LET IT SAVE
-                throw new RuntimeException("Task already exists");
+                //throw new RuntimeException("Task already exists");
+                Toast.makeText(mContext, "Error adding new task", Toast.LENGTH_SHORT).show();
             }
         }
 
         if(addPosition != -1)
         {
-            mAdapter.addTaskData(addPosition, task.getName(), task.getDescription(), task.getId());
+            notifyItemInserted(addPosition);
             saveTasks();
         }
     }
@@ -124,8 +132,7 @@ public class TaskList
 
         mArchive.addTask(task.toArchived(LocalDateTime.now()));
 
-        mAdapter.removeTaskData(index);
-        mAdapter.updateOnRemoved(index);
+        notifyItemRemoved(index);
         saveTasks();
     }
 
@@ -165,13 +172,7 @@ public class TaskList
         }
 
         mTasks.sort(Comparator.comparingLong(EnlistedTask::getId));
-
-        for(int i = 0; i < mTasks.size(); i++)
-        {
-            mAdapter.addTaskData(i, mTasks.get(i).getName(), mTasks.get(i).getDescription(), mTasks.get(i).getId());
-        }
-
-        mAdapter.updateAll();
+        notifyDataSetChanged();
     }
 
     public void saveTasks()
@@ -195,6 +196,48 @@ public class TaskList
         catch(JSONException | IOException e)
         {
             e.printStackTrace();
+        }
+    }
+
+    @NonNull
+    @Override
+    public TaskList.TaskViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i)
+    {
+        View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.layout_task_view, viewGroup, false);
+        return new TaskList.TaskViewHolder(view);
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull TaskList.TaskViewHolder taskViewHolder, int position)
+    {
+        taskViewHolder.mTextView.setText(mTasks.get(position).getName());
+
+        taskViewHolder.mCheckbox.setOnClickListener(view -> Toast.makeText(mContext, "HOW TO DO IT???", Toast.LENGTH_LONG).show());
+
+        taskViewHolder.mParentLayout.setOnClickListener(view -> Toast.makeText(mContext, mTasks.get(position).getDescription(), Toast.LENGTH_LONG).show());
+    }
+
+    @Override
+    public int getItemCount()
+    {
+        return mTasks.size();
+    }
+
+    static class TaskViewHolder extends RecyclerView.ViewHolder
+    {
+        TextView mTextView;
+        CheckBox mCheckbox;
+
+        ConstraintLayout mParentLayout;
+
+        public TaskViewHolder(View itemView)
+        {
+            super(itemView);
+
+            mTextView = itemView.findViewById(R.id.textTaskName);
+            mCheckbox = itemView.findViewById(R.id.checkBoxTaskDone);
+
+            mParentLayout = itemView.findViewById(R.id.layoutTaskView);
         }
     }
 }

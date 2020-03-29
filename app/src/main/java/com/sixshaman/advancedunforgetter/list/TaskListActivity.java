@@ -1,21 +1,18 @@
-package com.sixshaman.advancedunforgetter.ui;
+package com.sixshaman.advancedunforgetter.list;
 
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
-import android.view.View;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 import com.sixshaman.advancedunforgetter.R;
 import com.sixshaman.advancedunforgetter.archive.TaskArchive;
-import com.sixshaman.advancedunforgetter.list.TaskList;
 import com.sixshaman.advancedunforgetter.scheduler.TaskScheduler;
 
 import java.util.ArrayList;
@@ -29,6 +26,9 @@ public class TaskListActivity extends AppCompatActivity
     //Task list (the model of this class)
     private TaskList mTaskList;
 
+    //Task archive model
+    private TaskArchive mTaskArchive;
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -37,9 +37,8 @@ public class TaskListActivity extends AppCompatActivity
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        //Task archive model
-        TaskArchive mTaskArchive = new TaskArchive();
-        mTaskList      = new TaskList(mTaskArchive);
+        mTaskArchive   = new TaskArchive();
+        mTaskList      = new TaskList(mTaskArchive, this);
         mTaskScheduler = new TaskScheduler(mTaskList);
 
         mTaskList.setConfigFolder(Objects.requireNonNull(getExternalFilesDir("/app")).getAbsolutePath());
@@ -48,11 +47,9 @@ public class TaskListActivity extends AppCompatActivity
         buttonNewTask.setOnClickListener(view -> openAddTaskDialog());
 
         RecyclerView recyclerView = findViewById(R.id.taskListView);
-        TaskListAdapter adapter = new TaskListAdapter(this);
-        recyclerView.setAdapter(adapter);
+        recyclerView.setAdapter(mTaskList);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        mTaskList.setUiAdapter(adapter);
         mTaskList.loadTasks();
     }
 
