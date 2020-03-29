@@ -1,6 +1,7 @@
 package com.sixshaman.advancedunforgetter.list;
 
 import android.os.Bundle;
+import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -51,14 +52,17 @@ public class TaskListActivity extends AppCompatActivity
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         mTaskList.loadTasks();
+        mTaskScheduler.setLastTaskId(mTaskList.getLastTaskId());
     }
 
     private void openAddTaskDialog()
     {
         AlertDialog.Builder alertBuilder = new AlertDialog.Builder(this);
 
+        ConstraintLayout taskDialogLayout = findViewById(R.id.layoutDialogNewTask);
+
         final LayoutInflater inflater = getLayoutInflater();
-        alertBuilder.setView(inflater.inflate(R.layout.layout_dialog_new_task, null));
+        alertBuilder.setView(inflater.inflate(R.layout.layout_dialog_new_task, taskDialogLayout));
 
         alertBuilder.setTitle(R.string.newTaskDialogName);
 

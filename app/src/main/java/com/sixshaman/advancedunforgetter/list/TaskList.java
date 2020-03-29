@@ -199,6 +199,11 @@ public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
         }
     }
 
+    public long getLastTaskId()
+    {
+        return mTasks.get(mTasks.size() - 1).getId();
+    }
+
     @NonNull
     @Override
     public TaskList.TaskViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i)
@@ -212,7 +217,7 @@ public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
     {
         taskViewHolder.mTextView.setText(mTasks.get(position).getName());
 
-        taskViewHolder.mCheckbox.setOnClickListener(view -> Toast.makeText(mContext, "HOW TO DO IT???", Toast.LENGTH_LONG).show());
+        taskViewHolder.mCheckbox.setOnClickListener(view -> moveTaskToArchive(mTasks.get(position)));
 
         taskViewHolder.mParentLayout.setOnClickListener(view -> Toast.makeText(mContext, mTasks.get(position).getDescription(), Toast.LENGTH_LONG).show());
     }
