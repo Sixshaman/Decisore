@@ -42,13 +42,16 @@ public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
     private Context mContext;
 
     //Constructs a new task list
-    public TaskList(TaskArchive archive, Context context)
+    public TaskList()
     {
         mTasks = new ArrayList<>();
 
-        mArchive = archive;
+        mContext = null;
+    }
 
-        mContext = context;
+    public void setArchive(TaskArchive archive)
+    {
+        mArchive = archive;
     }
 
     //Sets the folder to store the JSON config file
@@ -90,7 +93,8 @@ public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
             }
             else
             {
-                //OH NOOOOOOOOO! THE TASK ALREADY EXISTS! WE CAN LOSE THIS TASK! STOP EVERYTHING, DON'T LET IT SAVE
+                //OH NO! THE TASK ALREADY EXISTS! WE CAN LOSE THIS TASK! STOP EVERYTHING, DON'T LET IT SAVE
+                //Or not, lol
                 //throw new RuntimeException("Task already exists");
                 Toast.makeText(mContext, "Error adding new task", Toast.LENGTH_SHORT).show();
             }
@@ -126,6 +130,11 @@ public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
     //Removes the task from the list
     public void moveTaskToArchive(EnlistedTask task)
     {
+        if(mArchive == null)
+        {
+            return;
+        }
+
         int index = Collections.binarySearch(mTasks, task.getId());
         if(index >= 0)
         {
@@ -221,6 +230,8 @@ public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
     @Override
     public TaskList.TaskViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i)
     {
+        mContext = viewGroup.getContext();
+
         View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.layout_task_view, viewGroup, false);
         return new TaskList.TaskViewHolder(view);
     }

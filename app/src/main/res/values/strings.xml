@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Advanced Unforgetter</string>
-    <string name="title_activity_task_list">Tasks for today</string>
+    <string name="title_activity_task_list">Tasks for today</string>\
+    <string name="title_activity_task_archive">Done tasks</string>
     <string name="placeholderTask">Task</string>
     <string name="taskName">Name</string>
     <string name="taskDescription">Description</string>
@@ -10,4 +11,5 @@
     <string name="createTask">DO IT, MOTHERFUCKER!</string>
 
     <string name="invalidTaskName">Invalid task name</string>
+    <string name="openArchive">Open tasks archive</string>
 </resources>

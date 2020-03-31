@@ -9,6 +9,14 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>
+
+    <style name="AlertDialogTheme" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimaryAlert</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDarkAlert</item>
+        <item name="colorAccent">@color/colorAccentAlert</item>
+    </style>
+
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar"/>
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light"/>
 

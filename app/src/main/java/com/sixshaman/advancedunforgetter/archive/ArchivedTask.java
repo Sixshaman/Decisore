@@ -155,4 +155,29 @@ public class ArchivedTask
             return null; //Can't create even a basic task
         }
     }
+
+    public LocalDateTime getCreationDate()
+    {
+        return mDateCreated;
+    }
+
+    public LocalDateTime getEnlistmentDate()
+    {
+        return mDateEnlisted;
+    }
+
+    public LocalDateTime getFinishDate()
+    {
+        return mDateFinished;
+    }
+
+    public String getName()
+    {
+        return mName;
+    }
+
+    public String getDescription()
+    {
+        return mDescription;
+    }
 }
