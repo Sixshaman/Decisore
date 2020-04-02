@@ -6,6 +6,7 @@
                                              android:layout_margin="16dp" android:id="@+id/layoutDialogNewTask">
 
     <EditText
+            android:theme="@style/AdditionalTheme"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:inputType="text"
@@ -19,6 +20,7 @@
             app:layout_constraintTop_toTopOf="parent"/>
 
     <EditText
+            android:theme="@style/AdditionalTheme"
             android:layout_width="wrap_content"
             android:layout_height="200dp"
             android:inputType="textMultiLine"

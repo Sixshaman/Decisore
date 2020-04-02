@@ -18,6 +18,7 @@
 
     <CheckBox
             android:text=""
+            android:buttonTint="@color/colorPrimary"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/checkBoxTaskDone"
