@@ -1,6 +1,6 @@
 package com.sixshaman.advancedunforgetter.list;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import com.sixshaman.advancedunforgetter.archive.ArchivedTask;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -155,7 +155,7 @@ public class EnlistedTask implements Comparable<Long>
             e.printStackTrace();
         }
 
-        EnlistedTask task = null;
+        EnlistedTask task;
         if(id != -1 && !name.isEmpty() && createdDate != null && addedDate != null)
         {
             task = new EnlistedTask(id, createdDate, addedDate, name, description, taskTags);

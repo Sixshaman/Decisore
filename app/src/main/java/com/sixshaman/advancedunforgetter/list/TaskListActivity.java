@@ -2,17 +2,16 @@ package com.sixshaman.advancedunforgetter.list;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.constraint.ConstraintLayout;
-import android.support.design.widget.FloatingActionButton;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.appcompat.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
@@ -54,17 +53,22 @@ public class TaskListActivity extends AppCompatActivity
 
         mTaskArchive   = new TaskArchive();
         mTaskList      = new TaskList();
-        mTaskScheduler = new TaskScheduler(mTaskList);
+        mTaskScheduler = new TaskScheduler();
 
         mTaskList.setArchive(mTaskArchive);
+        mTaskScheduler.setTaskList(mTaskList);
 
-        mTaskList.setConfigFolder(Objects.requireNonNull(getExternalFilesDir("/app")).getAbsolutePath());
-        mTaskArchive.setConfigFolder(Objects.requireNonNull(getExternalFilesDir("/app")).getAbsolutePath());
+        String configFolder = Objects.requireNonNull(getExternalFilesDir("/app")).getAbsolutePath();
+
+        mTaskScheduler.setConfigFolder(configFolder);
+        mTaskList.setConfigFolder(configFolder);
+        mTaskArchive.setConfigFolder(configFolder);
 
         RecyclerView recyclerView = findViewById(R.id.taskListView);
         recyclerView.setAdapter(mTaskList);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
+        mTaskScheduler.loadScheduledTasks();
         mTaskList.loadTasks();
         mTaskArchive.loadFinishedTasks();
 

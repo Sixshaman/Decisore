@@ -1,7 +1,12 @@
 package com.sixshaman.advancedunforgetter.scheduler;
 
+import android.util.JsonWriter;
 import com.sixshaman.advancedunforgetter.list.EnlistedTask;
 import com.sixshaman.advancedunforgetter.utils.RandomUtils;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -19,14 +24,11 @@ public class TaskPool
     //The list of all the task sources the pool can choose from
     private ArrayList<TaskSource> mTaskSources;
 
-    //The next date the pool is available
-    private LocalDateTime mNextUpdateDate;
-
-    //The period of giving tasks from the pool
-    private Duration mRepeatDuration;
-
     //The id of the task that was most recently provided by this pool.
     private long mLastProvidedTaskId;
+
+    //The flag that shows that the pool is active (i.e. not paused)
+    boolean mIsActive;
 
     //Constructs a new task pool
     TaskPool(String name, String description)
@@ -36,12 +38,141 @@ public class TaskPool
 
         mTaskSources = new ArrayList<>();
 
-        mNextUpdateDate = LocalDateTime.now();
-        mNextUpdateDate = mNextUpdateDate.truncatedTo(ChronoUnit.HOURS);
+        setLastProvidedTaskId(0);
 
-        mRepeatDuration = Duration.ofHours(0); //Default behavior: always update on-demand
+        mIsActive = true;
+    }
 
-        mLastProvidedTaskId = 0;
+    public JSONObject toJSON()
+    {
+        JSONObject result = new JSONObject();
+
+        try
+        {
+            result.put("Name",        mName);
+            result.put("Description", mDescription);
+
+            result.put("LastId", Long.toString(mLastProvidedTaskId));
+
+            result.put("IsActive", Boolean.toString(mIsActive));
+
+            JSONArray sourcesArray = new JSONArray();
+            for(TaskSource source: mTaskSources)
+            {
+                JSONObject taskSourceObject = new JSONObject();
+
+                //Another poke at Java! It can't into static methods in interfaces
+                if(source instanceof SingleTaskSource)
+                {
+                    taskSourceObject.put("Type", SingleTaskSource.getSourceTypeString());
+                }
+                else if(source instanceof TaskChain)
+                {
+                    taskSourceObject.put("Type", TaskChain.getSourceTypeString());
+                }
+                else
+                {
+                    continue; //Unknown source type????
+                }
+
+                taskSourceObject.put("Data", source.toJSON());
+
+                sourcesArray.put(taskSourceObject);
+            }
+
+            result.put("Sources", sourcesArray);
+        }
+        catch (JSONException e)
+        {
+            e.printStackTrace();
+        }
+
+        return result;
+    }
+
+    public static TaskPool fromJSON(JSONObject jsonObject)
+    {
+        try
+        {
+            String name        = jsonObject.optString("Name");
+            String description = jsonObject.optString("Description");
+
+            String lastIdString = jsonObject.optString("LastId");
+            Long lastId = null;
+            try
+            {
+                lastId = Long.parseLong(lastIdString);
+            }
+            catch(NumberFormatException e)
+            {
+                e.printStackTrace();
+            }
+
+            if(lastId == null)
+            {
+                return null;
+            }
+
+            TaskPool taskPool = new TaskPool(name, description);
+
+            String isActiveString = jsonObject.optString("IsActive");
+
+            boolean isActive = true;
+            if(isActiveString != null && !isActiveString.isEmpty())
+            {
+                if(isActiveString.equalsIgnoreCase("false"))
+                {
+                    isActive = false;
+                }
+            }
+
+            if(!isActive)
+            {
+                taskPool.pause();
+            }
+
+            JSONArray sourcesJsonArray = jsonObject.getJSONArray("Sources");
+            if(sourcesJsonArray != null)
+            {
+                for(int i = 0; i < sourcesJsonArray.length(); i++)
+                {
+                    JSONObject sourceObject = sourcesJsonArray.optJSONObject(i);
+                    if(sourceObject != null)
+                    {
+                        String     sourceType = sourceObject.optString("Type");
+                        JSONObject sourceData = sourceObject.optJSONObject("Data");
+
+                        if(sourceData != null)
+                        {
+                            if(sourceType.equals(SingleTaskSource.getSourceTypeString()))
+                            {
+                                SingleTaskSource singleTaskSource = SingleTaskSource.fromJSON(sourceData);
+                                if(singleTaskSource != null)
+                                {
+                                    taskPool.addTaskSource(singleTaskSource);
+                                }
+                            }
+                            else if(sourceType.equals(TaskChain.getSourceTypeString()))
+                            {
+                                TaskChain taskChain = TaskChain.fromJSON(sourceData);
+                                if(taskChain != null)
+                                {
+                                    taskPool.addTaskSource(taskChain);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return taskPool;
+        }
+        catch(JSONException e)
+        {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 
     //Updates all the task sources, removing the finished ones
@@ -63,6 +194,11 @@ public class TaskPool
     //Gets a task from a random source
     EnlistedTask getRandomTask(LocalDateTime referenceTime)
     {
+        if(!mIsActive)
+        {
+            return null;
+        }
+
         //Check non-empty sources only
         ArrayList<TaskSource> availableSources = new ArrayList<>();
         for(TaskSource source: mTaskSources)
@@ -81,11 +217,7 @@ public class TaskPool
         int  randomSourceIndex  = (int) RandomUtils.getInstance().getRandomUniform(0, availableSources.size() - 1);
         EnlistedTask resultTask = availableSources.get(randomSourceIndex).obtainTask(referenceTime);
 
-        //Reschedule the pool
-        mNextUpdateDate = referenceTime.plusHours(mRepeatDuration.toHours());
-        mNextUpdateDate = mNextUpdateDate.truncatedTo(ChronoUnit.HOURS);
-
-        mLastProvidedTaskId = resultTask.getId();
+        setLastProvidedTaskId(resultTask.getId());
         return resultTask;
     }
 
@@ -93,6 +225,21 @@ public class TaskPool
     boolean isSingleSingleTaskPool()
     {
         return (mTaskSources.size() == 1) && (mTaskSources.get(0) instanceof SingleTaskSource);
+    }
+
+    public long getMaxTaskId()
+    {
+        long maxId = -1;
+        for(TaskSource source: mTaskSources)
+        {
+            long sourceMaxId = source.getMaxTaskId();
+            if(sourceMaxId > maxId)
+            {
+                maxId = sourceMaxId;
+            }
+        }
+
+        return maxId;
     }
 
     public String getName()
@@ -116,15 +263,26 @@ public class TaskPool
         mTaskSources.add(source);
     }
 
-    //Sets the repeat duration
-    public void setRepeatDuration(Duration duration)
+    //Pauses the pool
+    void pause()
     {
-        mRepeatDuration = duration;
+        mIsActive = false;
+    }
+
+    //Unpauses the pool
+    void unpause()
+    {
+        mIsActive = true;
     }
 
     //Gets the last provided task id, to check if it has been finished yet
     long getLastProvidedTaskId()
     {
         return mLastProvidedTaskId;
+    }
+
+    private void setLastProvidedTaskId(long taskId)
+    {
+        mLastProvidedTaskId = taskId;
     }
 }

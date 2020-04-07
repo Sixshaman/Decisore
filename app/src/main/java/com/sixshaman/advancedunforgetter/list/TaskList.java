@@ -1,9 +1,9 @@
 package com.sixshaman.advancedunforgetter.list;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
-import android.support.constraint.ConstraintLayout;
-import android.support.v7.widget.RecyclerView;
+import androidx.annotation.NonNull;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -175,7 +175,10 @@ public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
                 if(taskObject != null)
                 {
                     EnlistedTask task = EnlistedTask.fromJSON(taskObject);
-                    mTasks.add(task);
+                    if(task != null)
+                    {
+                        mTasks.add(task);
+                    }
                 }
             }
         }

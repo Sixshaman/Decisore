@@ -18,6 +18,14 @@ After removing the task from the scheduler:
 import com.sixshaman.advancedunforgetter.list.EnlistedTask;
 import com.sixshaman.advancedunforgetter.list.TaskList;
 import com.sixshaman.advancedunforgetter.utils.TaskIdGenerator;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -25,6 +33,8 @@ import java.util.ArrayList;
 //The class to schedule all deferred tasks. The model for the scheduler UI
 public class TaskScheduler
 {
+    private static final String SCHEDULER_FILENAME = "TaskScheduler.json";
+
     //The list of all the task pools.
     //All single tasks are task pools with a single SingleTaskSource
     //All single task chains are task pools with a single TaskChain
@@ -36,19 +46,29 @@ public class TaskScheduler
     //The main list of tasks that scheduler adds tasks to
     private TaskList mMainList;
 
+    //The folder to store the config files
+    private String mConfigFolder;
+
     //Creates a new task scheduler that is bound to mainList
-    public TaskScheduler(TaskList mainList)
+    public TaskScheduler()
     {
         mTaskPools = new ArrayList<>();
 
         mIdGenerator = new TaskIdGenerator();
 
-        mMainList = mainList;
+        mMainList = null;
     }
 
-    public void setLastTaskId(long id)
+    //Sets the folder to store the JSON config file
+    public void setConfigFolder(String folder)
     {
-        mIdGenerator.setFirstId(id);
+        mConfigFolder = folder;
+    }
+
+    //Sets the task list to send scheduled tasks into
+    public void setTaskList(TaskList mainList)
+    {
+        mMainList = mainList;
     }
 
     //Updates the task scheduler: adds all ready-to-be-done tasks to the main list, reschedules tasks, updates chains and pools
@@ -83,6 +103,71 @@ public class TaskScheduler
         }
 
         mTaskPools = changedPools;
+    }
+
+    //Loads tasks from JSON config file
+    public void loadScheduledTasks()
+    {
+        mTaskPools.clear();
+
+        try
+        {
+            BufferedReader bufferedReader = new BufferedReader(new FileReader(mConfigFolder + "/" + SCHEDULER_FILENAME));
+
+            String line;
+            StringBuilder fileContentsStringBuilder = new StringBuilder();
+
+            while((line = bufferedReader.readLine()) != null)
+            {
+                fileContentsStringBuilder.append(line);
+            }
+
+            String fileContents = fileContentsStringBuilder.toString();
+            JSONObject jsonObject = new JSONObject(fileContents);
+
+            JSONArray poolsJsonArray = jsonObject.getJSONArray("POOLS");
+            for(int i = 0; i < poolsJsonArray.length(); i++)
+            {
+                JSONObject poolObject = poolsJsonArray.optJSONObject(i);
+                if(poolObject != null)
+                {
+                    TaskPool pool = TaskPool.fromJSON(poolObject);
+                    if(pool != null)
+                    {
+                        mTaskPools.add(pool);
+                    }
+                }
+            }
+        }
+        catch(JSONException | IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    //Saves scheduled tasks in JSON config file
+    public void saveScheduledTasks()
+    {
+        try
+        {
+            JSONObject jsonObject    = new JSONObject();
+            JSONArray tasksJsonArray = new JSONArray();
+
+            for(TaskPool pool: mTaskPools)
+            {
+                tasksJsonArray.put(pool.toJSON());
+            }
+
+            jsonObject.put("POOLS", tasksJsonArray);
+
+            FileWriter fileWriter = new FileWriter(mConfigFolder + "/" + SCHEDULER_FILENAME);
+            fileWriter.write(jsonObject.toString());
+            fileWriter.close();
+        }
+        catch(JSONException | IOException e)
+        {
+            e.printStackTrace();
+        }
     }
 
     //Creates a new one-time task and immediately adds it to the main list
@@ -189,6 +274,22 @@ public class TaskScheduler
             SingleTaskSource taskSource = new SingleTaskSource(scheduledTask);
             pool.addTaskSource(taskSource);
         }
+    }
+
+    //Sets the start id for the task id generator
+    public void setLastTaskId(long id)
+    {
+        long maxId = id;
+        for(TaskPool pool: mTaskPools)
+        {
+            long poolMaxId = pool.getMaxTaskId();
+            if(maxId > poolMaxId)
+            {
+                maxId = poolMaxId;
+            }
+        }
+
+        mIdGenerator.setFirstId(maxId);
     }
 
     //Moves the task to the main task list

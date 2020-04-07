@@ -1,6 +1,13 @@
 package com.sixshaman.advancedunforgetter.scheduler;
 
 import com.sixshaman.advancedunforgetter.list.EnlistedTask;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayDeque;
 
@@ -41,6 +48,102 @@ public class TaskChain implements TaskSource
     public String getDescription()
     {
         return mDescription;
+    }
+
+    @Override
+    public JSONObject toJSON()
+    {
+        //Never save finished task sources
+        if(mTasks == null)
+        {
+            return null;
+        }
+        else
+        {
+            JSONObject result = new JSONObject();
+
+            try
+            {
+                result.put("Name",        mName);
+                result.put("Description", mDescription);
+
+                JSONArray tasksArray = new JSONArray();
+                for(ScheduledTask task: mTasks)
+                {
+                    tasksArray.put(task.toJSON());
+                }
+
+                result.put("Tasks", tasksArray);
+            }
+            catch (JSONException e)
+            {
+                e.printStackTrace();
+            }
+
+            return result;
+        }
+    }
+
+    public static String getSourceTypeString()
+    {
+        return "TaskChain";
+    }
+
+    @Override
+    public long getMaxTaskId()
+    {
+        if(mTasks == null)
+        {
+            return 0;
+        }
+
+        long maxId = -1;
+        for(ScheduledTask task: mTasks)
+        {
+            long taskId = task.getId();
+            if(taskId > maxId)
+            {
+                maxId = taskId;
+            }
+        }
+
+        return maxId;
+    }
+
+    public static TaskChain fromJSON(JSONObject jsonObject)
+    {
+        try
+        {
+            String name        = jsonObject.optString("Name");
+            String description = jsonObject.optString("Description");
+
+            TaskChain taskChain = new TaskChain(name, description);
+
+            JSONArray tasksJsonArray = jsonObject.getJSONArray("Tasks");
+            if(tasksJsonArray != null)
+            {
+                for(int i = 0; i < tasksJsonArray.length(); i++)
+                {
+                    JSONObject taskObject = tasksJsonArray.optJSONObject(i);
+                    if(taskObject != null)
+                    {
+                        ScheduledTask task = ScheduledTask.fromJSON(taskObject);
+                        if(task != null)
+                        {
+                            taskChain.addTaskToChain(task);
+                        }
+                    }
+                }
+            }
+
+           return taskChain;
+        }
+        catch(JSONException e)
+        {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 
     @Override
