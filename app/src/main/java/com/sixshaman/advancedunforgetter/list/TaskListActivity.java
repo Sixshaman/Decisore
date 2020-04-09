@@ -1,7 +1,10 @@
 package com.sixshaman.advancedunforgetter.list;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.*;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import androidx.appcompat.app.AlertDialog;
@@ -12,15 +15,18 @@ import androidx.appcompat.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
-import android.widget.EditText;
-import android.widget.Spinner;
-import android.widget.Toast;
 import com.sixshaman.advancedunforgetter.R;
 import com.sixshaman.advancedunforgetter.archive.ArchiveActivity;
 import com.sixshaman.advancedunforgetter.archive.TaskArchive;
 import com.sixshaman.advancedunforgetter.scheduler.TaskScheduler;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Objects;
 
 public class TaskListActivity extends AppCompatActivity
@@ -111,9 +117,14 @@ public class TaskListActivity extends AppCompatActivity
 
             final Spinner taskTypeSpinner = ((AlertDialog)dialogInterface).findViewById(R.id.spinnerTaskType);
 
+            final EditText deferDateEditText = ((AlertDialog)dialogInterface).findViewById(R.id.editDeferDate);
+
             assert editTextName         != null;
             assert editTextNDescription != null;
-            assert taskTypeSpinner      != null;
+
+            assert taskTypeSpinner != null;
+
+            assert deferDateEditText != null;
 
             String nameText = editTextName.getEditableText().toString();
             if(nameText.isEmpty())
@@ -135,6 +146,18 @@ public class TaskListActivity extends AppCompatActivity
 
                     //Deferred task
                     case 1:
+                        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                        try
+                        {
+                            LocalDate     deferDate     = LocalDate.parse(deferDateEditText.getEditableText().toString(), dateTimeFormatter);
+                            LocalDateTime deferDateTime = deferDate.atTime(LocalTime.of(6, 0)); //Day starts at 6 AM
+
+                            mTaskScheduler.addDeferredTask(deferDateTime, nameText, descriptionText, new ArrayList<>());
+                        }
+                        catch(DateTimeParseException e)
+                        {
+                            Toast.makeText(TaskListActivity.this, getString(R.string.dateParseErrorISO8601), Toast.LENGTH_SHORT).show();
+                        }
                         break;
 
                     //Regular task
@@ -152,6 +175,68 @@ public class TaskListActivity extends AppCompatActivity
         });
 
         AlertDialog dialog = alertBuilder.create();
+        dialog.setOnShowListener(dialogInterface ->
+        {
+            Spinner taskTypeSpinner = ((AlertDialog)dialogInterface).findViewById(R.id.spinnerTaskType);
+
+            LinearLayout pickDeferDateLayout = ((AlertDialog)dialogInterface).findViewById(R.id.layoutSelectDeferDate);
+
+            TextView deferDateHintView = ((AlertDialog)dialogInterface).findViewById(R.id.textViewDeferTime);
+            EditText deferDateEditText = ((AlertDialog)dialogInterface).findViewById(R.id.editDeferDate);
+
+            assert taskTypeSpinner     != null;
+            assert pickDeferDateLayout != null;
+            assert deferDateHintView   != null;
+            assert deferDateEditText   != null;
+
+            pickDeferDateLayout.setVisibility(View.GONE);
+            deferDateHintView.setVisibility(View.GONE);
+            deferDateEditText.setVisibility(View.GONE);
+
+            pickDeferDateLayout.invalidate();
+
+            taskTypeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener()
+            {
+                @Override
+                public void onItemSelected(AdapterView<?> adapterView, View view, int index, long l)
+                {
+                    switch(index)
+                    {
+                        //Immediate task
+                        case 0:
+                            pickDeferDateLayout.setVisibility(View.GONE);
+                            deferDateHintView.setVisibility(View.GONE);
+                            deferDateEditText.setVisibility(View.GONE);
+                            break;
+
+                        //Deferred task
+                        case 1:
+                            pickDeferDateLayout.setVisibility(View.VISIBLE);
+                            deferDateHintView.setVisibility(View.VISIBLE);
+                            deferDateEditText.setVisibility(View.VISIBLE);
+                            break;
+
+                        //Regular task
+                        case 2:
+                            break;
+
+                        //Irregular task
+                        case 3:
+                            break;
+
+                        default:
+                            break;
+                    }
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> adapterView)
+                {
+                }
+            });
+
+        });
+
         dialog.show();
     }
 }

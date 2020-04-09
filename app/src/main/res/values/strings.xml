@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Advanced Unforgetter</string>
     <string name="title_activity_task_list">Tasks for today</string>\
     <string name="title_activity_task_archive">Done tasks</string>
@@ -7,9 +7,11 @@
     <string name="taskDescription">Description</string>
     <string name="newTaskDialogName">New task</string>
     <string name="taskType">Type:</string>
-    <string name="startDate">Start date:</string>
+    <string name="enlistDate">Enlist date:</string>
     <string name="createTask">DO IT, MOTHERFUCKER!</string>
 
     <string name="invalidTaskName">Invalid task name</string>
     <string name="openArchive">Open tasks archive</string>
+    <string name="unixStartDate" tools:ignore="TypographyDashes">1970-01-01</string>
+    <string name="dateParseErrorISO8601">Error parsing date. Enter the date in ISO 8601 format</string>
 </resources>

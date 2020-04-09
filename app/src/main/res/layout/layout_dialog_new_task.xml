@@ -57,4 +57,33 @@
                 android:entries="@array/taskTypes"/>
     </LinearLayout>
 
+    <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@+id/layoutSelectTaskType"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="8dp"
+            android:id="@+id/layoutSelectDeferDate">
+
+        <TextView
+                android:text="@string/enlistDate"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/textViewDeferTime"
+                android:layout_weight="1"
+                android:textAlignment="center"/>
+
+        <EditText
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:inputType="date"
+                android:ems="10"
+                android:id="@+id/editDeferDate"
+                android:layout_weight="1"
+                android:autofillHints=""
+                android:hint="@string/unixStartDate"/>
+    </LinearLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>
