@@ -3,6 +3,8 @@ package com.sixshaman.advancedunforgetter.list;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
 import android.widget.*;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -20,6 +22,7 @@ import com.sixshaman.advancedunforgetter.archive.ArchiveActivity;
 import com.sixshaman.advancedunforgetter.archive.TaskArchive;
 import com.sixshaman.advancedunforgetter.scheduler.TaskScheduler;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -117,14 +120,16 @@ public class TaskListActivity extends AppCompatActivity
 
             final Spinner taskTypeSpinner = ((AlertDialog)dialogInterface).findViewById(R.id.spinnerTaskType);
 
-            final EditText deferDateEditText = ((AlertDialog)dialogInterface).findViewById(R.id.editDeferDate);
+            final EditText deferDateEditText      = ((AlertDialog)dialogInterface).findViewById(R.id.editDeferDate);
+            final EditText repeatIntervalEditText = ((AlertDialog)dialogInterface).findViewById(R.id.editTextRepeatInterval);
 
             assert editTextName         != null;
             assert editTextNDescription != null;
 
             assert taskTypeSpinner != null;
 
-            assert deferDateEditText != null;
+            assert deferDateEditText      != null;
+            assert repeatIntervalEditText != null;
 
             String nameText = editTextName.getEditableText().toString();
             if(nameText.isEmpty())
@@ -141,32 +146,64 @@ public class TaskListActivity extends AppCompatActivity
                 {
                     //Immediate task
                     case 0:
+                    {
                         mTaskScheduler.addImmediateTask(nameText, descriptionText, new ArrayList<>());
                         break;
+                    }
 
                     //Deferred task
                     case 1:
+                    {
                         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
                         try
                         {
-                            LocalDate     deferDate     = LocalDate.parse(deferDateEditText.getEditableText().toString(), dateTimeFormatter);
+                            LocalDate deferDate = LocalDate.parse(deferDateEditText.getEditableText().toString(), dateTimeFormatter);
                             LocalDateTime deferDateTime = deferDate.atTime(LocalTime.of(6, 0)); //Day starts at 6 AM
 
                             mTaskScheduler.addDeferredTask(deferDateTime, nameText, descriptionText, new ArrayList<>());
                         }
-                        catch(DateTimeParseException e)
+                        catch (DateTimeParseException e)
                         {
                             Toast.makeText(TaskListActivity.this, getString(R.string.dateParseErrorISO8601), Toast.LENGTH_SHORT).show();
                         }
                         break;
+                    }
 
                     //Regular task
                     case 2:
+                    {
+                        try
+                        {
+                            int repeatInterval      = Integer.parseInt(repeatIntervalEditText.getEditableText().toString());
+                            Duration repeatDuration = Duration.ofDays(repeatInterval);
+
+                            mTaskScheduler.addRepeatedTask(repeatDuration, nameText, descriptionText, new ArrayList<>());
+                        }
+                        catch(NumberFormatException e)
+                        {
+                            Toast.makeText(TaskListActivity.this, getString(R.string.frequencyParseError), Toast.LENGTH_SHORT).show();
+                        }
+
                         break;
+                    }
 
                     //Irregular task
                     case 3:
+                    {
+                        try
+                        {
+                            int repeatInterval      = Integer.parseInt(repeatIntervalEditText.getEditableText().toString());
+                            Duration repeatDuration = Duration.ofDays(repeatInterval);
+
+                            mTaskScheduler.addTimeToTimeTask(repeatDuration, nameText, descriptionText, new ArrayList<>());
+                        }
+                        catch(NumberFormatException e)
+                        {
+                            Toast.makeText(TaskListActivity.this, getString(R.string.frequencyParseError), Toast.LENGTH_SHORT).show();
+                        }
+
                         break;
+                    }
 
                     default:
                         break;
@@ -179,21 +216,24 @@ public class TaskListActivity extends AppCompatActivity
         {
             Spinner taskTypeSpinner = ((AlertDialog)dialogInterface).findViewById(R.id.spinnerTaskType);
 
-            LinearLayout pickDeferDateLayout = ((AlertDialog)dialogInterface).findViewById(R.id.layoutSelectDeferDate);
+            LinearLayout pickDeferDateLayout      = ((AlertDialog)dialogInterface).findViewById(R.id.layoutSelectDeferDate);
+            LinearLayout pickRepeatIntervalLayout = ((AlertDialog)dialogInterface).findViewById(R.id.layoutSelectRepeatInterval);
 
-            TextView deferDateHintView = ((AlertDialog)dialogInterface).findViewById(R.id.textViewDeferTime);
-            EditText deferDateEditText = ((AlertDialog)dialogInterface).findViewById(R.id.editDeferDate);
+            TextView repeatIntervalTextView           = ((AlertDialog)dialogInterface).findViewById(R.id.textViewRepeatInterval);
+            TextView repeatIntervalTextViewBackground = ((AlertDialog)dialogInterface).findViewById(R.id.textViewBackHintAlwaysShown);
+            EditText repeatIntervalEditText           = ((AlertDialog)dialogInterface).findViewById(R.id.editTextRepeatInterval);
 
             assert taskTypeSpinner     != null;
-            assert pickDeferDateLayout != null;
-            assert deferDateHintView   != null;
-            assert deferDateEditText   != null;
+
+            assert pickDeferDateLayout      != null;
+            assert pickRepeatIntervalLayout != null;
+
+            assert repeatIntervalTextView           != null;
+            assert repeatIntervalTextViewBackground != null;
+            assert repeatIntervalEditText           != null;
 
             pickDeferDateLayout.setVisibility(View.GONE);
-            deferDateHintView.setVisibility(View.GONE);
-            deferDateEditText.setVisibility(View.GONE);
-
-            pickDeferDateLayout.invalidate();
+            pickRepeatIntervalLayout.setVisibility(View.GONE);
 
             taskTypeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener()
             {
@@ -205,23 +245,29 @@ public class TaskListActivity extends AppCompatActivity
                         //Immediate task
                         case 0:
                             pickDeferDateLayout.setVisibility(View.GONE);
-                            deferDateHintView.setVisibility(View.GONE);
-                            deferDateEditText.setVisibility(View.GONE);
+                            pickRepeatIntervalLayout.setVisibility(View.GONE);
                             break;
 
                         //Deferred task
                         case 1:
                             pickDeferDateLayout.setVisibility(View.VISIBLE);
-                            deferDateHintView.setVisibility(View.VISIBLE);
-                            deferDateEditText.setVisibility(View.VISIBLE);
+                            pickRepeatIntervalLayout.setVisibility(View.GONE);
                             break;
 
                         //Regular task
                         case 2:
+                            pickDeferDateLayout.setVisibility(View.GONE);
+                            pickRepeatIntervalLayout.setVisibility(View.VISIBLE);
+                            repeatIntervalTextView.setText(R.string.repeat_interval);
+                            repeatIntervalEditText.setText("1");
                             break;
 
                         //Irregular task
                         case 3:
+                            pickDeferDateLayout.setVisibility(View.GONE);
+                            pickRepeatIntervalLayout.setVisibility(View.VISIBLE);
+                            repeatIntervalTextView.setText(R.string.approx_frequency);
+                            repeatIntervalEditText.setText("7");
                             break;
 
                         default:
@@ -235,6 +281,32 @@ public class TaskListActivity extends AppCompatActivity
                 }
             });
 
+            repeatIntervalEditText.addTextChangedListener(new TextWatcher()
+            {
+                @Override
+                public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2)
+                {
+                }
+
+                @Override
+                public void onTextChanged(CharSequence charSequence, int i, int i1, int i2)
+                {
+                    try
+                    {
+                        int dayCount = Integer.parseInt(charSequence.toString());
+                        repeatIntervalTextViewBackground.setText(getResources().getQuantityString(R.plurals.plural_number_of_days, dayCount, dayCount));
+                    }
+                    catch(NumberFormatException e)
+                    {
+                        repeatIntervalTextViewBackground.setText(getString(R.string.placeholder_number_of_days));
+                    }
+                }
+
+                @Override
+                public void afterTextChanged(Editable editable)
+                {
+                }
+            });
         });
 
         dialog.show();

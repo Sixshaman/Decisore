@@ -7,4 +7,5 @@
     <color name="colorPrimaryAlert">#FFFFFF</color>
     <color name="colorPrimaryDarkAlert">#FF0000</color>
     <color name="colorAccentAlert">#700063</color>
+    <color name="empty_color">#00000000</color>
 </resources>

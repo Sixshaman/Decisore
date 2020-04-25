@@ -14,4 +14,13 @@
     <string name="openArchive">Open tasks archive</string>
     <string name="unixStartDate" tools:ignore="TypographyDashes">1970-01-01</string>
     <string name="dateParseErrorISO8601">Error parsing date. Enter the date in ISO 8601 format</string>
+    <string name="frequencyParseError">Please enter the correct frwquency in days</string>
+    <string name="repeat_interval">Repeat interval:</string>
+    <string name="approx_frequency">Approx frequency:</string>
+    <string name="placeholder_number_of_days">X days</string>
+
+    <plurals name="plural_number_of_days">
+        <item quantity="one">%1$d day</item>
+        <item quantity="other">%1$d days</item>
+    </plurals>
 </resources>
