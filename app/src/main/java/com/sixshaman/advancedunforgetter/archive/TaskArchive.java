@@ -1,6 +1,7 @@
 package com.sixshaman.advancedunforgetter.archive;
 
 import android.content.Context;
+import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
@@ -10,6 +11,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.sixshaman.advancedunforgetter.R;
+import com.sixshaman.advancedunforgetter.utils.LockedFile;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -18,6 +20,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.channels.FileLock;
 import java.util.ArrayList;
 
 //The task archive that contains all the finished tasks
@@ -28,8 +31,8 @@ public class TaskArchive extends RecyclerView.Adapter<TaskArchive.FinishedTaskVi
     //The list of all finished task
     private ArrayList<ArchivedTask> mFinishedTasks;
 
-    //The folder to store the config files
-    private String mConfigFolder;
+    //The file to store the scheduler data
+    private LockedFile mConfigFile;
 
     //The context for displaying the task list
     private Context mContext;
@@ -45,7 +48,7 @@ public class TaskArchive extends RecyclerView.Adapter<TaskArchive.FinishedTaskVi
     //Sets the folder to store the JSON config file
     public void setConfigFolder(String folder)
     {
-        mConfigFolder = folder;
+        mConfigFile = new LockedFile(folder + "/" + ARCHIVE_FILENAME);
     }
 
     //Adds a task to the archive
@@ -58,24 +61,35 @@ public class TaskArchive extends RecyclerView.Adapter<TaskArchive.FinishedTaskVi
         saveFinishedTasks();
     }
 
+    public void waitLock()
+    {
+        while(!mConfigFile.lock())
+        {
+            Log.d("LOCK", "Can't lock the list config file!");
+        }
+    }
+
+    public boolean tryLock()
+    {
+        return mConfigFile.lock();
+    }
+
+    public void unlock()
+    {
+        mConfigFile.unlock();
+    }
+
     //Loads finished tasks from JSON config file
     public void loadFinishedTasks()
     {
+        //There is a problemie-mie when tasks are imposible to load (due to a file lock, for example). What to do exactly?
+        //Solution: use waitLock() in these cases
+
         mFinishedTasks.clear();
 
         try
         {
-            BufferedReader bufferedReader = new BufferedReader(new FileReader(mConfigFolder + "/" + ARCHIVE_FILENAME));
-
-            String line;
-            StringBuilder fileContentsStringBuilder = new StringBuilder();
-
-            while((line = bufferedReader.readLine()) != null)
-            {
-                fileContentsStringBuilder.append(line);
-            }
-
-            String fileContents = fileContentsStringBuilder.toString();
+            String fileContents = mConfigFile.read();
             JSONObject jsonObject = new JSONObject(fileContents);
 
             JSONArray tasksJsonArray = jsonObject.getJSONArray("FINISHED_TASKS");
@@ -92,7 +106,7 @@ public class TaskArchive extends RecyclerView.Adapter<TaskArchive.FinishedTaskVi
                 }
             }
         }
-        catch(JSONException | IOException e)
+        catch(JSONException e)
         {
             e.printStackTrace();
         }
@@ -115,11 +129,9 @@ public class TaskArchive extends RecyclerView.Adapter<TaskArchive.FinishedTaskVi
 
             jsonObject.put("FINISHED_TASKS", tasksJsonArray);
 
-            FileWriter fileWriter = new FileWriter(mConfigFolder + "/" + ARCHIVE_FILENAME);
-            fileWriter.write(jsonObject.toString());
-            fileWriter.close();
+            mConfigFile.write(jsonObject.toString());
         }
-        catch(JSONException | IOException e)
+        catch(JSONException e)
         {
             e.printStackTrace();
         }

@@ -1,6 +1,7 @@
 package com.sixshaman.advancedunforgetter.list;
 
 import android.content.Context;
+import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
@@ -12,6 +13,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import com.sixshaman.advancedunforgetter.R;
 import com.sixshaman.advancedunforgetter.archive.TaskArchive;
+import com.sixshaman.advancedunforgetter.utils.LockedFile;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -35,8 +37,8 @@ public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
     //The archive to move finished tasks into
     private TaskArchive mArchive;
 
-    //The folder to store the config files
-    private String mConfigFolder;
+    //The file to store the tasks data
+    private LockedFile mConfigFile;
 
     //The context for displaying the task list
     private Context mContext;
@@ -57,7 +59,7 @@ public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
     //Sets the folder to store the JSON config file
     public void setConfigFolder(String folder)
     {
-        mConfigFolder = folder;
+        mConfigFile = new LockedFile(folder + "/" + LIST_FILENAME);
     }
 
     //Adds a task to the list
@@ -148,6 +150,24 @@ public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
         saveTasks();
     }
 
+    public void waitLock()
+    {
+        while(!mConfigFile.lock())
+        {
+            Log.d("LOCK", "Can't lock the list config file!");
+        }
+    }
+
+    public boolean tryLock()
+    {
+        return mConfigFile.lock();
+    }
+
+    public void unlock()
+    {
+        mConfigFile.unlock();
+    }
+
     //Loads tasks from JSON config file
     public void loadTasks()
     {
@@ -155,17 +175,7 @@ public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
 
         try
         {
-            BufferedReader bufferedReader = new BufferedReader(new FileReader(mConfigFolder + "/" + LIST_FILENAME));
-
-            String line;
-            StringBuilder fileContentsStringBuilder = new StringBuilder();
-
-            while((line = bufferedReader.readLine()) != null)
-            {
-                fileContentsStringBuilder.append(line);
-            }
-
-            String fileContents = fileContentsStringBuilder.toString();
+            String fileContents = mConfigFile.read();
             JSONObject jsonObject = new JSONObject(fileContents);
 
             JSONArray tasksJsonArray = jsonObject.getJSONArray("TASKS");
@@ -182,7 +192,7 @@ public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
                 }
             }
         }
-        catch(JSONException | IOException e)
+        catch(JSONException e)
         {
             e.printStackTrace();
         }
@@ -206,11 +216,9 @@ public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
 
             jsonObject.put("TASKS", tasksJsonArray);
 
-            FileWriter fileWriter = new FileWriter(mConfigFolder + "/" + LIST_FILENAME);
-            fileWriter.write(jsonObject.toString());
-            fileWriter.close();
+            mConfigFile.write(jsonObject.toString());
         }
-        catch(JSONException | IOException e)
+        catch(JSONException e)
         {
             e.printStackTrace();
         }

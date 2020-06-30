@@ -15,8 +15,10 @@ After removing the task from the scheduler:
 
 */
 
+import android.util.Log;
 import com.sixshaman.advancedunforgetter.list.EnlistedTask;
 import com.sixshaman.advancedunforgetter.list.TaskList;
+import com.sixshaman.advancedunforgetter.utils.LockedFile;
 import com.sixshaman.advancedunforgetter.utils.TaskIdGenerator;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -46,8 +48,8 @@ public class TaskScheduler
     //The main list of tasks that scheduler adds tasks to
     private TaskList mMainList;
 
-    //The folder to store the config files
-    private String mConfigFolder;
+    //The file to store the scheduler data
+    private LockedFile mConfigFile;
 
     //Creates a new task scheduler that is bound to mainList
     public TaskScheduler()
@@ -62,7 +64,7 @@ public class TaskScheduler
     //Sets the folder to store the JSON config file
     public void setConfigFolder(String folder)
     {
-        mConfigFolder = folder;
+        mConfigFile = new LockedFile(folder + "/" + SCHEDULER_FILENAME);
     }
 
     //Sets the task list to send scheduled tasks into
@@ -105,6 +107,24 @@ public class TaskScheduler
         mTaskPools = changedPools;
     }
 
+    public void waitLock()
+    {
+        while(!mConfigFile.lock())
+        {
+            Log.d("LOCK", "Can't lock the scheduler config file!");
+        }
+    }
+
+    public boolean tryLock()
+    {
+        return mConfigFile.lock();
+    }
+
+    public void unlock()
+    {
+        mConfigFile.unlock();
+    }
+
     //Loads tasks from JSON config file
     public void loadScheduledTasks()
     {
@@ -112,17 +132,7 @@ public class TaskScheduler
 
         try
         {
-            BufferedReader bufferedReader = new BufferedReader(new FileReader(mConfigFolder + "/" + SCHEDULER_FILENAME));
-
-            String line;
-            StringBuilder fileContentsStringBuilder = new StringBuilder();
-
-            while((line = bufferedReader.readLine()) != null)
-            {
-                fileContentsStringBuilder.append(line);
-            }
-
-            String fileContents = fileContentsStringBuilder.toString();
+            String fileContents = mConfigFile.read();
             JSONObject jsonObject = new JSONObject(fileContents);
 
             JSONArray poolsJsonArray = jsonObject.getJSONArray("POOLS");
@@ -139,7 +149,7 @@ public class TaskScheduler
                 }
             }
         }
-        catch(JSONException | IOException e)
+        catch(JSONException e)
         {
             e.printStackTrace();
         }
@@ -160,11 +170,9 @@ public class TaskScheduler
 
             jsonObject.put("POOLS", tasksJsonArray);
 
-            FileWriter fileWriter = new FileWriter(mConfigFolder + "/" + SCHEDULER_FILENAME);
-            fileWriter.write(jsonObject.toString());
-            fileWriter.close();
+            mConfigFile.write(jsonObject.toString());
         }
-        catch(JSONException | IOException e)
+        catch(JSONException e)
         {
             e.printStackTrace();
         }

@@ -82,6 +82,8 @@ public class TaskListActivity extends AppCompatActivity
         mTaskArchive.loadFinishedTasks();
 
         mTaskScheduler.setLastTaskId(mTaskList.getLastTaskId());
+
+        mTaskScheduler.update();
     }
 
     @Override
