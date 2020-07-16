@@ -77,9 +77,18 @@ public class TaskListActivity extends AppCompatActivity
         recyclerView.setAdapter(mTaskList);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
+        //We need to lock the file in the case of background tasks were updating it
+        mTaskScheduler.waitLock();
         mTaskScheduler.loadScheduledTasks();
+        mTaskScheduler.unlock();
+
+        mTaskList.waitLock();
         mTaskList.loadTasks();
+        mTaskList.unlock();
+
+        mTaskArchive.waitLock();
         mTaskArchive.loadFinishedTasks();
+        mTaskArchive.unlock();
 
         mTaskScheduler.setLastTaskId(mTaskList.getLastTaskId());
 

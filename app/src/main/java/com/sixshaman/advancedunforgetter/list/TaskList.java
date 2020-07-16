@@ -13,6 +13,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import com.sixshaman.advancedunforgetter.R;
 import com.sixshaman.advancedunforgetter.archive.TaskArchive;
+import com.sixshaman.advancedunforgetter.utils.FileLockException;
 import com.sixshaman.advancedunforgetter.utils.LockedFile;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -63,8 +64,17 @@ public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
     }
 
     //Adds a task to the list
-    public void addTask(EnlistedTask task)
+    public void addTask(EnlistedTask task) throws FileLockException
     {
+        //TODO: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        //TODO: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        //TODO: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        //TODO: WRITE THE ARCHITECTURE FOR FILE LOCKS
+        //A problematic example: we entered this function. The variable task CAN'T be lost, so we can't use tryLock.
+        //But while we do the stuff BEFORE saveTasks, the BACKGROUND UPDATER can lock the file AND OVERWRITE DATA.
+        //WE CAN'T ACCEPT IT, BUT WE ALSO CAN'T DO WAITLOCK BEFORE. AAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        //I need an architecture from ground up...
+
         int addPosition = -1;
         if(mTasks.isEmpty()) //Special case for the empty list
         {
@@ -137,17 +147,30 @@ public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
             return;
         }
 
-        int index = Collections.binarySearch(mTasks, task.getId());
-        if(index >= 0)
+        try
         {
-            mTasks.remove(index);
+            waitLock();
+            mArchive.waitLock();
+
+            int index = Collections.binarySearch(mTasks, task.getId());
+            if(index >= 0)
+            {
+                mTasks.remove(index);
+            }
+
+            mArchive.addTask(task.toArchived(LocalDateTime.now()));
+
+            notifyItemRemoved(index);
+            notifyItemRangeChanged(index, getItemCount());
+            saveTasks();
+
+            mArchive.unlock();
+            unlock();
         }
-
-        mArchive.addTask(task.toArchived(LocalDateTime.now()));
-
-        notifyItemRemoved(index);
-        notifyItemRangeChanged(index, getItemCount());
-        saveTasks();
+        catch (FileLockException e)
+        {
+            e.printStackTrace();
+        }
     }
 
     public void waitLock()
@@ -169,8 +192,13 @@ public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
     }
 
     //Loads tasks from JSON config file
-    public void loadTasks()
+    public void loadTasks() throws FileLockException
     {
+        if(!mConfigFile.isLocked())
+        {
+            throw new FileLockException();
+        }
+
         mTasks.clear();
 
         try
@@ -202,8 +230,13 @@ public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
     }
 
     //Saves tasks in JSON config file
-    public void saveTasks()
+    public void saveTasks() throws FileLockException
     {
+        if(!mConfigFile.isLocked())
+        {
+            throw new FileLockException();
+        }
+
         try
         {
             JSONObject jsonObject    = new JSONObject();

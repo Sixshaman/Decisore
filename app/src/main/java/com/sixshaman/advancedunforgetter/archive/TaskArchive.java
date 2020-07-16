@@ -11,15 +11,13 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.sixshaman.advancedunforgetter.R;
+import com.sixshaman.advancedunforgetter.utils.FileLockException;
 import com.sixshaman.advancedunforgetter.utils.LockedFile;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.nio.channels.FileLock;
 import java.util.ArrayList;
 
@@ -52,7 +50,7 @@ public class TaskArchive extends RecyclerView.Adapter<TaskArchive.FinishedTaskVi
     }
 
     //Adds a task to the archive
-    public void addTask(ArchivedTask task)
+    public void addTask(ArchivedTask task) throws FileLockException
     {
         //Forever
         mFinishedTasks.add(task);
@@ -80,10 +78,12 @@ public class TaskArchive extends RecyclerView.Adapter<TaskArchive.FinishedTaskVi
     }
 
     //Loads finished tasks from JSON config file
-    public void loadFinishedTasks()
+    public void loadFinishedTasks() throws FileLockException
     {
-        //There is a problemie-mie when tasks are imposible to load (due to a file lock, for example). What to do exactly?
-        //Solution: use waitLock() in these cases
+        if(!mConfigFile.isLocked())
+        {
+            throw new FileLockException();
+        }
 
         mFinishedTasks.clear();
 
@@ -115,8 +115,13 @@ public class TaskArchive extends RecyclerView.Adapter<TaskArchive.FinishedTaskVi
     }
 
     //Saves finished tasks in JSON config file
-    public void saveFinishedTasks()
+    public void saveFinishedTasks() throws FileLockException
     {
+        if(!mConfigFile.isLocked())
+        {
+            throw new FileLockException();
+        }
+
         try
         {
             JSONObject jsonObject    = new JSONObject();
