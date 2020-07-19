@@ -24,6 +24,7 @@ public class BackgroundUpdater extends Worker
     @Override
     public Result doWork()
     {
+        //TODO: Worker API implementation
         Data workParamsData = getInputData();
         String configFolder = workParamsData.getString(DATA_CONFIG_FOLDER);
 
