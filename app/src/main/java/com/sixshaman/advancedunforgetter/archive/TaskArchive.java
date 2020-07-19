@@ -11,7 +11,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.sixshaman.advancedunforgetter.R;
-import com.sixshaman.advancedunforgetter.utils.FileLockException;
+import com.sixshaman.advancedunforgetter.utils.BaseFileLockException;
 import com.sixshaman.advancedunforgetter.utils.LockedFile;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -24,6 +24,10 @@ import java.util.ArrayList;
 //The task archive that contains all the finished tasks
 public class TaskArchive extends RecyclerView.Adapter<TaskArchive.FinishedTaskViewHolder>
 {
+    class ArchiveFileLockException extends BaseFileLockException
+    {
+    }
+
     private static final String ARCHIVE_FILENAME = "TaskArchive.json";
 
     //The list of all finished task
@@ -50,7 +54,7 @@ public class TaskArchive extends RecyclerView.Adapter<TaskArchive.FinishedTaskVi
     }
 
     //Adds a task to the archive
-    public void addTask(ArchivedTask task) throws FileLockException
+    public void addTask(ArchivedTask task)
     {
         //Forever
         mFinishedTasks.add(task);
@@ -78,11 +82,11 @@ public class TaskArchive extends RecyclerView.Adapter<TaskArchive.FinishedTaskVi
     }
 
     //Loads finished tasks from JSON config file
-    public void loadFinishedTasks() throws FileLockException
+    public void loadFinishedTasks() throws ArchiveFileLockException
     {
         if(!mConfigFile.isLocked())
         {
-            throw new FileLockException();
+            throw new ArchiveFileLockException();
         }
 
         mFinishedTasks.clear();
@@ -115,11 +119,11 @@ public class TaskArchive extends RecyclerView.Adapter<TaskArchive.FinishedTaskVi
     }
 
     //Saves finished tasks in JSON config file
-    public void saveFinishedTasks() throws FileLockException
+    public void saveFinishedTasks() throws ArchiveFileLockException
     {
         if(!mConfigFile.isLocked())
         {
-            throw new FileLockException();
+            throw new ArchiveFileLockException();
         }
 
         try

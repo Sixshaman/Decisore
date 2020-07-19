@@ -13,7 +13,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 import com.sixshaman.advancedunforgetter.R;
 import com.sixshaman.advancedunforgetter.archive.TaskArchive;
-import com.sixshaman.advancedunforgetter.utils.FileLockException;
+import com.sixshaman.advancedunforgetter.utils.BaseFileLockException;
+import com.sixshaman.advancedunforgetter.utils.BaseFileLockException;
 import com.sixshaman.advancedunforgetter.utils.LockedFile;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -30,6 +31,10 @@ import java.util.Comparator;
 
 public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
 {
+    class ListFileLockException extends BaseFileLockException
+    {
+    }
+
     private static final String LIST_FILENAME = "TaskList.json";
 
     //All tasks to be done for today, sorted by ids. Or tomorrow. Or within a year. It's up to the user to decide
@@ -64,7 +69,7 @@ public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
     }
 
     //Adds a task to the list
-    public void addTask(EnlistedTask task) throws FileLockException
+    public void addTask(EnlistedTask task)
     {
         //TODO: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
         //TODO: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
@@ -147,30 +152,23 @@ public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
             return;
         }
 
-        try
+        waitLock();
+        mArchive.waitLock();
+
+        int index = Collections.binarySearch(mTasks, task.getId());
+        if(index >= 0)
         {
-            waitLock();
-            mArchive.waitLock();
-
-            int index = Collections.binarySearch(mTasks, task.getId());
-            if(index >= 0)
-            {
-                mTasks.remove(index);
-            }
-
-            mArchive.addTask(task.toArchived(LocalDateTime.now()));
-
-            notifyItemRemoved(index);
-            notifyItemRangeChanged(index, getItemCount());
-            saveTasks();
-
-            mArchive.unlock();
-            unlock();
+            mTasks.remove(index);
         }
-        catch (FileLockException e)
-        {
-            e.printStackTrace();
-        }
+
+        mArchive.addTask(task.toArchived(LocalDateTime.now()));
+
+        notifyItemRemoved(index);
+        notifyItemRangeChanged(index, getItemCount());
+        saveTasks();
+
+        mArchive.unlock();
+        unlock();
     }
 
     public void waitLock()
@@ -192,11 +190,11 @@ public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
     }
 
     //Loads tasks from JSON config file
-    public void loadTasks() throws FileLockException
+    public void loadTasks() throws ListFileLockException
     {
         if(!mConfigFile.isLocked())
         {
-            throw new FileLockException();
+            throw new ListFileLockException();
         }
 
         mTasks.clear();
@@ -230,11 +228,11 @@ public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
     }
 
     //Saves tasks in JSON config file
-    public void saveTasks() throws FileLockException
+    public void saveTasks() throws ListFileLockException
     {
         if(!mConfigFile.isLocked())
         {
-            throw new FileLockException();
+            throw new ListFileLockException();
         }
 
         try

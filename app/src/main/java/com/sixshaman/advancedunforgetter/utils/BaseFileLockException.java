@@ -2,9 +2,9 @@ package com.sixshaman.advancedunforgetter.utils;
 
 import java.io.IOException;
 
-public class FileLockException extends IOException
+public class BaseFileLockException extends IOException
 {
-    public FileLockException()
+    public BaseFileLockException()
     {
     }
 }
