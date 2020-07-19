@@ -29,6 +29,11 @@ public class LockedFile
         mOutputStreamWriter = null;
     }
 
+    public boolean isLocked()
+    {
+        return mFileLock != null && mFileLock.isValid();
+    }
+
     //Lock the file, preventing all processes to access this file
     public boolean lock()
     {

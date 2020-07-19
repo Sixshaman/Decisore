@@ -40,6 +40,8 @@ public class BackgroundUpdater extends Worker
         list.loadTasks();
 
         scheduler.update();
+
+        //TODO: update other layouts
         return Result.success();
     }
 }
