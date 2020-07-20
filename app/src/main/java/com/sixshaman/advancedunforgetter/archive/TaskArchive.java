@@ -24,7 +24,7 @@ import java.util.ArrayList;
 //The task archive that contains all the finished tasks
 public class TaskArchive extends RecyclerView.Adapter<TaskArchive.FinishedTaskViewHolder>
 {
-    class ArchiveFileLockException extends BaseFileLockException
+    public static class ArchiveFileLockException extends BaseFileLockException
     {
     }
 
@@ -54,7 +54,7 @@ public class TaskArchive extends RecyclerView.Adapter<TaskArchive.FinishedTaskVi
     }
 
     //Adds a task to the archive
-    public void addTask(ArchivedTask task)
+    public void addTask(ArchivedTask task) throws ArchiveFileLockException
     {
         //Forever
         mFinishedTasks.add(task);

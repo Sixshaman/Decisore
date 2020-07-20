@@ -36,7 +36,7 @@ import java.util.ArrayList;
 //The class to schedule all deferred tasks. The model for the scheduler UI
 public class TaskScheduler
 {
-    class SchedulerFileLockException extends BaseFileLockException
+    public static class SchedulerFileLockException extends BaseFileLockException
     {
     }
 
@@ -207,7 +207,7 @@ public class TaskScheduler
     }
 
     //Creates a new one-time task and immediately adds it to the main list
-    public void addImmediateTask(String taskName, String taskDescription, ArrayList<String> taskTags)
+    public void addImmediateTask(String taskName, String taskDescription, ArrayList<String> taskTags) throws TaskList.ListFileLockException
     {
         long          taskId      = mIdGenerator.generateNextId();
         LocalDateTime currentTime = LocalDateTime.now();
@@ -220,43 +220,43 @@ public class TaskScheduler
     }
 
     //Creates a new one-time task and schedules it to be added to the main list later
-    public void addDeferredTask(LocalDateTime deferTime, String taskName, String taskDescription, ArrayList<String> taskTags)
+    public void addDeferredTask(LocalDateTime deferTime, String taskName, String taskDescription, ArrayList<String> taskTags) throws SchedulerFileLockException
     {
         addTask(null,null, deferTime, Duration.ofHours(0),0.0f, taskName, taskDescription, taskTags);
     }
 
     //Creates a new repeated task
-    public void addRepeatedTask(Duration repeatDuration, String taskName, String taskDescription, ArrayList<String> taskTags)
+    public void addRepeatedTask(Duration repeatDuration, String taskName, String taskDescription, ArrayList<String> taskTags) throws SchedulerFileLockException
     {
         addTask(null,null, LocalDateTime.now(), repeatDuration,1.0f, taskName, taskDescription, taskTags);
     }
 
     //Creates a new time-to-time task
-    public void addTimeToTimeTask(Duration approxRepeatDuration, String taskName, String taskDescription, ArrayList<String> taskTags)
+    public void addTimeToTimeTask(Duration approxRepeatDuration, String taskName, String taskDescription, ArrayList<String> taskTags) throws SchedulerFileLockException
     {
         addTask(null,null, LocalDateTime.now(), approxRepeatDuration,0.5f, taskName, taskDescription, taskTags);
     }
 
     //Creates a new one-time immediate task and adds it to the selected task chain
-    public void addImmediateChainedTask(TaskChain chain, String taskName, String taskDescription, ArrayList<String> taskTags)
+    public void addImmediateChainedTask(TaskChain chain, String taskName, String taskDescription, ArrayList<String> taskTags) throws SchedulerFileLockException
     {
         addTask(null, chain, LocalDateTime.now(), Duration.ofHours(0), 0.0f, taskName, taskDescription, taskTags);
     }
 
     //Creates a new one-time deferred task and adds it to the selected task chain
-    public void addDeferredChainedTask(TaskChain chain, LocalDateTime deferTime, String taskName, String taskDescription, ArrayList<String> taskTags)
+    public void addDeferredChainedTask(TaskChain chain, LocalDateTime deferTime, String taskName, String taskDescription, ArrayList<String> taskTags) throws SchedulerFileLockException
     {
         addTask(null, chain, deferTime, Duration.ofHours(0), 0.0f, taskName, taskDescription, taskTags);
     }
 
     //Creates a new task and adds it to the provided pool
-    public void addPoolTask(TaskPool pool, LocalDateTime deferTime, String taskName, String taskDescription, ArrayList<String> taskTags)
+    public void addPoolTask(TaskPool pool, LocalDateTime deferTime, String taskName, String taskDescription, ArrayList<String> taskTags) throws SchedulerFileLockException
     {
         addTask( pool, null, deferTime, Duration.ofHours(0), 0.0f, taskName, taskDescription, taskTags);
     }
 
     //Creates a new explicit task chain
-    public void addTaskChain(String name, String description)
+    public void addTaskChain(String name, String description) throws SchedulerFileLockException
     {
         //Create a new unnamed task pool to hold the chain
         TaskPool pool = new TaskPool("", "");
@@ -266,7 +266,7 @@ public class TaskScheduler
     }
 
     //Creates a new explicit task pool
-    public void addTaskPool(String name, String description)
+    public void addTaskPool(String name, String description) throws SchedulerFileLockException
     {
         TaskPool pool = new TaskPool(name, description);
         mTaskPools.add(pool);
@@ -274,7 +274,7 @@ public class TaskScheduler
     }
 
     //Creates a new explicit task chain and adds it to the provided pool
-    public void addTaskChainToPool(TaskPool pool, String name, String description)
+    public void addTaskChainToPool(TaskPool pool, String name, String description) throws SchedulerFileLockException
     {
         TaskChain chain = new TaskChain(name, description);
         pool.addTaskSource(chain);
@@ -284,7 +284,7 @@ public class TaskScheduler
     //Adds a general task to task pool pool or task chain chain scheduled to be added at deferTime with repeat duration repeatDuration and repeat probability repeatProbability
     private void addTask(TaskPool pool, TaskChain chain, LocalDateTime deferTime,
                          Duration repeatDuration, float repeatProbability,
-                         String taskName, String taskDescription, ArrayList<String> taskTags)
+                         String taskName, String taskDescription, ArrayList<String> taskTags) throws SchedulerFileLockException
     {
         long          taskId      = mIdGenerator.generateNextId();
         LocalDateTime currentTime = LocalDateTime.now();
@@ -337,7 +337,7 @@ public class TaskScheduler
     }
 
     //Moves the task to the main task list
-    private void moveTaskToMainList(EnlistedTask task)
+    private void moveTaskToMainList(EnlistedTask task) throws TaskList.ListFileLockException
     {
         if(task != null)
         {

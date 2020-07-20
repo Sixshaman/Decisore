@@ -31,7 +31,7 @@ import java.util.Comparator;
 
 public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
 {
-    class ListFileLockException extends BaseFileLockException
+    public static class ListFileLockException extends BaseFileLockException
     {
     }
 
@@ -69,17 +69,8 @@ public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
     }
 
     //Adds a task to the list
-    public void addTask(EnlistedTask task)
+    public void addTask(EnlistedTask task) throws ListFileLockException
     {
-        //TODO: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-        //TODO: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-        //TODO: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-        //TODO: WRITE THE ARCHITECTURE FOR FILE LOCKS
-        //A problematic example: we entered this function. The variable task CAN'T be lost, so we can't use tryLock.
-        //But while we do the stuff BEFORE saveTasks, the BACKGROUND UPDATER can lock the file AND OVERWRITE DATA.
-        //WE CAN'T ACCEPT IT, BUT WE ALSO CAN'T DO WAITLOCK BEFORE. AAAAAAAAAAAAAAAAAAAAAAAAAAAA
-        //I need an architecture from ground up...
-
         int addPosition = -1;
         if(mTasks.isEmpty()) //Special case for the empty list
         {
