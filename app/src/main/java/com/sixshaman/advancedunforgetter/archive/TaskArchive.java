@@ -68,6 +68,14 @@ public class TaskArchive extends RecyclerView.Adapter<TaskArchive.FinishedTaskVi
         while(!mConfigFile.lock())
         {
             Log.d("LOCK", "Can't lock the list config file!");
+            try
+            {
+                Thread.sleep(100);
+            }
+            catch (InterruptedException e)
+            {
+                e.printStackTrace();
+            }
         }
     }
 

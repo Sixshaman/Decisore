@@ -21,6 +21,7 @@ import com.sixshaman.advancedunforgetter.R;
 import com.sixshaman.advancedunforgetter.archive.ArchiveActivity;
 import com.sixshaman.advancedunforgetter.archive.TaskArchive;
 import com.sixshaman.advancedunforgetter.scheduler.TaskScheduler;
+import com.sixshaman.advancedunforgetter.utils.BaseFileLockException;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -77,22 +78,29 @@ public class TaskListActivity extends AppCompatActivity
         recyclerView.setAdapter(mTaskList);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        //We need to lock the file in the case of background tasks were updating it
+        //We need to lock the file in case of background processes updating it
         mTaskScheduler.waitLock();
-        mTaskScheduler.loadScheduledTasks();
-        mTaskScheduler.unlock();
-
         mTaskList.waitLock();
-        mTaskList.loadTasks();
-        mTaskList.unlock();
-
         mTaskArchive.waitLock();
-        mTaskArchive.loadFinishedTasks();
+
+        try
+        {
+            mTaskScheduler.loadScheduledTasks();
+            mTaskList.loadTasks();
+            mTaskArchive.loadFinishedTasks();
+
+            mTaskScheduler.setLastTaskId(mTaskList.getLastTaskId());
+
+            mTaskScheduler.update();
+        }
+        catch (BaseFileLockException e)
+        {
+            e.printStackTrace();
+        }
+
         mTaskArchive.unlock();
-
-        mTaskScheduler.setLastTaskId(mTaskList.getLastTaskId());
-
-        mTaskScheduler.update();
+        mTaskList.unlock();
+        mTaskScheduler.unlock();
     }
 
     @Override
@@ -153,72 +161,90 @@ public class TaskListActivity extends AppCompatActivity
                 String descriptionText = editTextNDescription.getEditableText().toString();
 
                 int taskTypeIndex = taskTypeSpinner.getSelectedItemPosition();
-                switch(taskTypeIndex)
+
+                mTaskScheduler.waitLock();
+                mTaskList.waitLock();
+
+                try
                 {
-                    //Immediate task
-                    case 0:
+                    switch(taskTypeIndex)
                     {
-                        mTaskScheduler.addImmediateTask(nameText, descriptionText, new ArrayList<>());
-                        break;
+                        //Immediate task
+                        case 0:
+                        {
+                            mTaskScheduler.addImmediateTask(nameText, descriptionText, new ArrayList<>());
+                            break;
+                        }
+
+                        //Deferred task
+                        case 1:
+                        {
+                            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                            try
+                            {
+                                LocalDate deferDate = LocalDate.parse(deferDateEditText.getEditableText().toString(), dateTimeFormatter);
+                                LocalDateTime deferDateTime = deferDate.atTime(LocalTime.of(6, 0)); //Day starts at 6 AM
+
+                                mTaskScheduler.addDeferredTask(deferDateTime, nameText, descriptionText, new ArrayList<>());
+                            }
+                            catch (DateTimeParseException e)
+                            {
+                                Toast.makeText(TaskListActivity.this, getString(R.string.dateParseErrorISO8601), Toast.LENGTH_SHORT).show();
+                            }
+                            break;
+                        }
+
+                        //Regular task
+                        case 2:
+                        {
+                            try
+                            {
+                                int repeatInterval      = Integer.parseInt(repeatIntervalEditText.getEditableText().toString());
+                                Duration repeatDuration = Duration.ofDays(repeatInterval);
+
+                                mTaskScheduler.addRepeatedTask(repeatDuration, nameText, descriptionText, new ArrayList<>());
+                            }
+                            catch(NumberFormatException e)
+                            {
+                                Toast.makeText(TaskListActivity.this, getString(R.string.frequencyParseError), Toast.LENGTH_SHORT).show();
+                            }
+                            catch(TaskScheduler.SchedulerFileLockException e)
+                            {
+                                e.printStackTrace();
+                            }
+
+                            break;
+                        }
+
+                        //Irregular task
+                        case 3:
+                        {
+                            try
+                            {
+                                int repeatInterval      = Integer.parseInt(repeatIntervalEditText.getEditableText().toString());
+                                Duration repeatDuration = Duration.ofDays(repeatInterval);
+
+                                mTaskScheduler.addTimeToTimeTask(repeatDuration, nameText, descriptionText, new ArrayList<>());
+                            }
+                            catch(NumberFormatException e)
+                            {
+                                Toast.makeText(TaskListActivity.this, getString(R.string.frequencyParseError), Toast.LENGTH_SHORT).show();
+                            }
+
+                            break;
+                        }
+
+                        default:
+                            break;
                     }
-
-                    //Deferred task
-                    case 1:
-                    {
-                        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-                        try
-                        {
-                            LocalDate deferDate = LocalDate.parse(deferDateEditText.getEditableText().toString(), dateTimeFormatter);
-                            LocalDateTime deferDateTime = deferDate.atTime(LocalTime.of(6, 0)); //Day starts at 6 AM
-
-                            mTaskScheduler.addDeferredTask(deferDateTime, nameText, descriptionText, new ArrayList<>());
-                        }
-                        catch (DateTimeParseException e)
-                        {
-                            Toast.makeText(TaskListActivity.this, getString(R.string.dateParseErrorISO8601), Toast.LENGTH_SHORT).show();
-                        }
-                        break;
-                    }
-
-                    //Regular task
-                    case 2:
-                    {
-                        try
-                        {
-                            int repeatInterval      = Integer.parseInt(repeatIntervalEditText.getEditableText().toString());
-                            Duration repeatDuration = Duration.ofDays(repeatInterval);
-
-                            mTaskScheduler.addRepeatedTask(repeatDuration, nameText, descriptionText, new ArrayList<>());
-                        }
-                        catch(NumberFormatException e)
-                        {
-                            Toast.makeText(TaskListActivity.this, getString(R.string.frequencyParseError), Toast.LENGTH_SHORT).show();
-                        }
-
-                        break;
-                    }
-
-                    //Irregular task
-                    case 3:
-                    {
-                        try
-                        {
-                            int repeatInterval      = Integer.parseInt(repeatIntervalEditText.getEditableText().toString());
-                            Duration repeatDuration = Duration.ofDays(repeatInterval);
-
-                            mTaskScheduler.addTimeToTimeTask(repeatDuration, nameText, descriptionText, new ArrayList<>());
-                        }
-                        catch(NumberFormatException e)
-                        {
-                            Toast.makeText(TaskListActivity.this, getString(R.string.frequencyParseError), Toast.LENGTH_SHORT).show();
-                        }
-
-                        break;
-                    }
-
-                    default:
-                        break;
                 }
+                catch (BaseFileLockException e)
+                {
+                    e.printStackTrace();
+                }
+
+                mTaskList.unlock();
+                mTaskScheduler.unlock();
             }
         });
 

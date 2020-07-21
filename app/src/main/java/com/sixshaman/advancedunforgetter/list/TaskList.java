@@ -71,6 +71,11 @@ public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
     //Adds a task to the list
     public void addTask(EnlistedTask task) throws ListFileLockException
     {
+        if(task == null)
+        {
+            return;
+        }
+
         int addPosition = -1;
         if(mTasks.isEmpty()) //Special case for the empty list
         {
@@ -135,38 +140,19 @@ public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
         return (Collections.binarySearch(mTasks, taskId) >= 0);
     }
 
-    //Removes the task from the list
-    public void moveTaskToArchive(EnlistedTask task)
-    {
-        if(mArchive == null)
-        {
-            return;
-        }
-
-        waitLock();
-        mArchive.waitLock();
-
-        int index = Collections.binarySearch(mTasks, task.getId());
-        if(index >= 0)
-        {
-            mTasks.remove(index);
-        }
-
-        mArchive.addTask(task.toArchived(LocalDateTime.now()));
-
-        notifyItemRemoved(index);
-        notifyItemRangeChanged(index, getItemCount());
-        saveTasks();
-
-        mArchive.unlock();
-        unlock();
-    }
-
     public void waitLock()
     {
         while(!mConfigFile.lock())
         {
-            Log.d("LOCK", "Can't lock the list config file!");
+            try
+            {
+                Log.d("LOCK", "Can't lock the list config file!");
+                Thread.sleep(100);
+            }
+            catch(InterruptedException e)
+            {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -259,6 +245,19 @@ public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
         }
     }
 
+    private void removeTask(EnlistedTask task) throws ListFileLockException
+    {
+        int index = Collections.binarySearch(mTasks, task.getId());
+        if(index >= 0)
+        {
+            mTasks.remove(index);
+        }
+
+        notifyItemRemoved(index);
+        notifyItemRangeChanged(index, getItemCount());
+        saveTasks();
+    }
+
     @NonNull
     @Override
     public TaskList.TaskViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i)
@@ -274,7 +273,30 @@ public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
     {
         taskViewHolder.mTextView.setText(mTasks.get(position).getName());
 
-        taskViewHolder.mCheckbox.setOnClickListener(view -> moveTaskToArchive(mTasks.get(position)));
+        taskViewHolder.mCheckbox.setOnClickListener(view ->
+        {
+            if(mArchive == null)
+            {
+                return;
+            }
+
+            try
+            {
+                EnlistedTask taskToRemove = mTasks.get(position);
+                mArchive.waitLock();
+                this.waitLock();
+
+                mArchive.addTask(taskToRemove.toArchived(LocalDateTime.now()));
+                removeTask(taskToRemove);
+
+                this.unlock();
+                mArchive.unlock();
+            }
+            catch (BaseFileLockException e)
+            {
+                e.printStackTrace();
+            }
+        });
 
         taskViewHolder.mParentLayout.setOnClickListener(view -> Toast.makeText(mContext, mTasks.get(position).getDescription(), Toast.LENGTH_LONG).show());
 

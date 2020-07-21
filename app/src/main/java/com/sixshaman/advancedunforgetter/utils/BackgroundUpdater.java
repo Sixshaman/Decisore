@@ -36,10 +36,26 @@ public class BackgroundUpdater extends Worker
         scheduler.setConfigFolder(configFolder);
         list.setConfigFolder(configFolder);
 
-        scheduler.loadScheduledTasks();
-        list.loadTasks();
+        boolean schedulerLocked = scheduler.tryLock();
+        boolean listLocked      = list.tryLock();
 
-        scheduler.update();
+        if(schedulerLocked && listLocked)
+        {
+            try
+            {
+                scheduler.loadScheduledTasks();
+                list.loadTasks();
+
+                scheduler.update();
+            }
+            catch(BaseFileLockException e)
+            {
+                e.printStackTrace();
+            }
+        }
+
+        scheduler.unlock();
+        list.unlock();
 
         //TODO: update other layouts
         return Result.success();

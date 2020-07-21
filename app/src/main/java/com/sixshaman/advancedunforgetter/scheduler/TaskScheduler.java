@@ -79,11 +79,9 @@ public class TaskScheduler
     }
 
     //Updates the task scheduler: adds all ready-to-be-done tasks to the main list, reschedules tasks, updates chains and pools
-    public void update()
+    public void update() throws TaskList.ListFileLockException, SchedulerFileLockException
     {
         ArrayList<TaskPool> changedPools = new ArrayList<>(); //Rebuild task pool list after each update
-
-        mMainList.waitLock();
 
         LocalDateTime currentDateTime = LocalDateTime.now();
         for(TaskPool pool: mTaskPools)
@@ -92,7 +90,7 @@ public class TaskScheduler
             {
                 //Don't need to check if the last task is done
                 EnlistedTask task = pool.getRandomTask(currentDateTime);
-                moveTaskToMainList(task);
+                mMainList.addTask(task);
             }
             else
             {
@@ -100,7 +98,7 @@ public class TaskScheduler
                 if(!mMainList.isTaskInList(pool.getLastProvidedTaskId()))
                 {
                     EnlistedTask task = pool.getRandomTask(currentDateTime);
-                    moveTaskToMainList(task);
+                    mMainList.addTask(task);
                 }
             }
 
@@ -110,8 +108,6 @@ public class TaskScheduler
                 changedPools.add(pool);
             }
         }
-
-        mMainList.unlock();
 
         mTaskPools = changedPools;
         saveScheduledTasks();
@@ -215,7 +211,7 @@ public class TaskScheduler
         EnlistedTask task = new EnlistedTask(taskId, currentTime, currentTime, taskName, taskDescription, taskTags);
 
         mMainList.waitLock();
-        moveTaskToMainList(task);
+        mMainList.addTask(task);
         mMainList.unlock();
     }
 
@@ -334,14 +330,5 @@ public class TaskScheduler
         }
 
         mIdGenerator.setFirstId(maxId);
-    }
-
-    //Moves the task to the main task list
-    private void moveTaskToMainList(EnlistedTask task) throws TaskList.ListFileLockException
-    {
-        if(task != null)
-        {
-            mMainList.addTask(task);
-        }
     }
 }

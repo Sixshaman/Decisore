@@ -38,6 +38,15 @@ public class ArchiveActivity extends AppCompatActivity
         recyclerView.setAdapter(mArchive);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        mArchive.loadFinishedTasks();
+        try
+        {
+            mArchive.waitLock();
+            mArchive.loadFinishedTasks();
+            mArchive.unlock();
+        }
+        catch(TaskArchive.ArchiveFileLockException e)
+        {
+            e.printStackTrace();
+        }
     }
 }
