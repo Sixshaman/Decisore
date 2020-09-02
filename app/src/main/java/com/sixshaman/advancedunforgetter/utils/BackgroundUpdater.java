@@ -6,7 +6,7 @@ import androidx.work.Data;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 import com.sixshaman.advancedunforgetter.list.TaskList;
-import com.sixshaman.advancedunforgetter.scheduler.TaskScheduler;
+import com.sixshaman.advancedunforgetter.scheduler.*;
 
 //The class to do background updates
 public class BackgroundUpdater extends Worker
@@ -25,6 +25,7 @@ public class BackgroundUpdater extends Worker
     public Result doWork()
     {
         //TODO: Worker API implementation
+        //https://www.youtube.com/watch?v=83a4rYXsDs0
         Data workParamsData = getInputData();
         String configFolder = workParamsData.getString(DATA_CONFIG_FOLDER);
 

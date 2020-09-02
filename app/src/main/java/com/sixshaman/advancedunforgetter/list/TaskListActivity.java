@@ -8,6 +8,8 @@ import android.text.TextWatcher;
 import android.view.View;
 import android.widget.*;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -19,8 +21,9 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import com.sixshaman.advancedunforgetter.R;
 import com.sixshaman.advancedunforgetter.archive.ArchiveActivity;
-import com.sixshaman.advancedunforgetter.archive.TaskArchive;
-import com.sixshaman.advancedunforgetter.scheduler.TaskScheduler;
+import com.sixshaman.advancedunforgetter.archive.*;
+import com.sixshaman.advancedunforgetter.scheduler.*;
+import com.sixshaman.advancedunforgetter.utils.*;
 import com.sixshaman.advancedunforgetter.utils.BaseFileLockException;
 
 import java.time.Duration;
@@ -32,6 +35,7 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 public class TaskListActivity extends AppCompatActivity
 {
@@ -59,6 +63,7 @@ public class TaskListActivity extends AppCompatActivity
     @Override
     protected void onResume()
     {
+        //NEXT: SCHEDULER INTERFACE
         super.onResume();
 
         mTaskArchive   = new TaskArchive();
@@ -101,6 +106,12 @@ public class TaskListActivity extends AppCompatActivity
         mTaskArchive.unlock();
         mTaskList.unlock();
         mTaskScheduler.unlock();
+
+        //Guess I just need to read this
+        //https://www.youtube.com/watch?v=83a4rYXsDs0
+        PeriodicWorkRequest.Builder builder = new PeriodicWorkRequest.Builder(BackgroundUpdater.class, 1, TimeUnit.HOURS);
+        PeriodicWorkRequest workRequest = builder.build();
+        WorkManager.getInstance(this).enqueue(workRequest);
     }
 
     @Override

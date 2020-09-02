@@ -36,6 +36,12 @@ import java.util.ArrayList;
 //The class to schedule all deferred tasks. The model for the scheduler UI
 public class TaskScheduler
 {
+    //Our next big thing is to add a scheduler activity!
+    //The plan:
+    // - Main scheduler tab, showing the list of deferred tasks and daily/time-to-time tasks
+    // - Task chain tab, showing the list of individual task chains. Click on an element opens a new window with the list of tasks in the chain
+    // - Task pool tab, showing the list of task pools. Click on an element opens a new window with pool info and the list of task sources. Click on a task source opens another window with task source info.
+
     public static class SchedulerFileLockException extends BaseFileLockException
     {
     }
