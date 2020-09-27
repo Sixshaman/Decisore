@@ -42,6 +42,12 @@ public class TaskScheduler
     // - Task chain tab, showing the list of individual task chains. Click on an element opens a new window with the list of tasks in the chain
     // - Task pool tab, showing the list of task pools. Click on an element opens a new window with pool info and the list of task sources. Click on a task source opens another window with task source info.
 
+    //Architecture planning counts as working on this project :P
+    // - So, main scheduler. Pressing "+" will show options!
+    //Options are ONLY for individual tasks (daily, time-to-time, etc)
+    //On top there's a hamburger menu.
+    //All task chains and task pools are there. Not in options on "+".
+
     public static class SchedulerFileLockException extends BaseFileLockException
     {
     }
