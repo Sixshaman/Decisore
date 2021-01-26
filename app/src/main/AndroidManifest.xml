@@ -10,6 +10,21 @@
             android:roundIcon="@mipmap/ic_launcher_round"
             android:supportsRtl="true"
             android:theme="@style/AppTheme">
+        <activity
+                android:name=".scheduler.TaskSchedulerActivity"
+                android:label="@string/title_activity_task_scheduler"
+                android:theme="@style/AppTheme.NoActionBar">
+        </activity>
+        <activity
+                android:name=".scheduler.TaskChainsActivity"
+                android:label="@string/title_activity_task_chains"
+                android:theme="@style/AppTheme.NoActionBar">
+        </activity>
+        <activity
+                android:name=".scheduler.TaskPoolsActivity"
+                android:label="@string/title_activity_task_pools"
+                android:theme="@style/AppTheme.NoActionBar">
+        </activity>
         <activity android:name=".archive.ArchiveActivity">
         </activity>
         <activity

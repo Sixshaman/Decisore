@@ -23,4 +23,7 @@
         <item quantity="one">%1$d day</item>
         <item quantity="other">%1$d days</item>
     </plurals>
+    <string name="title_activity_task_pools">TaskPoolsActivity</string>
+    <string name="title_activity_task_chains">TaskChainsActivity</string>
+    <string name="title_activity_task_scheduler">Scheduled tasks</string>
 </resources>

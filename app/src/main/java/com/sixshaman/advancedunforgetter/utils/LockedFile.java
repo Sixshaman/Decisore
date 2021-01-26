@@ -1,5 +1,7 @@
 package com.sixshaman.advancedunforgetter.utils;
 
+import android.util.Log;
+
 import java.io.*;
 import java.nio.channels.Channels;
 import java.nio.channels.FileLock;
@@ -68,6 +70,7 @@ public class LockedFile
             return false;
         }
 
+        Log.i("FILE", "FILE " + mFilePath + " LOCKED!");
         return true;
     }
 
@@ -127,14 +130,25 @@ public class LockedFile
     {
         try
         {
-            mFileLock.release();
-            mFileLock = null;
+            if(mFileLock != null)
+            {
+                mFileLock.release();
+                mFileLock = null;
+            }
 
-            mInputStreamReader.close();
-            mInputStreamReader = null;
+            if(mInputStreamReader != null)
+            {
+                mInputStreamReader.close();
+                mInputStreamReader = null;
+            }
 
-            mOutputStreamWriter.close();
-            mOutputStreamWriter = null;
+            if(mOutputStreamWriter != null)
+            {
+                mOutputStreamWriter.close();
+                mOutputStreamWriter = null;
+            }
+
+            Log.i("FILE", "FILE " + mFilePath + " LOCKED!");
         }
         catch(IOException e)
         {
