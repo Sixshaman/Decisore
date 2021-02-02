@@ -217,14 +217,17 @@ public class TaskScheduler
     //Creates a new one-time task and immediately adds it to the main list
     public void addImmediateTask(String taskName, String taskDescription, ArrayList<String> taskTags) throws TaskList.ListFileLockException
     {
+        if(!mMainList.isLocked())
+        {
+            throw new TaskList.ListFileLockException();
+        }
+
         long          taskId      = mIdGenerator.generateNextId();
         LocalDateTime currentTime = LocalDateTime.now();
 
         EnlistedTask task = new EnlistedTask(taskId, currentTime, currentTime, taskName, taskDescription, taskTags);
 
-        mMainList.waitLock();
         mMainList.addTask(task);
-        mMainList.unlock();
     }
 
     //Creates a new one-time task and schedules it to be added to the main list later

@@ -17,10 +17,10 @@ public class LockedFile
     private FileLock mFileLock;
 
     //The stream to read from the file
-    InputStreamReader mInputStreamReader;
+    private InputStreamReader mInputStreamReader;
 
     //The stream to write to the file
-    OutputStreamWriter mOutputStreamWriter;
+    private OutputStreamWriter mOutputStreamWriter;
 
     public LockedFile(String path)
     {
@@ -40,7 +40,7 @@ public class LockedFile
     public boolean lock()
     {
         //Do nothing if already locked
-        if(mInputStreamReader != null || mOutputStreamWriter != null || mFileLock != null)
+        if(isLocked())
         {
             return false;
         }
@@ -130,12 +130,6 @@ public class LockedFile
     {
         try
         {
-            if(mFileLock != null)
-            {
-                mFileLock.release();
-                mFileLock = null;
-            }
-
             if(mInputStreamReader != null)
             {
                 mInputStreamReader.close();
@@ -146,6 +140,12 @@ public class LockedFile
             {
                 mOutputStreamWriter.close();
                 mOutputStreamWriter = null;
+            }
+
+            if(mFileLock != null)
+            {
+                mFileLock.release();
+                mFileLock = null;
             }
 
             Log.i("FILE", "FILE " + mFilePath + " LOCKED!");

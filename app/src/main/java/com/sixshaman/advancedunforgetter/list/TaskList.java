@@ -166,6 +166,11 @@ public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
         mConfigFile.unlock();
     }
 
+    public boolean isLocked()
+    {
+        return mConfigFile.isLocked();
+    }
+
     //Loads tasks from JSON config file
     public void loadTasks() throws ListFileLockException
     {
