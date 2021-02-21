@@ -16,35 +16,14 @@ public class LockedFile
     //The locking mechanism of the file
     private FileLock mFileLock;
 
-    //The stream to read from the file
-    private InputStreamReader mInputStreamReader;
-
-    //The stream to write to the file
-    private OutputStreamWriter mOutputStreamWriter;
-
     public LockedFile(String path)
     {
         mFilePath = path;
         mFileLock = null;
-
-        mInputStreamReader  = null;
-        mOutputStreamWriter = null;
     }
 
-    public boolean isLocked()
+    public InputStreamReader openRead()
     {
-        return mFileLock != null && mFileLock.isValid();
-    }
-
-    //Lock the file, preventing all processes to access this file
-    public boolean lock()
-    {
-        //Do nothing if already locked
-        if(isLocked())
-        {
-            return false;
-        }
-
         try
         {
             File file = new File(mFilePath);
@@ -53,102 +32,54 @@ public class LockedFile
             mFileLock = randomAccessFile.getChannel().tryLock();
             if(mFileLock == null)
             {
-                return false;
+                return null;
             }
 
-            mInputStreamReader  = new InputStreamReader(Channels.newInputStream(randomAccessFile.getChannel()));
-            mOutputStreamWriter = new OutputStreamWriter(Channels.newOutputStream(randomAccessFile.getChannel()));
+            Log.i("FILE", "FILE " + mFilePath + " LOCKED!");
+            return new InputStreamReader(Channels.newInputStream(randomAccessFile.getChannel()));
         }
         catch(OverlappingFileLockException | IOException e)
         {
-            mInputStreamReader  = null;
-            mOutputStreamWriter = null;
-
-            mFileLock = null;
-
             e.printStackTrace();
-            return false;
+            return null;
         }
-
-        Log.i("FILE", "FILE " + mFilePath + " LOCKED!");
-        return true;
     }
 
-    //Reads the contents of the file
-    public String read()
+    public OutputStreamWriter openWrite()
     {
-        if(mInputStreamReader == null || mFileLock == null)
-        {
-            return "";
-        }
-
         try
         {
-            BufferedReader bufferedReader = new BufferedReader(mInputStreamReader);
+            File file = new File(mFilePath);
+            RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
 
-            String line;
-            StringBuilder fileContentsStringBuilder = new StringBuilder();
-
-            while((line = bufferedReader.readLine()) != null)
+            mFileLock = randomAccessFile.getChannel().tryLock();
+            if(mFileLock == null)
             {
-                fileContentsStringBuilder.append(line);
+                return null;
             }
 
-            bufferedReader.close();
-            return fileContentsStringBuilder.toString();
+            Log.i("FILE", "FILE " + mFilePath + " LOCKED!");
+            return new OutputStreamWriter(Channels.newOutputStream(randomAccessFile.getChannel()));
         }
-        catch (IOException e)
+        catch(OverlappingFileLockException | IOException e)
         {
             e.printStackTrace();
-        }
-
-        return "";
-    }
-
-    //Writes the contents to the file
-    public void write(String contents)
-    {
-        if(mOutputStreamWriter == null || mFileLock == null)
-        {
-            return;
-        }
-
-        try
-        {
-            BufferedWriter bufferedWriter = new BufferedWriter(mOutputStreamWriter);
-            bufferedWriter.write(contents);
-            bufferedWriter.close();
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
+            return null;
         }
     }
 
     //Releases the lock on the file
-    public void unlock()
+    public void close()
     {
         try
         {
-            if(mInputStreamReader != null)
-            {
-                mInputStreamReader.close();
-                mInputStreamReader = null;
-            }
-
-            if(mOutputStreamWriter != null)
-            {
-                mOutputStreamWriter.close();
-                mOutputStreamWriter = null;
-            }
-
             if(mFileLock != null)
             {
                 mFileLock.release();
                 mFileLock = null;
             }
 
-            Log.i("FILE", "FILE " + mFilePath + " LOCKED!");
+            Log.i("FILE", "FILE " + mFilePath + " UNLOCKED!");
         }
         catch(IOException e)
         {

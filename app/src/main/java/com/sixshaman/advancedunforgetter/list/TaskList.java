@@ -13,17 +13,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 import com.sixshaman.advancedunforgetter.R;
 import com.sixshaman.advancedunforgetter.archive.TaskArchive;
-import com.sixshaman.advancedunforgetter.utils.BaseFileLockException;
-import com.sixshaman.advancedunforgetter.utils.BaseFileLockException;
-import com.sixshaman.advancedunforgetter.utils.LockedFile;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -31,10 +27,6 @@ import java.util.Comparator;
 
 public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
 {
-    public static class ListFileLockException extends BaseFileLockException
-    {
-    }
-
     private static final String LIST_FILENAME = "TaskList.json";
 
     //All tasks to be done for today, sorted by ids. Or tomorrow. Or within a year. It's up to the user to decide
@@ -43,8 +35,8 @@ public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
     //The archive to move finished tasks into
     private TaskArchive mArchive;
 
-    //The file to store the tasks data
-    private LockedFile mConfigFile;
+    //The folder to store the config file
+    private String mConfigFileName;
 
     //The context for displaying the task list
     private Context mContext;
@@ -65,16 +57,18 @@ public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
     //Sets the folder to store the JSON config file
     public void setConfigFolder(String folder)
     {
-        mConfigFile = new LockedFile(folder + "/" + LIST_FILENAME);
+        mConfigFileName = folder + "/" + LIST_FILENAME;
     }
 
     //Adds a task to the list
-    public void addTask(EnlistedTask task) throws ListFileLockException
+    public void addTask(EnlistedTask task)
     {
         if(task == null)
         {
             return;
         }
+
+        throw error;
 
         int addPosition = -1;
         if(mTasks.isEmpty()) //Special case for the empty list
@@ -140,50 +134,14 @@ public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
         return (Collections.binarySearch(mTasks, taskId) >= 0);
     }
 
-    public void waitLock()
-    {
-        while(!mConfigFile.lock())
-        {
-            try
-            {
-                Log.d("LOCK", "Can't lock the list config file!");
-                Thread.sleep(100);
-            }
-            catch(InterruptedException e)
-            {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    public boolean tryLock()
-    {
-        return mConfigFile.lock();
-    }
-
-    public void unlock()
-    {
-        mConfigFile.unlock();
-    }
-
-    public boolean isLocked()
-    {
-        return mConfigFile.isLocked();
-    }
-
     //Loads tasks from JSON config file
-    public void loadTasks() throws ListFileLockException
+    public void loadTasks()
     {
-        if(!mConfigFile.isLocked())
-        {
-            throw new ListFileLockException();
-        }
-
         mTasks.clear();
 
         try
         {
-            String fileContents = mConfigFile.read();
+            String fileContents = new String(Files.readAllBytes(Paths.get(mConfigFileName)));
             JSONObject jsonObject = new JSONObject(fileContents);
 
             JSONArray tasksJsonArray = jsonObject.getJSONArray("TASKS");
@@ -200,7 +158,7 @@ public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
                 }
             }
         }
-        catch(JSONException e)
+        catch(JSONException | IOException e)
         {
             e.printStackTrace();
         }
@@ -250,7 +208,7 @@ public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
         }
     }
 
-    private void removeTask(EnlistedTask task) throws ListFileLockException
+    private void removeTask(EnlistedTask task)
     {
         int index = Collections.binarySearch(mTasks, task.getId());
         if(index >= 0)
@@ -296,10 +254,6 @@ public class TaskList extends RecyclerView.Adapter<TaskList.TaskViewHolder>
 
                 this.unlock();
                 mArchive.unlock();
-            }
-            catch (BaseFileLockException e)
-            {
-                e.printStackTrace();
             }
         });
 
