@@ -1,6 +1,6 @@
 package com.sixshaman.advancedunforgetter.scheduler;
 
-import com.sixshaman.advancedunforgetter.list.EnlistedTask;
+import com.sixshaman.advancedunforgetter.list.EnlistedObjective;
 import com.sixshaman.advancedunforgetter.utils.RandomUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -251,9 +251,9 @@ class ScheduledTask
     }
 
     //Transforms scheduled task to an enlisted
-    public EnlistedTask toEnlisted(LocalDateTime enlistDate)
+    public EnlistedObjective toEnlisted(LocalDateTime enlistDate)
     {
-        return new EnlistedTask(mId, mDateCreated, enlistDate, mName, mDescription, mTags);
+        return new EnlistedObjective(mId, mDateCreated, enlistDate, mName, mDescription, mTags);
     }
 
     public long getId()

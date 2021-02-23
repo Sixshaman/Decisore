@@ -1,13 +1,10 @@
 package com.sixshaman.advancedunforgetter.scheduler;
 
-import com.sixshaman.advancedunforgetter.list.EnlistedTask;
+import com.sixshaman.advancedunforgetter.list.EnlistedObjective;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayDeque;
 
@@ -147,7 +144,7 @@ public class TaskChain implements TaskSource
     }
 
     @Override
-    public EnlistedTask obtainTask(LocalDateTime referenceTime)
+    public EnlistedObjective obtainTask(LocalDateTime referenceTime)
     {
         if(mTasks != null && !mTasks.isEmpty())
         {

@@ -16,19 +16,15 @@ After removing the task from the scheduler:
 */
 
 import android.util.Log;
-import com.sixshaman.advancedunforgetter.list.EnlistedTask;
-import com.sixshaman.advancedunforgetter.list.TaskList;
+import com.sixshaman.advancedunforgetter.list.EnlistedObjective;
+import com.sixshaman.advancedunforgetter.list.ObjectiveListCache;
 import com.sixshaman.advancedunforgetter.utils.BaseFileLockException;
-import com.sixshaman.advancedunforgetter.utils.LockedFile;
+import com.sixshaman.advancedunforgetter.utils.LockedReadFile;
 import com.sixshaman.advancedunforgetter.utils.TaskIdGenerator;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -48,10 +44,6 @@ public class TaskScheduler
     //On top there's a hamburger menu.
     //All task chains and task pools are there. Not in options on "+".
 
-    public static class SchedulerFileLockException extends BaseFileLockException
-    {
-    }
-
     private static final String SCHEDULER_FILENAME = "TaskScheduler.json";
 
     //The list of all the task pools.
@@ -62,11 +54,8 @@ public class TaskScheduler
     //Generated task ids
     private TaskIdGenerator mIdGenerator;
 
-    //The main list of tasks that scheduler adds tasks to
-    private TaskList mMainList;
-
     //The file to store the scheduler data
-    private LockedFile mConfigFile;
+    private LockedReadFile mConfigFile;
 
     //Creates a new task scheduler that is bound to mainList
     public TaskScheduler()
@@ -74,24 +63,16 @@ public class TaskScheduler
         mTaskPools = new ArrayList<>();
 
         mIdGenerator = new TaskIdGenerator();
-
-        mMainList = null;
     }
 
     //Sets the folder to store the JSON config file
     public void setConfigFolder(String folder)
     {
-        mConfigFile = new LockedFile(folder + "/" + SCHEDULER_FILENAME);
-    }
-
-    //Sets the task list to send scheduled tasks into
-    public void setTaskList(TaskList mainList)
-    {
-        mMainList = mainList;
+        mConfigFile = new LockedReadFile(folder + "/" + SCHEDULER_FILENAME);
     }
 
     //Updates the task scheduler: adds all ready-to-be-done tasks to the main list, reschedules tasks, updates chains and pools
-    public void update() throws TaskList.ListFileLockException, SchedulerFileLockException
+    public void update() throws ObjectiveListCache.ListFileLockException, SchedulerFileLockException
     {
         ArrayList<TaskPool> changedPools = new ArrayList<>(); //Rebuild task pool list after each update
 
@@ -101,7 +82,7 @@ public class TaskScheduler
             if(pool.isSingleSingleTaskPool())
             {
                 //Don't need to check if the last task is done
-                EnlistedTask task = pool.getRandomTask(currentDateTime);
+                EnlistedObjective task = pool.getRandomTask(currentDateTime);
                 mMainList.addTask(task);
             }
             else
@@ -109,7 +90,7 @@ public class TaskScheduler
                 //Only add the task to the main list if the last task provided by the pool is done
                 if(!mMainList.isTaskInList(pool.getLastProvidedTaskId()))
                 {
-                    EnlistedTask task = pool.getRandomTask(currentDateTime);
+                    EnlistedObjective task = pool.getRandomTask(currentDateTime);
                     mMainList.addTask(task);
                 }
             }
@@ -215,17 +196,17 @@ public class TaskScheduler
     }
 
     //Creates a new one-time task and immediately adds it to the main list
-    public void addImmediateTask(String taskName, String taskDescription, ArrayList<String> taskTags) throws TaskList.ListFileLockException
+    public void addImmediateTask(String taskName, String taskDescription, ArrayList<String> taskTags) throws ObjectiveListCache.ListFileLockException
     {
         if(!mMainList.isLocked())
         {
-            throw new TaskList.ListFileLockException();
+            throw new ObjectiveListCache.ListFileLockException();
         }
 
         long          taskId      = mIdGenerator.generateNextId();
         LocalDateTime currentTime = LocalDateTime.now();
 
-        EnlistedTask task = new EnlistedTask(taskId, currentTime, currentTime, taskName, taskDescription, taskTags);
+        EnlistedObjective task = new EnlistedObjective(taskId, currentTime, currentTime, taskName, taskDescription, taskTags);
 
         mMainList.addTask(task);
     }

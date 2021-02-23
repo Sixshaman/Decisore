@@ -6,13 +6,15 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.appcompat.widget.Toolbar;
 import com.sixshaman.advancedunforgetter.R;
+import com.sixshaman.advancedunforgetter.utils.LockedReadFile;
 
+import java.io.FileNotFoundException;
 import java.util.Objects;
 
 public class ArchiveActivity extends AppCompatActivity
 {
-    //The task archive, the model of this activity
-    private TaskArchive mArchive;
+    //The objective archive, the model of this activity
+    private ObjectiveArchiveCache mArchiveCache;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -30,21 +32,21 @@ public class ArchiveActivity extends AppCompatActivity
     {
         super.onResume();
 
-        mArchive = new TaskArchive();
+        mArchiveCache = new ObjectiveArchiveCache();
 
-        mArchive.setConfigFolder(Objects.requireNonNull(getExternalFilesDir("/app")).getAbsolutePath());
+        String configFolder = Objects.requireNonNull(getExternalFilesDir("/app")).getAbsolutePath();
 
         RecyclerView recyclerView = findViewById(R.id.taskArchiveView);
-        recyclerView.setAdapter(mArchive);
+        recyclerView.setAdapter(mArchiveCache);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         try
         {
-            mArchive.waitLock();
-            mArchive.loadFinishedTasks();
-            mArchive.unlock();
+            LockedReadFile archiveFile = new LockedReadFile(configFolder + "/" + ObjectiveArchiveCache.ARCHIVE_FILENAME);
+            mArchiveCache.invalidate(archiveFile);
+            archiveFile.close();
         }
-        catch(TaskArchive.ArchiveFileLockException e)
+        catch(FileNotFoundException e)
         {
             e.printStackTrace();
         }

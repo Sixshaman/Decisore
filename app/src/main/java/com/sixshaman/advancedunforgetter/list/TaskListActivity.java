@@ -1,6 +1,5 @@
 package com.sixshaman.advancedunforgetter.list;
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
@@ -23,7 +22,6 @@ import com.sixshaman.advancedunforgetter.R;
 import com.sixshaman.advancedunforgetter.archive.ArchiveActivity;
 import com.sixshaman.advancedunforgetter.archive.*;
 import com.sixshaman.advancedunforgetter.scheduler.*;
-import com.sixshaman.advancedunforgetter.utils.*;
 import com.sixshaman.advancedunforgetter.utils.BaseFileLockException;
 
 import java.time.Duration;
@@ -33,7 +31,6 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -43,10 +40,10 @@ public class TaskListActivity extends AppCompatActivity
     private TaskScheduler mTaskScheduler;
 
     //Task list (the model of this class)
-    private TaskList mTaskList;
+    private ObjectiveListCache mObjectiveListCache;
 
     //Task archive model
-    private TaskArchive mTaskArchive;
+    private ObjectiveArchiveCache mObjectiveArchiveCache;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -66,35 +63,35 @@ public class TaskListActivity extends AppCompatActivity
         //NEXT: SCHEDULER INTERFACE
         super.onResume();
 
-        mTaskArchive   = new TaskArchive();
-        mTaskList      = new TaskList();
+        mObjectiveArchiveCache = new ObjectiveArchiveCache();
+        mObjectiveListCache = new ObjectiveListCache();
         mTaskScheduler = new TaskScheduler();
 
-        mTaskList.setArchive(mTaskArchive);
-        mTaskScheduler.setTaskList(mTaskList);
+        mObjectiveListCache.setArchive(mObjectiveArchiveCache);
+        mTaskScheduler.setTaskList(mObjectiveListCache);
 
         String configFolder = Objects.requireNonNull(getExternalFilesDir("/app")).getAbsolutePath();
 
         mTaskScheduler.setConfigFolder(configFolder);
-        mTaskList.setConfigFolder(configFolder);
-        mTaskArchive.setConfigFolder(configFolder);
+        mObjectiveListCache.setConfigFolder(configFolder);
+        mObjectiveArchiveCache.setConfigFolder(configFolder);
 
         RecyclerView recyclerView = findViewById(R.id.taskListView);
-        recyclerView.setAdapter(mTaskList);
+        recyclerView.setAdapter(mObjectiveListCache);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         //We need to lock the file in case of background processes updating it
         mTaskScheduler.waitLock();
-        mTaskList.waitLock();
-        mTaskArchive.waitLock();
+        mObjectiveListCache.waitLock();
+        mObjectiveArchiveCache.waitLock();
 
         try
         {
             mTaskScheduler.loadScheduledTasks();
-            mTaskList.loadTasks();
-            mTaskArchive.loadFinishedTasks();
+            mObjectiveListCache.loadTasks();
+            mObjectiveArchiveCache.loadFinishedTasks();
 
-            mTaskScheduler.setLastTaskId(mTaskList.getLastTaskId());
+            mTaskScheduler.setLastTaskId(mObjectiveListCache.getLastTaskId());
 
             mTaskScheduler.update();
         }
@@ -103,8 +100,8 @@ public class TaskListActivity extends AppCompatActivity
             e.printStackTrace();
         }
 
-        mTaskArchive.unlock();
-        mTaskList.unlock();
+        mObjectiveArchiveCache.unlock();
+        mObjectiveListCache.unlock();
         mTaskScheduler.unlock();
 
         //Guess I just need to read this
@@ -122,7 +119,7 @@ public class TaskListActivity extends AppCompatActivity
 
         menu.findItem(R.id.menuOpenArchive).setOnMenuItemClickListener(item ->
         {
-            mTaskList.setArchive(null); //Stop the archive from updating
+            mObjectiveListCache.setArchive(null); //Stop the archive from updating
 
             Intent archiveOpenIntent = new Intent(TaskListActivity.this, ArchiveActivity.class);
             startActivity(archiveOpenIntent);
@@ -174,7 +171,7 @@ public class TaskListActivity extends AppCompatActivity
                 int taskTypeIndex = taskTypeSpinner.getSelectedItemPosition();
 
                 mTaskScheduler.waitLock();
-                mTaskList.waitLock();
+                mObjectiveListCache.waitLock();
 
                 try
                 {
@@ -254,7 +251,7 @@ public class TaskListActivity extends AppCompatActivity
                     e.printStackTrace();
                 }
 
-                mTaskList.unlock();
+                mObjectiveListCache.unlock();
                 mTaskScheduler.unlock();
             }
         });

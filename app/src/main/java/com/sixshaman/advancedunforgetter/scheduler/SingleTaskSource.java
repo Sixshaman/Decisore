@@ -1,12 +1,10 @@
 package com.sixshaman.advancedunforgetter.scheduler;
 
-import com.sixshaman.advancedunforgetter.list.EnlistedTask;
-import org.json.JSONArray;
+import com.sixshaman.advancedunforgetter.list.EnlistedObjective;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 //A task source that contains a single task
 public class SingleTaskSource implements TaskSource
@@ -84,7 +82,7 @@ public class SingleTaskSource implements TaskSource
     }
 
     @Override
-    public EnlistedTask obtainTask(LocalDateTime referenceTime)
+    public EnlistedObjective obtainTask(LocalDateTime referenceTime)
     {
         if(getState(referenceTime) == SourceState.SOURCE_STATE_REGULAR)
         {

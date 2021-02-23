@@ -9,7 +9,7 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 
 //The finished archived task that will stay in the past
-public class ArchivedTask
+public class ArchivedObjective
 {
     private static final String JSON_TASK_NAME        = "Name";
     private static final String JSON_TASK_DESCRIPTION = "Description";
@@ -36,7 +36,7 @@ public class ArchivedTask
     //Task tags (why not?)
     private ArrayList<String> mTags;
 
-    public ArchivedTask(LocalDateTime creationDate, LocalDateTime addedDate, LocalDateTime finishDate, String name, String description, ArrayList<String> tags)
+    public ArchivedObjective(LocalDateTime creationDate, LocalDateTime addedDate, LocalDateTime finishDate, String name, String description, ArrayList<String> tags)
     {
         mDateCreated  = creationDate;
         mDateEnlisted = addedDate;
@@ -90,7 +90,7 @@ public class ArchivedTask
     }
 
     //Creates a task from its JSON representation
-    public static ArchivedTask fromJSON(JSONObject jsonObject)
+    public static ArchivedObjective fromJSON(JSONObject jsonObject)
     {
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss:nnnnnnnnn");
 
@@ -145,10 +145,10 @@ public class ArchivedTask
             e.printStackTrace();
         }
 
-        ArchivedTask task = null;
+        ArchivedObjective task = null;
         if(!name.isEmpty() && createdDate != null && addedDate != null && finishDate != null)
         {
-            return new ArchivedTask(createdDate, addedDate, finishDate, name, description, taskTags);
+            return new ArchivedObjective(createdDate, addedDate, finishDate, name, description, taskTags);
         }
         else
         {
