@@ -123,22 +123,22 @@ public class ObjectiveArchiveCache
         return true;
     }
 
-    private class ArchiveCacheViewHolder extends RecyclerView.Adapter<ObjectiveArchiveCache.FinishedTaskViewHolder>
+    private class ArchiveCacheViewHolder extends RecyclerView.Adapter<ObjectiveArchiveCache.FinishedObjectiveViewHolder>
     {
         private Context mContext;
 
         @NonNull
         @Override
-        public ObjectiveArchiveCache.FinishedTaskViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i)
+        public ObjectiveArchiveCache.FinishedObjectiveViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i)
         {
             mContext = viewGroup.getContext();
 
             View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.layout_finished_task_view, viewGroup, false);
-            return new ObjectiveArchiveCache.FinishedTaskViewHolder(view);
+            return new ObjectiveArchiveCache.FinishedObjectiveViewHolder(view);
         }
 
         @Override
-        public void onBindViewHolder(@NonNull ObjectiveArchiveCache.FinishedTaskViewHolder taskViewHolder, int position)
+        public void onBindViewHolder(@NonNull ObjectiveArchiveCache.FinishedObjectiveViewHolder taskViewHolder, int position)
         {
             taskViewHolder.mTextView.setText(mFinishedObjectives.get(position).getName());
 
@@ -151,13 +151,13 @@ public class ObjectiveArchiveCache
         }
     }
 
-    static class FinishedTaskViewHolder extends RecyclerView.ViewHolder
+    static class FinishedObjectiveViewHolder extends RecyclerView.ViewHolder
     {
         TextView mTextView;
 
         ConstraintLayout mParentLayout;
 
-        public FinishedTaskViewHolder(View itemView)
+        public FinishedObjectiveViewHolder(View itemView)
         {
             super(itemView);
 

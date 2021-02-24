@@ -11,6 +11,7 @@ import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.sixshaman.advancedunforgetter.R;
+import com.sixshaman.advancedunforgetter.archive.ObjectiveArchiveCache;
 import com.sixshaman.advancedunforgetter.utils.LockedReadFile;
 import com.sixshaman.advancedunforgetter.utils.LockedWriteFile;
 import com.sixshaman.advancedunforgetter.utils.TransactionDispatcher;
@@ -24,74 +25,79 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Objects;
 
-public class ObjectiveListCache extends RecyclerView.Adapter<ObjectiveListCache.TaskViewHolder>
+public class ObjectiveListCache
 {
     public static final String LIST_FILENAME = "TaskList.json";
 
     //All tasks to be done for today, sorted by ids. Or tomorrow. Or within a year. It's up to the user to decide
     private ArrayList<EnlistedObjective> mEnlistedObjectives;
 
-    //The context for displaying the task list
-    private Context mContext;
+    //The view holder of the cached data
+    private ObjectiveListCache.ListCacheViewHolder mListViewHolder;
 
     //Constructs a new task list
     public ObjectiveListCache()
     {
         mEnlistedObjectives = new ArrayList<>();
+    }
 
-        mContext = null;
+    public void attachToView(RecyclerView recyclerView)
+    {
+        mListViewHolder = new ObjectiveListCache.ListCacheViewHolder();
+        recyclerView.setAdapter(mListViewHolder);
     }
 
     //Adds an objective to the list
     public boolean addObjective(EnlistedObjective objective)
     {
-        if(objective == null)
+        if (objective == null)
         {
             return false;
         }
 
         int addPosition = -1;
-        if(mEnlistedObjectives.isEmpty()) //Special case for the empty list
+        if (mEnlistedObjectives.isEmpty()) //Special case for the empty list
         {
             mEnlistedObjectives.add(objective);
             addPosition = mEnlistedObjectives.size() - 1;
-        }
-        else if(mEnlistedObjectives.get(mEnlistedObjectives.size() - 1).getId() < objective.getId()) //Special case for the trivial insertion that will keep the list sorted anyway
+        } else if (mEnlistedObjectives.get(mEnlistedObjectives.size() - 1).getId() < objective.getId()) //Special case for the trivial insertion that will keep the list sorted anyway
         {
             mEnlistedObjectives.add(objective);
             addPosition = mEnlistedObjectives.size() - 1;
-        }
-        else
+        } else
         {
             int index = Collections.binarySearch(mEnlistedObjectives, objective.getId());
-            if(index < 0)
+            if (index < 0)
             {
                 //Insert at selected position
                 int insertIndex = -(index + 1);
 
                 mEnlistedObjectives.add(null);
-                for(int i = insertIndex; i < mEnlistedObjectives.size() - 1; i++)
+                for (int i = insertIndex; i < mEnlistedObjectives.size() - 1; i++)
                 {
                     mEnlistedObjectives.set(i + 1, mEnlistedObjectives.get(i));
                 }
 
                 mEnlistedObjectives.set(insertIndex, objective);
                 addPosition = insertIndex;
-            }
-            else
+            } else
             {
                 //OH NO! THE TASK ALREADY EXISTS! WE CAN LOSE THIS TASK! STOP EVERYTHING, DON'T LET IT SAVE
                 //Or not, lol
                 //throw new RuntimeException("Task already exists");
-                Toast.makeText(mContext, "Error adding new objective", Toast.LENGTH_SHORT).show();
                 return false;
             }
         }
 
-        if(addPosition != -1)
+        if (addPosition == -1)
         {
-            notifyItemInserted(addPosition);
-            notifyItemRangeChanged(addPosition, getItemCount());
+            return false;
+        }
+
+        if(mListViewHolder != null)
+        {
+            mListViewHolder.notifyItemInserted(addPosition);
+            mListViewHolder.notifyItemRangeChanged(addPosition, mListViewHolder.getItemCount());
         }
 
         return true;
@@ -100,17 +106,19 @@ public class ObjectiveListCache extends RecyclerView.Adapter<ObjectiveListCache.
     public boolean removeObjective(EnlistedObjective objective)
     {
         int index = Collections.binarySearch(mEnlistedObjectives, objective.getId());
-        if(index >= 0)
+        if (index >= 0)
         {
             mEnlistedObjectives.remove(index);
-        }
-        else
+        } else
         {
             return false;
         }
 
-        notifyItemRemoved(index);
-        notifyItemRangeChanged(index, getItemCount());
+        if(mListViewHolder != null)
+        {
+            mListViewHolder.notifyItemRemoved(index);
+            mListViewHolder.notifyItemRangeChanged(index, mListViewHolder.getItemCount());
+        }
 
         return true;
     }
@@ -119,13 +127,13 @@ public class ObjectiveListCache extends RecyclerView.Adapter<ObjectiveListCache.
     public boolean isObjectiveInList(long objectiveId)
     {
         //Special case for empty list
-        if(mEnlistedObjectives.size() == 0)
+        if (mEnlistedObjectives.size() == 0)
         {
             return false;
         }
 
         //Special case: since mTasks is sorted by id, then last element having lesser id means the task is not in mTasks. This is a pretty common case.
-        if(mEnlistedObjectives.get(mEnlistedObjectives.size() - 1).getId() < objectiveId)
+        if (mEnlistedObjectives.get(mEnlistedObjectives.size() - 1).getId() < objectiveId)
         {
             return false;
         }
@@ -145,20 +153,19 @@ public class ObjectiveListCache extends RecyclerView.Adapter<ObjectiveListCache.
             JSONObject jsonObject = new JSONObject(fileContents);
 
             JSONArray tasksJsonArray = jsonObject.getJSONArray("TASKS");
-            for(int i = 0; i < tasksJsonArray.length(); i++)
+            for (int i = 0; i < tasksJsonArray.length(); i++)
             {
                 JSONObject taskObject = tasksJsonArray.optJSONObject(i);
-                if(taskObject != null)
+                if (taskObject != null)
                 {
                     EnlistedObjective objective = EnlistedObjective.fromJSON(taskObject);
-                    if(objective != null)
+                    if (objective != null)
                     {
                         enlistedObjectives.add(objective);
                     }
                 }
             }
-        }
-        catch(JSONException e)
+        } catch (JSONException e)
         {
             e.printStackTrace();
             return false;
@@ -167,7 +174,11 @@ public class ObjectiveListCache extends RecyclerView.Adapter<ObjectiveListCache.
         mEnlistedObjectives = enlistedObjectives;
 
         mEnlistedObjectives.sort(Comparator.comparingLong(EnlistedObjective::getId));
-        notifyDataSetChanged();
+
+        if(mListViewHolder != null)
+        {
+            mListViewHolder.notifyDataSetChanged();
+        }
 
         return true;
     }
@@ -177,10 +188,10 @@ public class ObjectiveListCache extends RecyclerView.Adapter<ObjectiveListCache.
     {
         try
         {
-            JSONObject jsonObject    = new JSONObject();
+            JSONObject jsonObject = new JSONObject();
             JSONArray tasksJsonArray = new JSONArray();
 
-            for(EnlistedObjective objective: mEnlistedObjectives)
+            for (EnlistedObjective objective : mEnlistedObjectives)
             {
                 tasksJsonArray.put(objective.toJSON());
             }
@@ -188,8 +199,7 @@ public class ObjectiveListCache extends RecyclerView.Adapter<ObjectiveListCache.
             jsonObject.put("TASKS", tasksJsonArray);
 
             listWriteFile.write(jsonObject.toString());
-        }
-        catch(JSONException e)
+        } catch (JSONException e)
         {
             e.printStackTrace();
             return false;
@@ -202,60 +212,66 @@ public class ObjectiveListCache extends RecyclerView.Adapter<ObjectiveListCache.
     //Since objectives are sorted by id, it's gonna be the last objective
     public long getMaxObjectiveId()
     {
-        if(mEnlistedObjectives.isEmpty())
+        if (mEnlistedObjectives.isEmpty())
         {
             return -1;
-        }
-        else
+        } else
         {
             return mEnlistedObjectives.get(mEnlistedObjectives.size() - 1).getId();
         }
     }
 
-    @NonNull
-    @Override
-    public ObjectiveListCache.TaskViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i)
+    private class ListCacheViewHolder extends RecyclerView.Adapter<ObjectiveListCache.ObjectiveViewHolder>
     {
-        mContext = viewGroup.getContext();
+        private Context mContext;
 
-        View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.layout_task_view, viewGroup, false);
-        return new ObjectiveListCache.TaskViewHolder(view);
-    }
-
-    @Override
-    public void onBindViewHolder(@NonNull ObjectiveListCache.TaskViewHolder taskViewHolder, int position)
-    {
-        taskViewHolder.mTextView.setText(mEnlistedObjectives.get(position).getName());
-
-        taskViewHolder.mCheckbox.setOnClickListener(view ->
+        @NonNull
+        @Override
+        public ObjectiveListCache.ObjectiveViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i)
         {
-            String configFolder = Objects.requireNonNull(mContext.getExternalFilesDir("/app")).getAbsolutePath();
+            mContext = viewGroup.getContext();
 
-            EnlistedObjective objectiveToRemove = mEnlistedObjectives.get(position);
+            View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.layout_task_view, viewGroup, false);
+            return new ObjectiveListCache.ObjectiveViewHolder(view);
+        }
 
-            TransactionDispatcher transactionDispatcher = mContext.getApplication().
-            transactionDispatcher.finishObjectiveTransaction(this, null, configFolder, objectiveToRemove, LocalDateTime.now());
-        });
+        @Override
+        public void onBindViewHolder(@NonNull ObjectiveListCache.ObjectiveViewHolder taskViewHolder, int position)
+        {
+            taskViewHolder.mTextView.setText(mEnlistedObjectives.get(position).getName());
 
-        taskViewHolder.mParentLayout.setOnClickListener(view -> Toast.makeText(mContext, mEnlistedObjectives.get(position).getDescription(), Toast.LENGTH_LONG).show());
+            taskViewHolder.mCheckbox.setOnClickListener(view ->
+            {
+                String configFolder = Objects.requireNonNull(mContext.getExternalFilesDir("/app")).getAbsolutePath();
 
-        taskViewHolder.mCheckbox.setChecked(false);
+                EnlistedObjective objectiveToRemove = mEnlistedObjectives.get(position);
+
+                TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
+                transactionDispatcher.setListCache(ObjectiveListCache.this);
+
+                transactionDispatcher.finishObjectiveTransaction(configFolder, objectiveToRemove, LocalDateTime.now());
+            });
+
+            taskViewHolder.mParentLayout.setOnClickListener(view -> Toast.makeText(mContext, mEnlistedObjectives.get(position).getDescription(), Toast.LENGTH_LONG).show());
+
+            taskViewHolder.mCheckbox.setChecked(false);
+        }
+
+        @Override
+        public int getItemCount()
+        {
+            return mEnlistedObjectives.size();
+        }
     }
 
-    @Override
-    public int getItemCount()
-    {
-        return mEnlistedObjectives.size();
-    }
-
-    static class TaskViewHolder extends RecyclerView.ViewHolder
+    static class ObjectiveViewHolder extends RecyclerView.ViewHolder
     {
         TextView mTextView;
         CheckBox mCheckbox;
 
         ConstraintLayout mParentLayout;
 
-        public TaskViewHolder(View itemView)
+        public ObjectiveViewHolder(View itemView)
         {
             super(itemView);
 
