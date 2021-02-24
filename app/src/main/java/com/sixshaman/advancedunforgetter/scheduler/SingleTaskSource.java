@@ -10,13 +10,13 @@ import java.time.LocalDateTime;
 public class SingleTaskSource implements TaskSource
 {
     //The task that this source can provide
-    private ScheduledTask mTask;
+    private ScheduledObjective mTask;
 
     //After returning the task the source declares itself finished if the task is not repeatable
     private boolean mIsFinished;
 
     //Creates a task source from a task
-    SingleTaskSource(ScheduledTask task)
+    SingleTaskSource(ScheduledObjective task)
     {
         mTask       = task;
         mIsFinished = false;
@@ -56,7 +56,7 @@ public class SingleTaskSource implements TaskSource
             return null;
         }
 
-        ScheduledTask task = ScheduledTask.fromJSON(taskJsonObject);
+        ScheduledObjective task = ScheduledObjective.fromJSON(taskJsonObject);
         if(task == null)
         {
             return null;

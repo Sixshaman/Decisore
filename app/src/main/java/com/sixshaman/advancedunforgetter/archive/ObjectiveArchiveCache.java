@@ -19,22 +19,28 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 
 //The task archive that contains all the finished tasks
-public class ObjectiveArchiveCache extends RecyclerView.Adapter<ObjectiveArchiveCache.FinishedTaskViewHolder>
+public class ObjectiveArchiveCache
 {
     public static final String ARCHIVE_FILENAME = "TaskArchive.json";
 
     //The list of all finished objectives
     private ArrayList<ArchivedObjective> mFinishedObjectives;
 
-    //The context for displaying the finished objective list
-    private Context mContext;
+    //The view holder of the cached data
+    private ArchiveCacheViewHolder mArchiveViewHolder;
 
     //Creates a new task archive
     public ObjectiveArchiveCache()
     {
         mFinishedObjectives = new ArrayList<>();
 
-        mContext = null;
+        mArchiveViewHolder = null;
+    }
+
+    public void attachToView(RecyclerView recyclerView)
+    {
+        mArchiveViewHolder = new ArchiveCacheViewHolder();
+        recyclerView.setAdapter(mArchiveViewHolder);
     }
 
     //Adds an objective to the archive cache
@@ -42,8 +48,11 @@ public class ObjectiveArchiveCache extends RecyclerView.Adapter<ObjectiveArchive
     {
         //Forever
         mFinishedObjectives.add(objective);
-        notifyItemInserted(mFinishedObjectives.size() - 1);
-        notifyItemRangeChanged(mFinishedObjectives.size() - 1, getItemCount());
+        if(mArchiveViewHolder != null)
+        {
+            mArchiveViewHolder.notifyItemInserted(mFinishedObjectives.size() - 1);
+            mArchiveViewHolder.notifyItemRangeChanged(mFinishedObjectives.size() - 1, mArchiveViewHolder.getItemCount());
+        }
 
         return true;
     }
@@ -79,7 +88,10 @@ public class ObjectiveArchiveCache extends RecyclerView.Adapter<ObjectiveArchive
         }
 
         mFinishedObjectives = finishedObjectives;
-        notifyDataSetChanged();
+        if(mArchiveViewHolder != null)
+        {
+            mArchiveViewHolder.notifyDataSetChanged();
+        }
 
         return true;
     }
@@ -111,28 +123,32 @@ public class ObjectiveArchiveCache extends RecyclerView.Adapter<ObjectiveArchive
         return true;
     }
 
-    @NonNull
-    @Override
-    public ObjectiveArchiveCache.FinishedTaskViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i)
+    private class ArchiveCacheViewHolder extends RecyclerView.Adapter<ObjectiveArchiveCache.FinishedTaskViewHolder>
     {
-        mContext = viewGroup.getContext();
+        private Context mContext;
 
-        View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.layout_finished_task_view, viewGroup, false);
-        return new ObjectiveArchiveCache.FinishedTaskViewHolder(view);
-    }
+        @NonNull
+        @Override
+        public ObjectiveArchiveCache.FinishedTaskViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i)
+        {
+            mContext = viewGroup.getContext();
 
-    @Override
-    public void onBindViewHolder(@NonNull ObjectiveArchiveCache.FinishedTaskViewHolder taskViewHolder, int position)
-    {
-        taskViewHolder.mTextView.setText(mFinishedObjectives.get(position).getName());
+            View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.layout_finished_task_view, viewGroup, false);
+            return new ObjectiveArchiveCache.FinishedTaskViewHolder(view);
+        }
 
-        taskViewHolder.mParentLayout.setOnClickListener(view -> Toast.makeText(mContext, mFinishedObjectives.get(position).getDescription(), Toast.LENGTH_LONG).show());
-    }
+        @Override
+        public void onBindViewHolder(@NonNull ObjectiveArchiveCache.FinishedTaskViewHolder taskViewHolder, int position)
+        {
+            taskViewHolder.mTextView.setText(mFinishedObjectives.get(position).getName());
 
-    @Override
-    public int getItemCount()
-    {
-        return mFinishedObjectives.size();
+            taskViewHolder.mParentLayout.setOnClickListener(view -> Toast.makeText(mContext, mFinishedObjectives.get(position).getDescription(), Toast.LENGTH_LONG).show());
+        }
+
+        @Override
+        public int getItemCount() {
+            return mFinishedObjectives.size();
+        }
     }
 
     static class FinishedTaskViewHolder extends RecyclerView.ViewHolder

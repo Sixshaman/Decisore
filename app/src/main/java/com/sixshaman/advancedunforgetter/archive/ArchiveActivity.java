@@ -37,7 +37,7 @@ public class ArchiveActivity extends AppCompatActivity
         String configFolder = Objects.requireNonNull(getExternalFilesDir("/app")).getAbsolutePath();
 
         RecyclerView recyclerView = findViewById(R.id.taskArchiveView);
-        recyclerView.setAdapter(mArchiveCache);
+        mArchiveCache.attachToView(recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         try

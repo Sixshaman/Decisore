@@ -13,7 +13,7 @@ import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 
-class ScheduledTask
+public class ScheduledObjective
 {
     private static final String JSON_TASK_ID                 = "Id";
     private static final String JSON_TASK_NAME               = "Name";
@@ -53,7 +53,7 @@ class ScheduledTask
     private float mRepeatProbability;
 
     //Creates a new active scheduled task ready to be used by the task scheduler
-    ScheduledTask(long id, String name, String description, LocalDateTime createdDate, LocalDateTime scheduleDate, ArrayList<String> tags, Duration repeatDuration, float repeatProbability)
+    ScheduledObjective(long id, String name, String description, LocalDateTime createdDate, LocalDateTime scheduleDate, ArrayList<String> tags, Duration repeatDuration, float repeatProbability)
     {
         mIsActive = true;
 
@@ -121,7 +121,7 @@ class ScheduledTask
     }
 
     //Creates a task from its JSON representation
-    public static ScheduledTask fromJSON(JSONObject jsonObject)
+    public static ScheduledObjective fromJSON(JSONObject jsonObject)
     {
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss:nnnnnnnnn");
 
@@ -202,11 +202,11 @@ class ScheduledTask
             e.printStackTrace();
         }
 
-        ScheduledTask task;
+        ScheduledObjective task;
         if(id != -1 && !name.isEmpty() && createdDate != null && scheduledDate != null && repeatDurationMinutes != null && repeatProbability != null)
         {
             Duration repeatDuration = Duration.ofMinutes(repeatDurationMinutes);
-            task = new ScheduledTask(id, name, description, createdDate, scheduledDate, taskTags, repeatDuration, repeatProbability);
+            task = new ScheduledObjective(id, name, description, createdDate, scheduledDate, taskTags, repeatDuration, repeatProbability);
 
             if(!isActive)
             {

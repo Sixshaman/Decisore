@@ -37,7 +37,7 @@ import java.util.concurrent.TimeUnit;
 public class TaskListActivity extends AppCompatActivity
 {
     //Task scheduler to add new tasks there
-    private TaskScheduler mTaskScheduler;
+    private ObjectiveSchedulerCache mObjectiveSchedulerCache;
 
     //Task list (the model of this class)
     private ObjectiveListCache mObjectiveListCache;
@@ -65,14 +65,14 @@ public class TaskListActivity extends AppCompatActivity
 
         mObjectiveArchiveCache = new ObjectiveArchiveCache();
         mObjectiveListCache = new ObjectiveListCache();
-        mTaskScheduler = new TaskScheduler();
+        mObjectiveSchedulerCache = new ObjectiveSchedulerCache();
 
         mObjectiveListCache.setArchive(mObjectiveArchiveCache);
-        mTaskScheduler.setTaskList(mObjectiveListCache);
+        mObjectiveSchedulerCache.setTaskList(mObjectiveListCache);
 
         String configFolder = Objects.requireNonNull(getExternalFilesDir("/app")).getAbsolutePath();
 
-        mTaskScheduler.setConfigFolder(configFolder);
+        mObjectiveSchedulerCache.setConfigFolder(configFolder);
         mObjectiveListCache.setConfigFolder(configFolder);
         mObjectiveArchiveCache.setConfigFolder(configFolder);
 
@@ -81,19 +81,19 @@ public class TaskListActivity extends AppCompatActivity
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         //We need to lock the file in case of background processes updating it
-        mTaskScheduler.waitLock();
+        mObjectiveSchedulerCache.waitLock();
         mObjectiveListCache.waitLock();
         mObjectiveArchiveCache.waitLock();
 
         try
         {
-            mTaskScheduler.loadScheduledTasks();
+            mObjectiveSchedulerCache.loadScheduledTasks();
             mObjectiveListCache.loadTasks();
             mObjectiveArchiveCache.loadFinishedTasks();
 
-            mTaskScheduler.setLastTaskId(mObjectiveListCache.getLastTaskId());
+            mObjectiveSchedulerCache.setLastTaskId(mObjectiveListCache.getLastTaskId());
 
-            mTaskScheduler.update();
+            mObjectiveSchedulerCache.update();
         }
         catch (BaseFileLockException e)
         {
@@ -102,7 +102,7 @@ public class TaskListActivity extends AppCompatActivity
 
         mObjectiveArchiveCache.unlock();
         mObjectiveListCache.unlock();
-        mTaskScheduler.unlock();
+        mObjectiveSchedulerCache.unlock();
 
         //Guess I just need to read this
         //https://www.youtube.com/watch?v=83a4rYXsDs0
@@ -170,7 +170,7 @@ public class TaskListActivity extends AppCompatActivity
 
                 int taskTypeIndex = taskTypeSpinner.getSelectedItemPosition();
 
-                mTaskScheduler.waitLock();
+                mObjectiveSchedulerCache.waitLock();
                 mObjectiveListCache.waitLock();
 
                 try
@@ -180,7 +180,7 @@ public class TaskListActivity extends AppCompatActivity
                         //Immediate task
                         case 0:
                         {
-                            mTaskScheduler.addImmediateTask(nameText, descriptionText, new ArrayList<>());
+                            mObjectiveSchedulerCache.addImmediateTask(nameText, descriptionText, new ArrayList<>());
                             break;
                         }
 
@@ -193,7 +193,7 @@ public class TaskListActivity extends AppCompatActivity
                                 LocalDate deferDate = LocalDate.parse(deferDateEditText.getEditableText().toString(), dateTimeFormatter);
                                 LocalDateTime deferDateTime = deferDate.atTime(LocalTime.of(6, 0)); //Day starts at 6 AM
 
-                                mTaskScheduler.addDeferredTask(deferDateTime, nameText, descriptionText, new ArrayList<>());
+                                mObjectiveSchedulerCache.addDeferredTask(deferDateTime, nameText, descriptionText, new ArrayList<>());
                             }
                             catch (DateTimeParseException e)
                             {
@@ -210,13 +210,13 @@ public class TaskListActivity extends AppCompatActivity
                                 int repeatInterval      = Integer.parseInt(repeatIntervalEditText.getEditableText().toString());
                                 Duration repeatDuration = Duration.ofDays(repeatInterval);
 
-                                mTaskScheduler.addRepeatedTask(repeatDuration, nameText, descriptionText, new ArrayList<>());
+                                mObjectiveSchedulerCache.addRepeatedTask(repeatDuration, nameText, descriptionText, new ArrayList<>());
                             }
                             catch(NumberFormatException e)
                             {
                                 Toast.makeText(TaskListActivity.this, getString(R.string.frequencyParseError), Toast.LENGTH_SHORT).show();
                             }
-                            catch(TaskScheduler.SchedulerFileLockException e)
+                            catch(ObjectiveSchedulerCache.SchedulerFileLockException e)
                             {
                                 e.printStackTrace();
                             }
@@ -232,7 +232,7 @@ public class TaskListActivity extends AppCompatActivity
                                 int repeatInterval      = Integer.parseInt(repeatIntervalEditText.getEditableText().toString());
                                 Duration repeatDuration = Duration.ofDays(repeatInterval);
 
-                                mTaskScheduler.addTimeToTimeTask(repeatDuration, nameText, descriptionText, new ArrayList<>());
+                                mObjectiveSchedulerCache.addTimeToTimeTask(repeatDuration, nameText, descriptionText, new ArrayList<>());
                             }
                             catch(NumberFormatException e)
                             {
@@ -252,7 +252,7 @@ public class TaskListActivity extends AppCompatActivity
                 }
 
                 mObjectiveListCache.unlock();
-                mTaskScheduler.unlock();
+                mObjectiveSchedulerCache.unlock();
             }
         });
 

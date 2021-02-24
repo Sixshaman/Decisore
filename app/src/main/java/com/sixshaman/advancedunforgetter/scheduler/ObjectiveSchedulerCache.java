@@ -20,6 +20,7 @@ import com.sixshaman.advancedunforgetter.list.EnlistedObjective;
 import com.sixshaman.advancedunforgetter.list.ObjectiveListCache;
 import com.sixshaman.advancedunforgetter.utils.BaseFileLockException;
 import com.sixshaman.advancedunforgetter.utils.LockedReadFile;
+import com.sixshaman.advancedunforgetter.utils.LockedWriteFile;
 import com.sixshaman.advancedunforgetter.utils.TaskIdGenerator;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -30,72 +31,46 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 //The class to schedule all deferred tasks. The model for the scheduler UI
-public class TaskScheduler
+public class ObjectiveSchedulerCache
 {
-    //Our next big thing is to add a scheduler activity!
-    //The plan:
-    // - Main scheduler tab, showing the list of deferred tasks and daily/time-to-time tasks
-    // - Task chain tab, showing the list of individual task chains. Click on an element opens a new window with the list of tasks in the chain
-    // - Task pool tab, showing the list of task pools. Click on an element opens a new window with pool info and the list of task sources. Click on a task source opens another window with task source info.
-
-    //Architecture planning counts as working on this project :P
-    // - So, main scheduler. Pressing "+" will show options!
-    //Options are ONLY for individual tasks (daily, time-to-time, etc)
-    //On top there's a hamburger menu.
-    //All task chains and task pools are there. Not in options on "+".
-
-    private static final String SCHEDULER_FILENAME = "TaskScheduler.json";
+    public static final String SCHEDULER_FILENAME = "TaskScheduler.json";
 
     //The list of all the task pools.
     //All single tasks are task pools with a single SingleTaskSource
     //All single task chains are task pools with a single TaskChain
     private ArrayList<TaskPool> mTaskPools;
 
-    //Generated task ids
-    private TaskIdGenerator mIdGenerator;
-
-    //The file to store the scheduler data
-    private LockedReadFile mConfigFile;
-
     //Creates a new task scheduler that is bound to mainList
-    public TaskScheduler()
+    public ObjectiveSchedulerCache()
     {
         mTaskPools = new ArrayList<>();
-
-        mIdGenerator = new TaskIdGenerator();
     }
 
-    //Sets the folder to store the JSON config file
-    public void setConfigFolder(String folder)
+    //Updates the task scheduler. Returns the list of objectives ready to-do
+    public ArrayList<EnlistedObjective> dumpReadyObjectives(final ObjectiveListCache listCache, LocalDateTime enlistDateTime)
     {
-        mConfigFile = new LockedReadFile(folder + "/" + SCHEDULER_FILENAME);
-    }
+        ArrayList<EnlistedObjective> result = new ArrayList<>();
 
-    //Updates the task scheduler: adds all ready-to-be-done tasks to the main list, reschedules tasks, updates chains and pools
-    public void update() throws ObjectiveListCache.ListFileLockException, SchedulerFileLockException
-    {
-        ArrayList<TaskPool> changedPools = new ArrayList<>(); //Rebuild task pool list after each update
-
-        LocalDateTime currentDateTime = LocalDateTime.now();
+        ArrayList<TaskPool> changedPools = new ArrayList<>(); //Rebuild task pool list after each update event
         for(TaskPool pool: mTaskPools)
         {
             if(pool.isSingleSingleTaskPool())
             {
                 //Don't need to check if the last task is done
-                EnlistedObjective task = pool.getRandomTask(currentDateTime);
-                mMainList.addTask(task);
+                EnlistedObjective task = pool.getRandomTask(enlistDateTime);
+                result.add(task);
             }
             else
             {
                 //Only add the task to the main list if the last task provided by the pool is done
-                if(!mMainList.isTaskInList(pool.getLastProvidedTaskId()))
+                if(!listCache.isObjectiveInList(pool.getLastProvidedTaskId()))
                 {
-                    EnlistedObjective task = pool.getRandomTask(currentDateTime);
-                    mMainList.addTask(task);
+                    EnlistedObjective task = pool.getRandomTask(enlistDateTime);
+                    result.add(task);
                 }
             }
 
-            pool.updateTaskSources(currentDateTime);
+            pool.updateTaskSources(enlistDateTime);
             if(pool.getTaskSourceCount() != 0) //Don't add empty pools
             {
                 changedPools.add(pool);
@@ -103,43 +78,12 @@ public class TaskScheduler
         }
 
         mTaskPools = changedPools;
-        saveScheduledTasks();
-    }
-
-    public void waitLock()
-    {
-        try
-        {
-            while(!mConfigFile.lock())
-            {
-                Log.d("LOCK", "Can't lock the scheduler config file!");
-                Thread.sleep(100);
-            }
-        }
-        catch(InterruptedException e)
-        {
-            e.printStackTrace();
-        }
-    }
-
-    public boolean tryLock()
-    {
-        return mConfigFile.lock();
-    }
-
-    public void unlock()
-    {
-        mConfigFile.unlock();
+        return result;
     }
 
     //Loads tasks from JSON config file
-    public void loadScheduledTasks() throws SchedulerFileLockException
+    public boolean invalidate(LockedReadFile schedulerReadFile)
     {
-        if(!mConfigFile.isLocked())
-        {
-            throw new SchedulerFileLockException();
-        }
-
         mTaskPools.clear();
 
         try
@@ -164,17 +108,15 @@ public class TaskScheduler
         catch(JSONException e)
         {
             e.printStackTrace();
+            return false;
         }
+
+        return true;
     }
 
     //Saves scheduled tasks in JSON config file
-    public void saveScheduledTasks() throws SchedulerFileLockException
+    public boolean flush(LockedWriteFile schedulerWriteFile)
     {
-        if(!mConfigFile.isLocked())
-        {
-            throw new SchedulerFileLockException();
-        }
-
         try
         {
             JSONObject jsonObject    = new JSONObject();
@@ -192,7 +134,10 @@ public class TaskScheduler
         catch(JSONException e)
         {
             e.printStackTrace();
+            return false;
         }
+
+        return true;
     }
 
     //Creates a new one-time task and immediately adds it to the main list
@@ -274,23 +219,22 @@ public class TaskScheduler
     }
 
     //Adds a general task to task pool pool or task chain chain scheduled to be added at deferTime with repeat duration repeatDuration and repeat probability repeatProbability
-    private void addTask(TaskPool pool, TaskChain chain, LocalDateTime deferTime,
-                         Duration repeatDuration, float repeatProbability,
-                         String taskName, String taskDescription, ArrayList<String> taskTags) throws SchedulerFileLockException
+    private boolean addTask(long objectiveId, TaskPool pool, TaskChain chain,
+                            LocalDateTime deferTime, Duration repeatDuration, float repeatProbability,
+                            String taskName, String taskDescription, ArrayList<String> taskTags)
     {
-        long          taskId      = mIdGenerator.generateNextId();
         LocalDateTime currentTime = LocalDateTime.now();
 
-        ScheduledTask scheduledTask = new ScheduledTask(taskId, taskName, taskDescription, currentTime, deferTime,
-                                                        taskTags, repeatDuration, repeatProbability);
+        ScheduledObjective scheduledObjective = new ScheduledObjective(objectiveId, taskName, taskDescription, currentTime, deferTime,
+                                                                       taskTags, repeatDuration, repeatProbability);
 
         //Calculate the next time to do the task
-        scheduledTask.reschedule(deferTime);
+        scheduledObjective.reschedule(deferTime);
 
         if(pool == null && chain == null) //Add a single task source to the new pool
         {
-            //Neither task chain nor pool are provided, create an implicit pool and add task there
-            SingleTaskSource taskSource = new SingleTaskSource(scheduledTask);
+            //Neither task chain nor pool is provided, create an implicit pool and add task there
+            SingleTaskSource taskSource = new SingleTaskSource(scheduledObjective);
 
             TaskPool implicitPool = new TaskPool("", "");
             implicitPool.addTaskSource(taskSource);
@@ -300,22 +244,22 @@ public class TaskScheduler
         else if(pool == null)
         {
             //Task chain provided, add the task there
-            chain.addTaskToChain(scheduledTask);
+            chain.addTaskToChain(scheduledObjective);
         }
         else
         {
             //Task pool provided, add the task there
-            SingleTaskSource taskSource = new SingleTaskSource(scheduledTask);
+            SingleTaskSource taskSource = new SingleTaskSource(scheduledObjective);
             pool.addTaskSource(taskSource);
         }
 
-        saveScheduledTasks();
+        return true;
     }
 
     //Sets the start id for the task id generator
-    public void setLastTaskId(long id)
+    public long getMaxObjectiveId()
     {
-        long maxId = id;
+        long maxId = -1;
         for(TaskPool pool: mTaskPools)
         {
             long poolMaxId = pool.getMaxTaskId();
@@ -325,6 +269,6 @@ public class TaskScheduler
             }
         }
 
-        mIdGenerator.setFirstId(maxId);
+        return maxId;
     }
 }

@@ -34,9 +34,6 @@ public class ObjectiveListCache extends RecyclerView.Adapter<ObjectiveListCache.
     //The context for displaying the task list
     private Context mContext;
 
-    //Transaction dispatcher for task finishing
-    private TransactionDispatcher mTransactionDispatcher;
-
     //Constructs a new task list
     public ObjectiveListCache()
     {
@@ -202,7 +199,8 @@ public class ObjectiveListCache extends RecyclerView.Adapter<ObjectiveListCache.
     }
 
     //Returns the largest id for a stored objective
-    public long getLastObjectiveId()
+    //Since objectives are sorted by id, it's gonna be the last objective
+    public long getMaxObjectiveId()
     {
         if(mEnlistedObjectives.isEmpty())
         {
@@ -231,8 +229,12 @@ public class ObjectiveListCache extends RecyclerView.Adapter<ObjectiveListCache.
 
         taskViewHolder.mCheckbox.setOnClickListener(view ->
         {
+            String configFolder = Objects.requireNonNull(mContext.getExternalFilesDir("/app")).getAbsolutePath();
+
             EnlistedObjective objectiveToRemove = mEnlistedObjectives.get(position);
-            mTransactionDispatcher.finishObjectiveTransaction(mConfigFolder, objectiveToRemove, LocalDateTime.now());
+
+            TransactionDispatcher transactionDispatcher = mContext.getApplication().
+            transactionDispatcher.finishObjectiveTransaction(this, null, configFolder, objectiveToRemove, LocalDateTime.now());
         });
 
         taskViewHolder.mParentLayout.setOnClickListener(view -> Toast.makeText(mContext, mEnlistedObjectives.get(position).getDescription(), Toast.LENGTH_LONG).show());

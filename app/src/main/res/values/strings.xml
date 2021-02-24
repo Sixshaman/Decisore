@@ -1,7 +1,7 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Advanced Unforgetter</string>
-    <string name="title_activity_task_list">Tasks for today</string>\
-    <string name="title_activity_task_archive">Done tasks</string>
+    <string name="title_activity_task_list">Today objectives</string>\
+    <string name="title_activity_task_archive">Finished objectives</string>
     <string name="placeholderTask">Task</string>
     <string name="taskName">Name</string>
     <string name="taskDescription">Description</string>

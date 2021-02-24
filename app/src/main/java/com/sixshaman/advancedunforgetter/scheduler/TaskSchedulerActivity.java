@@ -8,28 +8,18 @@ import android.widget.*;
 import androidx.appcompat.app.AlertDialog;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import android.view.View;
 import com.sixshaman.advancedunforgetter.R;
-import com.sixshaman.advancedunforgetter.list.TaskListActivity;
 import com.sixshaman.advancedunforgetter.utils.BaseFileLockException;
-
-import java.time.Duration;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
 
 public class TaskSchedulerActivity extends AppCompatActivity
 {
     //This is the first one
 
     //Task scheduler model
-    private TaskScheduler mTaskScheduler;
+    private ObjectiveSchedulerCache mObjectiveSchedulerCache;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
