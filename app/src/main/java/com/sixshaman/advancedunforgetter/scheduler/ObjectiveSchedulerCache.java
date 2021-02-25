@@ -87,7 +87,7 @@ public class ObjectiveSchedulerCache
 
         try
         {
-            String fileContents = mConfigFile.read();
+            String fileContents = schedulerReadFile.read();
             JSONObject jsonObject = new JSONObject(fileContents);
 
             JSONArray poolsJsonArray = jsonObject.getJSONArray("POOLS");
@@ -128,7 +128,7 @@ public class ObjectiveSchedulerCache
 
             jsonObject.put("POOLS", tasksJsonArray);
 
-            mConfigFile.write(jsonObject.toString());
+            schedulerWriteFile.write(jsonObject.toString());
         }
         catch(JSONException e)
         {
@@ -144,7 +144,7 @@ public class ObjectiveSchedulerCache
     {
         //Create a new unnamed task pool to hold the chain
         TaskPool pool = new TaskPool("", "");
-        addTaskChainToPool(pool, name, description);
+        addObjectiveChainToPool(pool, name, description);
         mTaskPools.add(pool);
     }
 
@@ -165,14 +165,6 @@ public class ObjectiveSchedulerCache
     //Adds a general task to task pool pool or task chain chain scheduled to be added at deferTime with repeat duration repeatDuration and repeat probability repeatProbability
     public boolean addObjective(TaskPool pool, TaskChain chain, ScheduledObjective scheduledObjective)
     {
-        LocalDateTime currentTime = LocalDateTime.now();
-
-        ScheduledObjective scheduledObjective = new ScheduledObjective(objectiveId, objectiveName, objectiveDescription, currentTime, deferTime,
-                                                                       objectiveTags, repeatDuration, repeatProbability);
-
-        //Calculate the next time to do the task
-        scheduledObjective.reschedule(deferTime);
-
         if(pool == null && chain == null) //Add a single task source to the new pool
         {
             //Neither task chain nor pool is provided, create an implicit pool and add task there

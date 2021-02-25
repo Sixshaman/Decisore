@@ -138,14 +138,19 @@ public class ListActivity extends AppCompatActivity
             {
                 String descriptionText = editTextNDescription.getEditableText().toString();
 
-                int taskTypeIndex = taskTypeSpinner.getSelectedItemPosition();
+                LocalDateTime objectiveCreateDate   = LocalDateTime.now();
+                LocalDateTime objectiveScheduleDate = objectiveCreateDate;
 
-                switch(taskTypeIndex)
+                Duration objectiveRepeatDuration = Duration.ZERO;
+                float objectiveRepeatProbability = 0.0f;
+
+                int objectiveTypeIndex = taskTypeSpinner.getSelectedItemPosition();
+                switch(objectiveTypeIndex)
                 {
                     //Immediate task
                     case 0:
                     {
-                        mObjectiveSchedulerCache.addImmediateTask(nameText, descriptionText, new ArrayList<>());
+                        objectiveScheduleDate = objectiveCreateDate;
                         break;
                     }
 
@@ -156,9 +161,7 @@ public class ListActivity extends AppCompatActivity
                         try
                         {
                             LocalDate deferDate = LocalDate.parse(deferDateEditText.getEditableText().toString(), dateTimeFormatter);
-                            LocalDateTime deferDateTime = deferDate.atTime(LocalTime.of(6, 0)); //Day starts at 6 AM
-
-                            mObjectiveSchedulerCache.addDeferredTask(deferDateTime, nameText, descriptionText, new ArrayList<>());
+                            objectiveScheduleDate = deferDate.atTime(LocalTime.of(6, 0)); //Day starts at 6 AM
                         }
                         catch (DateTimeParseException e)
                         {
@@ -172,18 +175,15 @@ public class ListActivity extends AppCompatActivity
                     {
                         try
                         {
-                            int repeatInterval      = Integer.parseInt(repeatIntervalEditText.getEditableText().toString());
-                            Duration repeatDuration = Duration.ofDays(repeatInterval);
+                            int repeatInterval         = Integer.parseInt(repeatIntervalEditText.getEditableText().toString());
+                            objectiveRepeatDuration    = Duration.ofDays(repeatInterval);
+                            objectiveRepeatProbability = 1.0f;
 
-                            mObjectiveSchedulerCache.addRepeatedTask(repeatDuration, nameText, descriptionText, new ArrayList<>());
+                            objectiveScheduleDate = objectiveCreateDate.plusDays(1); //Default for regular objectives is +1 day for start
                         }
                         catch(NumberFormatException e)
                         {
                             Toast.makeText(ListActivity.this, getString(R.string.frequencyParseError), Toast.LENGTH_SHORT).show();
-                        }
-                        catch(ObjectiveSchedulerCache.SchedulerFileLockException e)
-                        {
-                            e.printStackTrace();
                         }
 
                         break;
@@ -194,10 +194,11 @@ public class ListActivity extends AppCompatActivity
                     {
                         try
                         {
-                            int repeatInterval      = Integer.parseInt(repeatIntervalEditText.getEditableText().toString());
-                            Duration repeatDuration = Duration.ofDays(repeatInterval);
+                            int repeatInterval         = Integer.parseInt(repeatIntervalEditText.getEditableText().toString());
+                            objectiveRepeatDuration    = Duration.ofDays(repeatInterval);
+                            objectiveRepeatProbability = 0.5f;
 
-                            mObjectiveSchedulerCache.addTimeToTimeTask(repeatDuration, nameText, descriptionText, new ArrayList<>());
+                            objectiveScheduleDate = objectiveCreateDate.plusDays(1); //Default for regular objectives is +1 day for start
                         }
                         catch(NumberFormatException e)
                         {
@@ -216,7 +217,9 @@ public class ListActivity extends AppCompatActivity
                 TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
                 transactionDispatcher.setListCache(mListCache);
 
-                transactionDispatcher.addTransaction(configFolder);
+                transactionDispatcher.addObjectiveTransaction(configFolder, objectiveCreateDate, objectiveScheduleDate,
+                                                              objectiveRepeatDuration, objectiveRepeatProbability,
+                                                              nameText, descriptionText, new ArrayList<>());
             }
         });
 
