@@ -109,7 +109,8 @@ public class ObjectiveListCache
         if (index >= 0)
         {
             mEnlistedObjectives.remove(index);
-        } else
+        }
+        else
         {
             return false;
         }
