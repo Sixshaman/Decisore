@@ -1,6 +1,5 @@
 package com.sixshaman.advancedunforgetter.list;
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
@@ -23,9 +22,10 @@ import com.sixshaman.advancedunforgetter.R;
 import com.sixshaman.advancedunforgetter.archive.ArchiveActivity;
 import com.sixshaman.advancedunforgetter.archive.*;
 import com.sixshaman.advancedunforgetter.scheduler.*;
-import com.sixshaman.advancedunforgetter.utils.*;
-import com.sixshaman.advancedunforgetter.utils.BaseFileLockException;
+import com.sixshaman.advancedunforgetter.utils.LockedReadFile;
+import com.sixshaman.advancedunforgetter.utils.TransactionDispatcher;
 
+import java.io.FileNotFoundException;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -33,20 +33,13 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-public class TaskListActivity extends AppCompatActivity
+public class ListActivity extends AppCompatActivity
 {
-    //Task scheduler to add new tasks there
-    private TaskScheduler mTaskScheduler;
-
-    //Task list (the model of this class)
-    private TaskList mTaskList;
-
-    //Task archive model
-    private TaskArchive mTaskArchive;
+    //Objective list
+    private ObjectiveListCache mListCache;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -63,55 +56,31 @@ public class TaskListActivity extends AppCompatActivity
     @Override
     protected void onResume()
     {
-        //NEXT: SCHEDULER INTERFACE
         super.onResume();
 
-        mTaskArchive   = new TaskArchive();
-        mTaskList      = new TaskList();
-        mTaskScheduler = new TaskScheduler();
-
-        mTaskList.setArchive(mTaskArchive);
-        mTaskScheduler.setTaskList(mTaskList);
+        mListCache = new ObjectiveListCache();
 
         String configFolder = Objects.requireNonNull(getExternalFilesDir("/app")).getAbsolutePath();
 
-        mTaskScheduler.setConfigFolder(configFolder);
-        mTaskList.setConfigFolder(configFolder);
-        mTaskArchive.setConfigFolder(configFolder);
-
         RecyclerView recyclerView = findViewById(R.id.taskListView);
-        recyclerView.setAdapter(mTaskList);
+        mListCache.attachToView(recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-
-        //We need to lock the file in case of background processes updating it
-        mTaskScheduler.waitLock();
-        mTaskList.waitLock();
-        mTaskArchive.waitLock();
 
         try
         {
-            mTaskScheduler.loadScheduledTasks();
-            mTaskList.loadTasks();
-            mTaskArchive.loadFinishedTasks();
+            LockedReadFile listFile = new LockedReadFile(configFolder + "/" + ObjectiveListCache.LIST_FILENAME);
+            mListCache.invalidate(listFile);
+            listFile.close();
 
-            mTaskScheduler.setLastTaskId(mTaskList.getLastTaskId());
+            TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
+            transactionDispatcher.setListCache(mListCache);
 
-            mTaskScheduler.update();
+            transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now());
         }
-        catch (BaseFileLockException e)
+        catch(FileNotFoundException e)
         {
             e.printStackTrace();
         }
-
-        mTaskArchive.unlock();
-        mTaskList.unlock();
-        mTaskScheduler.unlock();
-
-        //Guess I just need to read this
-        //https://www.youtube.com/watch?v=83a4rYXsDs0
-        PeriodicWorkRequest.Builder builder = new PeriodicWorkRequest.Builder(BackgroundUpdater.class, 1, TimeUnit.HOURS);
-        PeriodicWorkRequest workRequest = builder.build();
-        WorkManager.getInstance(this).enqueue(workRequest);
     }
 
     @Override
@@ -122,9 +91,7 @@ public class TaskListActivity extends AppCompatActivity
 
         menu.findItem(R.id.menuOpenArchive).setOnMenuItemClickListener(item ->
         {
-            mTaskList.setArchive(null); //Stop the archive from updating
-
-            Intent archiveOpenIntent = new Intent(TaskListActivity.this, ArchiveActivity.class);
+            Intent archiveOpenIntent = new Intent(ListActivity.this, ArchiveActivity.class);
             startActivity(archiveOpenIntent);
             return true;
         });
@@ -164,98 +131,95 @@ public class TaskListActivity extends AppCompatActivity
             String nameText = editTextName.getEditableText().toString();
             if(nameText.isEmpty())
             {
-                Toast toast = Toast.makeText(TaskListActivity.this, R.string.invalidTaskName, Toast.LENGTH_SHORT);
+                Toast toast = Toast.makeText(ListActivity.this, R.string.invalidTaskName, Toast.LENGTH_SHORT);
                 toast.show();
             }
             else
             {
                 String descriptionText = editTextNDescription.getEditableText().toString();
 
-                int taskTypeIndex = taskTypeSpinner.getSelectedItemPosition();
+                LocalDateTime objectiveCreateDate   = LocalDateTime.now();
+                LocalDateTime objectiveScheduleDate = objectiveCreateDate;
 
-                mTaskScheduler.waitLock();
-                mTaskList.waitLock();
+                Duration objectiveRepeatDuration = Duration.ZERO;
+                float objectiveRepeatProbability = 0.0f;
 
-                try
+                int objectiveTypeIndex = taskTypeSpinner.getSelectedItemPosition();
+                switch(objectiveTypeIndex)
                 {
-                    switch(taskTypeIndex)
+                    //Immediate task
+                    case 0:
                     {
-                        //Immediate task
-                        case 0:
-                        {
-                            mTaskScheduler.addImmediateTask(nameText, descriptionText, new ArrayList<>());
-                            break;
-                        }
-
-                        //Deferred task
-                        case 1:
-                        {
-                            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-                            try
-                            {
-                                LocalDate deferDate = LocalDate.parse(deferDateEditText.getEditableText().toString(), dateTimeFormatter);
-                                LocalDateTime deferDateTime = deferDate.atTime(LocalTime.of(6, 0)); //Day starts at 6 AM
-
-                                mTaskScheduler.addDeferredTask(deferDateTime, nameText, descriptionText, new ArrayList<>());
-                            }
-                            catch (DateTimeParseException e)
-                            {
-                                Toast.makeText(TaskListActivity.this, getString(R.string.dateParseErrorISO8601), Toast.LENGTH_SHORT).show();
-                            }
-                            break;
-                        }
-
-                        //Regular task
-                        case 2:
-                        {
-                            try
-                            {
-                                int repeatInterval      = Integer.parseInt(repeatIntervalEditText.getEditableText().toString());
-                                Duration repeatDuration = Duration.ofDays(repeatInterval);
-
-                                mTaskScheduler.addRepeatedTask(repeatDuration, nameText, descriptionText, new ArrayList<>());
-                            }
-                            catch(NumberFormatException e)
-                            {
-                                Toast.makeText(TaskListActivity.this, getString(R.string.frequencyParseError), Toast.LENGTH_SHORT).show();
-                            }
-                            catch(TaskScheduler.SchedulerFileLockException e)
-                            {
-                                e.printStackTrace();
-                            }
-
-                            break;
-                        }
-
-                        //Irregular task
-                        case 3:
-                        {
-                            try
-                            {
-                                int repeatInterval      = Integer.parseInt(repeatIntervalEditText.getEditableText().toString());
-                                Duration repeatDuration = Duration.ofDays(repeatInterval);
-
-                                mTaskScheduler.addTimeToTimeTask(repeatDuration, nameText, descriptionText, new ArrayList<>());
-                            }
-                            catch(NumberFormatException e)
-                            {
-                                Toast.makeText(TaskListActivity.this, getString(R.string.frequencyParseError), Toast.LENGTH_SHORT).show();
-                            }
-
-                            break;
-                        }
-
-                        default:
-                            break;
+                        objectiveScheduleDate = objectiveCreateDate;
+                        break;
                     }
-                }
-                catch (BaseFileLockException e)
-                {
-                    e.printStackTrace();
+
+                    //Deferred task
+                    case 1:
+                    {
+                        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                        try
+                        {
+                            LocalDate deferDate = LocalDate.parse(deferDateEditText.getEditableText().toString(), dateTimeFormatter);
+                            objectiveScheduleDate = deferDate.atTime(LocalTime.of(6, 0)); //Day starts at 6 AM
+                        }
+                        catch (DateTimeParseException e)
+                        {
+                            Toast.makeText(ListActivity.this, getString(R.string.dateParseErrorISO8601), Toast.LENGTH_SHORT).show();
+                        }
+                        break;
+                    }
+
+                    //Regular task
+                    case 2:
+                    {
+                        try
+                        {
+                            int repeatInterval         = Integer.parseInt(repeatIntervalEditText.getEditableText().toString());
+                            objectiveRepeatDuration    = Duration.ofDays(repeatInterval);
+                            objectiveRepeatProbability = 1.0f;
+
+                            objectiveScheduleDate = objectiveCreateDate.plusDays(1); //Default for regular objectives is +1 day for start
+                        }
+                        catch(NumberFormatException e)
+                        {
+                            Toast.makeText(ListActivity.this, getString(R.string.frequencyParseError), Toast.LENGTH_SHORT).show();
+                        }
+
+                        break;
+                    }
+
+                    //Irregular task
+                    case 3:
+                    {
+                        try
+                        {
+                            int repeatInterval         = Integer.parseInt(repeatIntervalEditText.getEditableText().toString());
+                            objectiveRepeatDuration    = Duration.ofDays(repeatInterval);
+                            objectiveRepeatProbability = 0.5f;
+
+                            objectiveScheduleDate = objectiveCreateDate.plusDays(1); //Default for regular objectives is +1 day for start
+                        }
+                        catch(NumberFormatException e)
+                        {
+                            Toast.makeText(ListActivity.this, getString(R.string.frequencyParseError), Toast.LENGTH_SHORT).show();
+                        }
+
+                        break;
+                    }
+
+                    default:
+                        break;
                 }
 
-                mTaskList.unlock();
-                mTaskScheduler.unlock();
+                String configFolder = Objects.requireNonNull(getExternalFilesDir("/app")).getAbsolutePath();
+
+                TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
+                transactionDispatcher.setListCache(mListCache);
+
+                transactionDispatcher.addObjectiveTransaction(configFolder, objectiveCreateDate, objectiveScheduleDate,
+                                                              objectiveRepeatDuration, objectiveRepeatProbability,
+                                                              nameText, descriptionText, new ArrayList<>());
             }
         });
 

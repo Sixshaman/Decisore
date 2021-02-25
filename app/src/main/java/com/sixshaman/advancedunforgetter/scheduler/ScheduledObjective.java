@@ -1,6 +1,6 @@
 package com.sixshaman.advancedunforgetter.scheduler;
 
-import com.sixshaman.advancedunforgetter.list.EnlistedTask;
+import com.sixshaman.advancedunforgetter.list.EnlistedObjective;
 import com.sixshaman.advancedunforgetter.utils.RandomUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -13,7 +13,7 @@ import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 
-class ScheduledTask
+public class ScheduledObjective
 {
     private static final String JSON_TASK_ID                 = "Id";
     private static final String JSON_TASK_NAME               = "Name";
@@ -53,7 +53,7 @@ class ScheduledTask
     private float mRepeatProbability;
 
     //Creates a new active scheduled task ready to be used by the task scheduler
-    ScheduledTask(long id, String name, String description, LocalDateTime createdDate, LocalDateTime scheduleDate, ArrayList<String> tags, Duration repeatDuration, float repeatProbability)
+    public ScheduledObjective(long id, String name, String description, LocalDateTime createdDate, LocalDateTime scheduleDate, ArrayList<String> tags, Duration repeatDuration, float repeatProbability)
     {
         mIsActive = true;
 
@@ -121,7 +121,7 @@ class ScheduledTask
     }
 
     //Creates a task from its JSON representation
-    public static ScheduledTask fromJSON(JSONObject jsonObject)
+    public static ScheduledObjective fromJSON(JSONObject jsonObject)
     {
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss:nnnnnnnnn");
 
@@ -202,11 +202,11 @@ class ScheduledTask
             e.printStackTrace();
         }
 
-        ScheduledTask task;
+        ScheduledObjective task;
         if(id != -1 && !name.isEmpty() && createdDate != null && scheduledDate != null && repeatDurationMinutes != null && repeatProbability != null)
         {
             Duration repeatDuration = Duration.ofMinutes(repeatDurationMinutes);
-            task = new ScheduledTask(id, name, description, createdDate, scheduledDate, taskTags, repeatDuration, repeatProbability);
+            task = new ScheduledObjective(id, name, description, createdDate, scheduledDate, taskTags, repeatDuration, repeatProbability);
 
             if(!isActive)
             {
@@ -221,16 +221,16 @@ class ScheduledTask
         return task;
     }
 
-    //Reschedules the task to the new enlist date
-    void reschedule(LocalDateTime referenceTime)
+    //Reschedules the objective to the new enlist date
+    public void reschedule(LocalDateTime referenceTime)
     {
         //Cannot reschedule non-repeated tasks and won't reschedule paused tasks
-        if(mRepeatProbability == 0.0f || !mIsActive)
+        if(mRepeatProbability < 0.0001f || !mIsActive)
         {
             return;
         }
 
-        if(mRepeatProbability == 1.0f) //If it's a strictly repeated task, just add the duration
+        if(mRepeatProbability > 0.9999f) //If it's a strictly repeated task, just add the duration
         {
             LocalDateTime nextDateTime = referenceTime.plusHours(mRepeatDuration.toHours());
             mScheduledAddDate = nextDateTime.truncatedTo(ChronoUnit.HOURS);
@@ -251,9 +251,9 @@ class ScheduledTask
     }
 
     //Transforms scheduled task to an enlisted
-    public EnlistedTask toEnlisted(LocalDateTime enlistDate)
+    public EnlistedObjective toEnlisted(LocalDateTime enlistDate)
     {
-        return new EnlistedTask(mId, mDateCreated, enlistDate, mName, mDescription, mTags);
+        return new EnlistedObjective(mId, mDateCreated, enlistDate, mName, mDescription, mTags);
     }
 
     public long getId()

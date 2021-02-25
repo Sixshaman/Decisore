@@ -1,6 +1,6 @@
 package com.sixshaman.advancedunforgetter.scheduler;
 
-import com.sixshaman.advancedunforgetter.list.EnlistedTask;
+import com.sixshaman.advancedunforgetter.list.EnlistedObjective;
 import org.json.JSONObject;
 
 import java.time.LocalDateTime;
@@ -26,7 +26,7 @@ interface TaskSource
     JSONObject toJSON();
 
     //Obtains a single task ready-to-be-added to the list
-    EnlistedTask obtainTask(LocalDateTime referenceTime);
+    EnlistedObjective obtainTask(LocalDateTime referenceTime);
 
     //Gets the task source state
     SourceState getState(LocalDateTime referenceTime);

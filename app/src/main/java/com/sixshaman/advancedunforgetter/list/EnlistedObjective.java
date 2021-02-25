@@ -1,7 +1,7 @@
 package com.sixshaman.advancedunforgetter.list;
 
 import androidx.annotation.NonNull;
-import com.sixshaman.advancedunforgetter.archive.ArchivedTask;
+import com.sixshaman.advancedunforgetter.archive.ArchivedObjective;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -11,7 +11,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 
-public class EnlistedTask implements Comparable<Long>
+public class EnlistedObjective implements Comparable<Long>
 {
     private static final String TAG = "EnlistedTask";
 
@@ -45,7 +45,7 @@ public class EnlistedTask implements Comparable<Long>
     private float mCharm;
 
     //Creates a new unfinished, not added to the list task
-    public EnlistedTask(long id, LocalDateTime creationDate, LocalDateTime addedDate, String name, String description, ArrayList<String> tags)
+    public EnlistedObjective(long id, LocalDateTime creationDate, LocalDateTime addedDate, String name, String description, ArrayList<String> tags)
     {
         mId = id;
 
@@ -107,7 +107,7 @@ public class EnlistedTask implements Comparable<Long>
     }
 
     //Creates a task from its JSON representation
-    public static EnlistedTask fromJSON(JSONObject jsonObject)
+    public static EnlistedObjective fromJSON(JSONObject jsonObject)
     {
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss:nnnnnnnnn");
 
@@ -155,10 +155,10 @@ public class EnlistedTask implements Comparable<Long>
             e.printStackTrace();
         }
 
-        EnlistedTask task;
+        EnlistedObjective task;
         if(id != -1 && !name.isEmpty() && createdDate != null && addedDate != null)
         {
-            task = new EnlistedTask(id, createdDate, addedDate, name, description, taskTags);
+            task = new EnlistedObjective(id, createdDate, addedDate, name, description, taskTags);
         }
         else
         {
@@ -170,9 +170,9 @@ public class EnlistedTask implements Comparable<Long>
         return task;
     }
 
-    public ArchivedTask toArchived(LocalDateTime finishDate)
+    public ArchivedObjective toArchived(LocalDateTime finishDate)
     {
-        return new ArchivedTask(mDateCreated, mDateEnlisted, finishDate, mName, mDescription, mTags);
+        return new ArchivedObjective(mDateCreated, mDateEnlisted, finishDate, mName, mDescription, mTags);
     }
 
     //Returns true if tag is in mTags, otherwise returns false

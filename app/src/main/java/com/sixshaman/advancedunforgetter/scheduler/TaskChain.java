@@ -1,13 +1,10 @@
 package com.sixshaman.advancedunforgetter.scheduler;
 
-import com.sixshaman.advancedunforgetter.list.EnlistedTask;
+import com.sixshaman.advancedunforgetter.list.EnlistedObjective;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayDeque;
 
@@ -20,7 +17,7 @@ public class TaskChain implements TaskSource
     private String mDescription;
 
     //The tasks that this chain will provide one-by-one. Since Java doesn't have any non-deque Queue implementation, we will use ArrayDeque
-    private ArrayDeque<ScheduledTask> mTasks;
+    private ArrayDeque<ScheduledObjective> mTasks;
 
     //Creates a new task chain
     TaskChain(String name, String description)
@@ -32,7 +29,7 @@ public class TaskChain implements TaskSource
     }
 
     //Adds a task to the chain
-    void addTaskToChain(ScheduledTask task)
+    void addTaskToChain(ScheduledObjective task)
     {
         if(mTasks != null) //mTasks can be null if the chain is finished
         {
@@ -68,7 +65,7 @@ public class TaskChain implements TaskSource
                 result.put("Description", mDescription);
 
                 JSONArray tasksArray = new JSONArray();
-                for(ScheduledTask task: mTasks)
+                for(ScheduledObjective task: mTasks)
                 {
                     tasksArray.put(task.toJSON());
                 }
@@ -98,7 +95,7 @@ public class TaskChain implements TaskSource
         }
 
         long maxId = -1;
-        for(ScheduledTask task: mTasks)
+        for(ScheduledObjective task: mTasks)
         {
             long taskId = task.getId();
             if(taskId > maxId)
@@ -127,7 +124,7 @@ public class TaskChain implements TaskSource
                     JSONObject taskObject = tasksJsonArray.optJSONObject(i);
                     if(taskObject != null)
                     {
-                        ScheduledTask task = ScheduledTask.fromJSON(taskObject);
+                        ScheduledObjective task = ScheduledObjective.fromJSON(taskObject);
                         if(task != null)
                         {
                             taskChain.addTaskToChain(task);
@@ -147,11 +144,11 @@ public class TaskChain implements TaskSource
     }
 
     @Override
-    public EnlistedTask obtainTask(LocalDateTime referenceTime)
+    public EnlistedObjective obtainTask(LocalDateTime referenceTime)
     {
         if(mTasks != null && !mTasks.isEmpty())
         {
-            ScheduledTask firstTask = mTasks.getFirst();
+            ScheduledObjective firstTask = mTasks.getFirst();
             if(referenceTime.isAfter(firstTask.getScheduledEnlistDate()))
             {
                 return mTasks.removeFirst().toEnlisted(referenceTime);
@@ -180,7 +177,7 @@ public class TaskChain implements TaskSource
         }
         else
         {
-            ScheduledTask firstTask = mTasks.getFirst();
+            ScheduledObjective firstTask = mTasks.getFirst();
             if(firstTask.isActive() && referenceTime.isAfter(firstTask.getScheduledEnlistDate())) //Also return EMPTY state if we can't provide the first task at this time
             {
                 return SourceState.SOURCE_STATE_REGULAR;

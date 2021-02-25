@@ -7,29 +7,25 @@ import android.view.LayoutInflater;
 import android.widget.*;
 import androidx.appcompat.app.AlertDialog;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import android.view.View;
 import com.sixshaman.advancedunforgetter.R;
-import com.sixshaman.advancedunforgetter.list.TaskListActivity;
-import com.sixshaman.advancedunforgetter.utils.BaseFileLockException;
+import com.sixshaman.advancedunforgetter.list.ObjectiveListCache;
+import com.sixshaman.advancedunforgetter.utils.LockedReadFile;
+import com.sixshaman.advancedunforgetter.utils.TransactionDispatcher;
 
-import java.time.Duration;
-import java.time.LocalDate;
+import java.io.FileNotFoundException;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
+import java.util.Objects;
 
 public class TaskSchedulerActivity extends AppCompatActivity
 {
-    //This is the first one
-
-    //Task scheduler model
-    private TaskScheduler mTaskScheduler;
+    //Scheduler cache model
+    private ObjectiveSchedulerCache mSchedulerCache;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -51,6 +47,32 @@ public class TaskSchedulerActivity extends AppCompatActivity
                 openAddTaskDialog();
             }
         });
+    }
+
+    @Override
+    protected void onResume()
+    {
+        super.onResume();
+
+        mSchedulerCache = new ObjectiveSchedulerCache();
+
+        String configFolder = Objects.requireNonNull(getExternalFilesDir("/app")).getAbsolutePath();
+
+        try
+        {
+            LockedReadFile listFile = new LockedReadFile(configFolder + "/" + ObjectiveListCache.LIST_FILENAME);
+            mSchedulerCache.invalidate(listFile);
+            listFile.close();
+
+            TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
+            transactionDispatcher.setSchedulerCache(mSchedulerCache);
+
+            transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now());
+        }
+        catch(FileNotFoundException e)
+        {
+            e.printStackTrace();
+        }
     }
 
     private void openAddTaskDialog()
