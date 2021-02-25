@@ -28,7 +28,7 @@
         <activity android:name=".archive.ArchiveActivity">
         </activity>
         <activity
-                android:name=".list.TaskListActivity"
+                android:name=".list.ListActivity"
                 android:label="@string/title_activity_task_list"
                 android:theme="@style/AppTheme">
             <intent-filter>

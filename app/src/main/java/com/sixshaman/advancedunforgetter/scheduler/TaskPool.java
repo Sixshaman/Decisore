@@ -1,15 +1,12 @@
 package com.sixshaman.advancedunforgetter.scheduler;
 
-import android.util.JsonWriter;
-import com.sixshaman.advancedunforgetter.list.EnlistedTask;
+import com.sixshaman.advancedunforgetter.list.EnlistedObjective;
 import com.sixshaman.advancedunforgetter.utils.RandomUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 
 //A pool that can randomly choose from several task sources
@@ -192,7 +189,7 @@ public class TaskPool
     }
 
     //Gets a task from a random source
-    EnlistedTask getRandomTask(LocalDateTime referenceTime)
+    EnlistedObjective getRandomTask(LocalDateTime referenceTime)
     {
         if(!mIsActive)
         {
@@ -215,7 +212,7 @@ public class TaskPool
         }
 
         int  randomSourceIndex  = (int) RandomUtils.getInstance().getRandomUniform(0, availableSources.size() - 1);
-        EnlistedTask resultTask = availableSources.get(randomSourceIndex).obtainTask(referenceTime);
+        EnlistedObjective resultTask = availableSources.get(randomSourceIndex).obtainTask(referenceTime);
 
         setLastProvidedTaskId(resultTask.getId());
         return resultTask;

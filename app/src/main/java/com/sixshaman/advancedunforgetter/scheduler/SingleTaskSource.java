@@ -1,24 +1,22 @@
 package com.sixshaman.advancedunforgetter.scheduler;
 
-import com.sixshaman.advancedunforgetter.list.EnlistedTask;
-import org.json.JSONArray;
+import com.sixshaman.advancedunforgetter.list.EnlistedObjective;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 //A task source that contains a single task
 public class SingleTaskSource implements TaskSource
 {
     //The task that this source can provide
-    private ScheduledTask mTask;
+    private ScheduledObjective mTask;
 
     //After returning the task the source declares itself finished if the task is not repeatable
     private boolean mIsFinished;
 
     //Creates a task source from a task
-    SingleTaskSource(ScheduledTask task)
+    SingleTaskSource(ScheduledObjective task)
     {
         mTask       = task;
         mIsFinished = false;
@@ -58,7 +56,7 @@ public class SingleTaskSource implements TaskSource
             return null;
         }
 
-        ScheduledTask task = ScheduledTask.fromJSON(taskJsonObject);
+        ScheduledObjective task = ScheduledObjective.fromJSON(taskJsonObject);
         if(task == null)
         {
             return null;
@@ -84,7 +82,7 @@ public class SingleTaskSource implements TaskSource
     }
 
     @Override
-    public EnlistedTask obtainTask(LocalDateTime referenceTime)
+    public EnlistedObjective obtainTask(LocalDateTime referenceTime)
     {
         if(getState(referenceTime) == SourceState.SOURCE_STATE_REGULAR)
         {
