@@ -53,7 +53,7 @@ public class ScheduledObjective
     private float mRepeatProbability;
 
     //Creates a new active scheduled task ready to be used by the task scheduler
-    ScheduledObjective(long id, String name, String description, LocalDateTime createdDate, LocalDateTime scheduleDate, ArrayList<String> tags, Duration repeatDuration, float repeatProbability)
+    public ScheduledObjective(long id, String name, String description, LocalDateTime createdDate, LocalDateTime scheduleDate, ArrayList<String> tags, Duration repeatDuration, float repeatProbability)
     {
         mIsActive = true;
 
@@ -221,16 +221,16 @@ public class ScheduledObjective
         return task;
     }
 
-    //Reschedules the task to the new enlist date
-    void reschedule(LocalDateTime referenceTime)
+    //Reschedules the objective to the new enlist date
+    public void reschedule(LocalDateTime referenceTime)
     {
         //Cannot reschedule non-repeated tasks and won't reschedule paused tasks
-        if(mRepeatProbability == 0.0f || !mIsActive)
+        if(mRepeatProbability < 0.0001f || !mIsActive)
         {
             return;
         }
 
-        if(mRepeatProbability == 1.0f) //If it's a strictly repeated task, just add the duration
+        if(mRepeatProbability > 0.9999f) //If it's a strictly repeated task, just add the duration
         {
             LocalDateTime nextDateTime = referenceTime.plusHours(mRepeatDuration.toHours());
             mScheduledAddDate = nextDateTime.truncatedTo(ChronoUnit.HOURS);

@@ -75,7 +75,7 @@ public class ListActivity extends AppCompatActivity
             TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
             transactionDispatcher.setListCache(mListCache);
 
-            transactionDispatcher.updateTransaction(configFolder, LocalDateTime.now());
+            transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now());
         }
         catch(FileNotFoundException e)
         {

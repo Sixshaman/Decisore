@@ -12,7 +12,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import android.view.View;
 import com.sixshaman.advancedunforgetter.R;
-import com.sixshaman.advancedunforgetter.utils.BaseFileLockException;
 
 public class TaskSchedulerActivity extends AppCompatActivity
 {

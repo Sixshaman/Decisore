@@ -56,31 +56,34 @@ public class ObjectiveListCache
         }
 
         int addPosition = -1;
-        if (mEnlistedObjectives.isEmpty()) //Special case for the empty list
+        if(mEnlistedObjectives.isEmpty()) //Special case for the empty list
         {
             mEnlistedObjectives.add(objective);
             addPosition = mEnlistedObjectives.size() - 1;
-        } else if (mEnlistedObjectives.get(mEnlistedObjectives.size() - 1).getId() < objective.getId()) //Special case for the trivial insertion that will keep the list sorted anyway
+        }
+        else if(mEnlistedObjectives.get(mEnlistedObjectives.size() - 1).getId() < objective.getId()) //Special case for the trivial insertion that will keep the list sorted anyway
         {
             mEnlistedObjectives.add(objective);
             addPosition = mEnlistedObjectives.size() - 1;
-        } else
+        }
+        else
         {
             int index = Collections.binarySearch(mEnlistedObjectives, objective.getId());
-            if (index < 0)
+            if(index < 0)
             {
                 //Insert at selected position
                 int insertIndex = -(index + 1);
 
                 mEnlistedObjectives.add(null);
-                for (int i = insertIndex; i < mEnlistedObjectives.size() - 1; i++)
+                for(int i = insertIndex; i < mEnlistedObjectives.size() - 1; i++)
                 {
                     mEnlistedObjectives.set(i + 1, mEnlistedObjectives.get(i));
                 }
 
                 mEnlistedObjectives.set(insertIndex, objective);
                 addPosition = insertIndex;
-            } else
+            }
+            else
             {
                 //OH NO! THE TASK ALREADY EXISTS! WE CAN LOSE THIS TASK! STOP EVERYTHING, DON'T LET IT SAVE
                 //Or not, lol
@@ -106,7 +109,7 @@ public class ObjectiveListCache
     public boolean removeObjective(EnlistedObjective objective)
     {
         int index = Collections.binarySearch(mEnlistedObjectives, objective.getId());
-        if (index >= 0)
+        if(index >= 0)
         {
             mEnlistedObjectives.remove(index);
         }
@@ -128,13 +131,13 @@ public class ObjectiveListCache
     public boolean isObjectiveInList(long objectiveId)
     {
         //Special case for empty list
-        if (mEnlistedObjectives.size() == 0)
+        if(mEnlistedObjectives.size() == 0)
         {
             return false;
         }
 
         //Special case: since mTasks is sorted by id, then last element having lesser id means the task is not in mTasks. This is a pretty common case.
-        if (mEnlistedObjectives.get(mEnlistedObjectives.size() - 1).getId() < objectiveId)
+        if(mEnlistedObjectives.get(mEnlistedObjectives.size() - 1).getId() < objectiveId)
         {
             return false;
         }
@@ -154,19 +157,20 @@ public class ObjectiveListCache
             JSONObject jsonObject = new JSONObject(fileContents);
 
             JSONArray tasksJsonArray = jsonObject.getJSONArray("TASKS");
-            for (int i = 0; i < tasksJsonArray.length(); i++)
+            for(int i = 0; i < tasksJsonArray.length(); i++)
             {
                 JSONObject taskObject = tasksJsonArray.optJSONObject(i);
-                if (taskObject != null)
+                if(taskObject != null)
                 {
                     EnlistedObjective objective = EnlistedObjective.fromJSON(taskObject);
-                    if (objective != null)
+                    if(objective != null)
                     {
                         enlistedObjectives.add(objective);
                     }
                 }
             }
-        } catch (JSONException e)
+        }
+        catch(JSONException e)
         {
             e.printStackTrace();
             return false;
@@ -189,10 +193,10 @@ public class ObjectiveListCache
     {
         try
         {
-            JSONObject jsonObject = new JSONObject();
+            JSONObject jsonObject    = new JSONObject();
             JSONArray tasksJsonArray = new JSONArray();
 
-            for (EnlistedObjective objective : mEnlistedObjectives)
+            for(EnlistedObjective objective: mEnlistedObjectives)
             {
                 tasksJsonArray.put(objective.toJSON());
             }
@@ -200,7 +204,8 @@ public class ObjectiveListCache
             jsonObject.put("TASKS", tasksJsonArray);
 
             listWriteFile.write(jsonObject.toString());
-        } catch (JSONException e)
+        }
+        catch(JSONException e)
         {
             e.printStackTrace();
             return false;
@@ -213,10 +218,11 @@ public class ObjectiveListCache
     //Since objectives are sorted by id, it's gonna be the last objective
     public long getMaxObjectiveId()
     {
-        if (mEnlistedObjectives.isEmpty())
+        if(mEnlistedObjectives.isEmpty())
         {
             return -1;
-        } else
+        }
+        else
         {
             return mEnlistedObjectives.get(mEnlistedObjectives.size() - 1).getId();
         }
