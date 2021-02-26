@@ -9,6 +9,7 @@ import com.sixshaman.advancedunforgetter.R;
 import com.sixshaman.advancedunforgetter.utils.LockedReadFile;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Objects;
 
 public class ArchiveActivity extends AppCompatActivity
@@ -46,7 +47,7 @@ public class ArchiveActivity extends AppCompatActivity
             mArchiveCache.invalidate(archiveFile);
             archiveFile.close();
         }
-        catch(FileNotFoundException e)
+        catch(IOException e)
         {
             e.printStackTrace();
         }

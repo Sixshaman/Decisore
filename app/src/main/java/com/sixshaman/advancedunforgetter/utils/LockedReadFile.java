@@ -20,7 +20,7 @@ public class LockedReadFile
     //File contents reader
     private InputStreamReader mInputStreamReader;
 
-    public LockedReadFile(String path) throws FileNotFoundException
+    public LockedReadFile(String path) throws IOException
     {
         mFilePath = path;
         mFileLock = null;
@@ -30,7 +30,7 @@ public class LockedReadFile
             try
             {
                 File file = new File(mFilePath);
-                RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r");
+                RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
 
                 FileChannel channel = randomAccessFile.getChannel();
 
@@ -41,7 +41,7 @@ public class LockedReadFile
                     mInputStreamReader = new InputStreamReader(Channels.newInputStream(channel));
                 }
             }
-            catch(OverlappingFileLockException | IOException e)
+            catch(OverlappingFileLockException e)
             {
                 e.printStackTrace();
             }
