@@ -26,6 +26,7 @@ import com.sixshaman.advancedunforgetter.utils.LockedReadFile;
 import com.sixshaman.advancedunforgetter.utils.TransactionDispatcher;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -71,16 +72,16 @@ public class ListActivity extends AppCompatActivity
             LockedReadFile listFile = new LockedReadFile(configFolder + "/" + ObjectiveListCache.LIST_FILENAME);
             mListCache.invalidate(listFile);
             listFile.close();
-
-            TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
-            transactionDispatcher.setListCache(mListCache);
-
-            transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now());
         }
-        catch(FileNotFoundException e)
+        catch(IOException e)
         {
             e.printStackTrace();
         }
+
+        TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
+        transactionDispatcher.setListCache(mListCache);
+
+        transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now());
     }
 
     @Override

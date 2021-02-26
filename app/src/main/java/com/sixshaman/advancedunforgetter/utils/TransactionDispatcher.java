@@ -8,6 +8,7 @@ import com.sixshaman.advancedunforgetter.scheduler.ScheduledObjective;
 import com.sixshaman.advancedunforgetter.scheduler.ObjectiveSchedulerCache;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -57,7 +58,7 @@ public class TransactionDispatcher
                 mSchedulerCache.invalidate(schedulerFile);
                 schedulerFile.close();
             }
-            catch(FileNotFoundException e)
+            catch(IOException e)
             {
                 e.printStackTrace();
             }
@@ -73,7 +74,7 @@ public class TransactionDispatcher
                 mListCache.invalidate(listFile);
                 listFile.close();
             }
-            catch(FileNotFoundException e)
+            catch(IOException e)
             {
                 e.printStackTrace();
             }
@@ -181,7 +182,7 @@ public class TransactionDispatcher
                 mListCache.invalidate(listReadFile);
                 listReadFile.close();
             }
-            catch(FileNotFoundException e)
+            catch(IOException e)
             {
                 e.printStackTrace();
             }
@@ -205,7 +206,7 @@ public class TransactionDispatcher
                 mSchedulerCache.invalidate(schedulerFile);
                 schedulerFile.close();
             }
-            catch(FileNotFoundException e)
+            catch(IOException e)
             {
                 e.printStackTrace();
             }
@@ -221,7 +222,7 @@ public class TransactionDispatcher
                 mListCache.invalidate(listFile);
                 listFile.close();
             }
-            catch(FileNotFoundException e)
+            catch(IOException e)
             {
                 e.printStackTrace();
             }
@@ -293,7 +294,7 @@ public class TransactionDispatcher
                     mListCache.invalidate(listReadFile);
                     listReadFile.close();
                 }
-                catch(FileNotFoundException e)
+                catch(IOException e)
                 {
                     e.printStackTrace();
                 }
@@ -307,7 +308,7 @@ public class TransactionDispatcher
                 mSchedulerCache.invalidate(schedulerReadFile);
                 schedulerReadFile.close();
             }
-            catch(FileNotFoundException e)
+            catch(IOException e)
             {
                 e.printStackTrace();
             }
@@ -331,7 +332,7 @@ public class TransactionDispatcher
                 mListCache.invalidate(listFile);
                 listFile.close();
             }
-            catch(FileNotFoundException e)
+            catch(IOException e)
             {
                 e.printStackTrace();
             }
@@ -347,7 +348,7 @@ public class TransactionDispatcher
                 mArchiveCache.invalidate(archiveFile);
                 archiveFile.close();
             }
-            catch(FileNotFoundException e)
+            catch(IOException e)
             {
                 e.printStackTrace();
             }
@@ -409,7 +410,7 @@ public class TransactionDispatcher
                     mArchiveCache.invalidate(archiveReadFile);
                     archiveReadFile.close();
                 }
-                catch(FileNotFoundException e)
+                catch(IOException e)
                 {
                     e.printStackTrace();
                 }
@@ -423,7 +424,7 @@ public class TransactionDispatcher
                 mListCache.invalidate(listReadFile);
                 listReadFile.close();
             }
-            catch(FileNotFoundException e)
+            catch(IOException e)
             {
                 e.printStackTrace();
             }

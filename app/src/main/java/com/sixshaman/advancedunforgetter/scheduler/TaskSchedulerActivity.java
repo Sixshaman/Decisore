@@ -19,6 +19,7 @@ import com.sixshaman.advancedunforgetter.utils.LockedReadFile;
 import com.sixshaman.advancedunforgetter.utils.TransactionDispatcher;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -69,7 +70,7 @@ public class TaskSchedulerActivity extends AppCompatActivity
 
             transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now());
         }
-        catch(FileNotFoundException e)
+        catch(IOException e)
         {
             e.printStackTrace();
         }

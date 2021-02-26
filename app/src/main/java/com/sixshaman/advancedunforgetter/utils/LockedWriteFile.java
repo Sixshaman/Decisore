@@ -29,7 +29,7 @@ public class LockedWriteFile
             try
             {
                 File file = new File(mFilePath);
-                RandomAccessFile randomAccessFile = new RandomAccessFile(file, "w");
+                RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
 
                 FileChannel channel = randomAccessFile.getChannel();
 
