@@ -87,7 +87,7 @@ public class SingleTaskSource implements TaskSource
         if(getState(referenceTime) == SourceState.SOURCE_STATE_REGULAR)
         {
             //Becomes invalid if it's not a repeated task
-            if(mTask.getRepeatProbability() == 0.0f) //Uhm... Since I always assign 0 directly, I probably don't have to consider precision error margin
+            if(mTask.getRepeatProbability() < 0.0001f)
             {
                 mIsFinished = true;
             }
