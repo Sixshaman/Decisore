@@ -25,8 +25,8 @@ public class ScheduledObjective
     private static final String JSON_TASK_REPEAT_DURATION    = "RepeatDuration";
     private static final String JSON_TASK_REPEAT_PROBABILITY = "RepeatProbability";
 
-    //The task ID
-    private long mId;
+    //The objective ID
+    private final long mId;
 
     //The date when the task was created and added to the task scheduler
     private LocalDateTime mDateCreated;
@@ -230,24 +230,31 @@ public class ScheduledObjective
             return;
         }
 
+        LocalDateTime nextDateTime;
         if(mRepeatProbability > 0.9999f) //If it's a strictly repeated task, just add the duration
         {
-            LocalDateTime nextDateTime = referenceTime.plusHours(mRepeatDuration.toHours());
-            mScheduledAddDate = nextDateTime.truncatedTo(ChronoUnit.HOURS);
+            nextDateTime = referenceTime.plusHours(mRepeatDuration.toHours());
         }
-        else //If it's a time-to-time task, set a random date
+        else //It's an occasional objective, set a random date
         {
-            //Time-to-time tasks are repeated using normal distribution
-            long randomHoursToAdd = RandomUtils.getInstance().getRandomGauss(mRepeatDuration.toHours(), mRepeatProbability);
-            if(randomHoursToAdd < 1)
+            //Simulate the passing of time
+            nextDateTime = mScheduledAddDate;
+            while(nextDateTime.isBefore(referenceTime))
             {
-                //Clamp the value just in case
-                randomHoursToAdd = 1;
+                //Occasional objectives are repeated using normal distribution
+                long randomHoursToAdd = RandomUtils.getInstance().getRandomGauss(mRepeatDuration.toHours(), mRepeatProbability);
+                if(randomHoursToAdd < 1)
+                {
+                    //Clamp the value just in case
+                    randomHoursToAdd = 1;
+                }
+
+                nextDateTime = nextDateTime.plusHours(randomHoursToAdd);
             }
 
-            LocalDateTime nextDateTime = referenceTime.plusHours(randomHoursToAdd);
-            mScheduledAddDate = nextDateTime.truncatedTo(ChronoUnit.HOURS);
         }
+
+        mScheduledAddDate = nextDateTime.truncatedTo(ChronoUnit.HOURS);
     }
 
     //Transforms scheduled task to an enlisted
