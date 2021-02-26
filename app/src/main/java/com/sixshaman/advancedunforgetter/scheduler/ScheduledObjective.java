@@ -230,28 +230,25 @@ public class ScheduledObjective
             return;
         }
 
-        LocalDateTime nextDateTime;
-        if(mRepeatProbability > 0.9999f) //If it's a strictly repeated task, just add the duration
+        LocalDateTime nextDateTime = mScheduledAddDate;
+        while(nextDateTime.isBefore(referenceTime)) //Simulate the passing of time
         {
-            nextDateTime = referenceTime.plusHours(mRepeatDuration.toHours());
-        }
-        else //It's an occasional objective, set a random date
-        {
-            //Simulate the passing of time
-            nextDateTime = mScheduledAddDate;
-            while(nextDateTime.isBefore(referenceTime))
+            long hoursToAdd = 0;
+            if(mRepeatProbability > 0.9999f) //If it's a strictly repeated task, just add the duration
             {
-                //Occasional objectives are repeated using normal distribution
-                long randomHoursToAdd = RandomUtils.getInstance().getRandomGauss(mRepeatDuration.toHours(), mRepeatProbability);
-                if(randomHoursToAdd < 1)
+                hoursToAdd = mRepeatDuration.toHours();
+            }
+            else //Occasional objectives are repeated using normal distribution
+            {
+                hoursToAdd = RandomUtils.getInstance().getRandomGauss(mRepeatDuration.toHours(), mRepeatProbability);
+                if(hoursToAdd < 1)
                 {
                     //Clamp the value just in case
-                    randomHoursToAdd = 1;
+                    hoursToAdd = 1;
                 }
-
-                nextDateTime = nextDateTime.plusHours(randomHoursToAdd);
             }
 
+            nextDateTime = referenceTime.plusHours(hoursToAdd);
         }
 
         mScheduledAddDate = nextDateTime.truncatedTo(ChronoUnit.HOURS);
