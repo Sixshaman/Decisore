@@ -15,17 +15,14 @@ After removing the task from the scheduler:
 
 */
 
-import android.util.Log;
 import com.sixshaman.advancedunforgetter.list.EnlistedObjective;
 import com.sixshaman.advancedunforgetter.list.ObjectiveListCache;
 import com.sixshaman.advancedunforgetter.utils.LockedReadFile;
 import com.sixshaman.advancedunforgetter.utils.LockedWriteFile;
-import com.sixshaman.advancedunforgetter.utils.TaskIdGenerator;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
@@ -37,12 +34,12 @@ public class ObjectiveSchedulerCache
     //The list of all the task pools.
     //All single tasks are task pools with a single SingleTaskSource
     //All single task chains are task pools with a single TaskChain
-    private ArrayList<TaskPool> mTaskPools;
+    private ArrayList<ObjectivePool> mObjectivePools;
 
     //Creates a new task scheduler that is bound to mainList
     public ObjectiveSchedulerCache()
     {
-        mTaskPools = new ArrayList<>();
+        mObjectivePools = new ArrayList<>();
     }
 
     //Updates the task scheduler. Returns the list of objectives ready to-do
@@ -50,40 +47,35 @@ public class ObjectiveSchedulerCache
     {
         ArrayList<EnlistedObjective> result = new ArrayList<>();
 
-        ArrayList<TaskPool> changedPools = new ArrayList<>(); //Rebuild task pool list after each update event
-        for(TaskPool pool: mTaskPools)
+        ArrayList<ObjectivePool> changedPools = new ArrayList<>(); //Rebuild task pool list after each update event
+        for(ObjectivePool pool: mObjectivePools)
         {
-            if(pool.isSingleSingleTaskPool())
+            //Only add the objective to the list if the previous objective from the pool is finished
+            //This is true for all types of objectives
+            if(!listCache.isObjectiveInList(pool.getLastProvidedObjectiveId()))
             {
-                //Don't need to check if the last task is done
-                EnlistedObjective task = pool.getRandomTask(enlistDateTime);
-                result.add(task);
-            }
-            else
-            {
-                //Only add the task to the main list if the last task provided by the pool is done
-                if(!listCache.isObjectiveInList(pool.getLastProvidedTaskId()))
+                EnlistedObjective objective = pool.getRandomObjective(enlistDateTime);
+                if(objective != null)
                 {
-                    EnlistedObjective task = pool.getRandomTask(enlistDateTime);
-                    result.add(task);
+                    result.add(objective);
                 }
             }
 
-            pool.updateTaskSources(enlistDateTime);
+            pool.updateObjectiveSources(enlistDateTime);
             if(pool.getTaskSourceCount() != 0) //Don't add empty pools
             {
                 changedPools.add(pool);
             }
         }
 
-        mTaskPools = changedPools;
+        mObjectivePools = changedPools;
         return result;
     }
 
     //Loads tasks from JSON config file
     public boolean invalidate(LockedReadFile schedulerReadFile)
     {
-        mTaskPools.clear();
+        mObjectivePools.clear();
 
         try
         {
@@ -96,10 +88,10 @@ public class ObjectiveSchedulerCache
                 JSONObject poolObject = poolsJsonArray.optJSONObject(i);
                 if(poolObject != null)
                 {
-                    TaskPool pool = TaskPool.fromJSON(poolObject);
+                    ObjectivePool pool = ObjectivePool.fromJSON(poolObject);
                     if(pool != null)
                     {
-                        mTaskPools.add(pool);
+                        mObjectivePools.add(pool);
                     }
                 }
             }
@@ -121,7 +113,7 @@ public class ObjectiveSchedulerCache
             JSONObject jsonObject    = new JSONObject();
             JSONArray tasksJsonArray = new JSONArray();
 
-            for(TaskPool pool: mTaskPools)
+            for(ObjectivePool pool: mObjectivePools)
             {
                 tasksJsonArray.put(pool.toJSON());
             }
@@ -143,37 +135,37 @@ public class ObjectiveSchedulerCache
     public void addObjectiveChain(String name, String description)
     {
         //Create a new unnamed task pool to hold the chain
-        TaskPool pool = new TaskPool("", "");
+        ObjectivePool pool = new ObjectivePool("", "");
         addObjectiveChainToPool(pool, name, description);
-        mTaskPools.add(pool);
+        mObjectivePools.add(pool);
     }
 
     //Creates a new explicit task pool
     public void addObjectivePool(String name, String description)
     {
-        TaskPool pool = new TaskPool(name, description);
-        mTaskPools.add(pool);
+        ObjectivePool pool = new ObjectivePool(name, description);
+        mObjectivePools.add(pool);
     }
 
     //Creates a new explicit task chain and adds it to the provided pool
-    public void addObjectiveChainToPool(TaskPool pool, String name, String description)
+    public void addObjectiveChainToPool(ObjectivePool pool, String name, String description)
     {
         TaskChain chain = new TaskChain(name, description);
         pool.addTaskSource(chain);
     }
 
     //Adds a general task to task pool pool or task chain chain scheduled to be added at deferTime with repeat duration repeatDuration and repeat probability repeatProbability
-    public boolean addObjective(TaskPool pool, TaskChain chain, ScheduledObjective scheduledObjective)
+    public boolean addObjective(ObjectivePool pool, TaskChain chain, ScheduledObjective scheduledObjective)
     {
         if(pool == null && chain == null) //Add a single task source to the new pool
         {
             //Neither task chain nor pool is provided, create an implicit pool and add task there
             SingleTaskSource taskSource = new SingleTaskSource(scheduledObjective);
 
-            TaskPool implicitPool = new TaskPool("", "");
+            ObjectivePool implicitPool = new ObjectivePool("", "");
             implicitPool.addTaskSource(taskSource);
 
-            mTaskPools.add(implicitPool);
+            mObjectivePools.add(implicitPool);
         }
         else if(pool == null)
         {
@@ -194,7 +186,7 @@ public class ObjectiveSchedulerCache
     public long getMaxObjectiveId()
     {
         long maxId = -1;
-        for(TaskPool pool: mTaskPools)
+        for(ObjectivePool pool: mObjectivePools)
         {
             long poolMaxId = pool.getMaxTaskId();
             if(maxId > poolMaxId)

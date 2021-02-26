@@ -235,17 +235,23 @@ public class ScheduledObjective
             LocalDateTime nextDateTime = referenceTime.plusHours(mRepeatDuration.toHours());
             mScheduledAddDate = nextDateTime.truncatedTo(ChronoUnit.HOURS);
         }
-        else //If it's a time-to-time task, set a random date
+        else //It's an occasional objective, set a random date
         {
-            //Time-to-time tasks are repeated using normal distribution
-            long randomHoursToAdd = RandomUtils.getInstance().getRandomGauss(mRepeatDuration.toHours(), mRepeatProbability);
-            if(randomHoursToAdd < 1)
+            //Simulate the passing of time
+            LocalDateTime nextDateTime = mScheduledAddDate;
+            while(nextDateTime.isBefore(referenceTime))
             {
-                //Clamp the value just in case
-                randomHoursToAdd = 1;
+                //Occasional objectives are repeated using normal distribution
+                long randomHoursToAdd = RandomUtils.getInstance().getRandomGauss(mRepeatDuration.toHours(), mRepeatProbability);
+                if(randomHoursToAdd < 1)
+                {
+                    //Clamp the value just in case
+                    randomHoursToAdd = 1;
+                }
+
+                nextDateTime = nextDateTime.plusHours(randomHoursToAdd);
             }
 
-            LocalDateTime nextDateTime = referenceTime.plusHours(randomHoursToAdd);
             mScheduledAddDate = nextDateTime.truncatedTo(ChronoUnit.HOURS);
         }
     }

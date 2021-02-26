@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 //A pool that can randomly choose from several task sources
-public class TaskPool
+public class ObjectivePool
 {
     //The name of the pool
     private String mName;
@@ -19,23 +19,23 @@ public class TaskPool
     private String mDescription;
 
     //The list of all the task sources the pool can choose from
-    private ArrayList<TaskSource> mTaskSources;
+    private ArrayList<TaskSource> mObjectiveSources;
 
     //The id of the task that was most recently provided by this pool.
-    private long mLastProvidedTaskId;
+    private long mLastProvidedObjectiveId;
 
     //The flag that shows that the pool is active (i.e. not paused)
     boolean mIsActive;
 
     //Constructs a new task pool
-    TaskPool(String name, String description)
+    ObjectivePool(String name, String description)
     {
         mName        = name;
         mDescription = description;
 
-        mTaskSources = new ArrayList<>();
+        mObjectiveSources = new ArrayList<>();
 
-        setLastProvidedTaskId(0);
+        setLastProvidedObjectiveId(0);
 
         mIsActive = true;
     }
@@ -49,12 +49,12 @@ public class TaskPool
             result.put("Name",        mName);
             result.put("Description", mDescription);
 
-            result.put("LastId", Long.toString(mLastProvidedTaskId));
+            result.put("LastId", Long.toString(mLastProvidedObjectiveId));
 
             result.put("IsActive", Boolean.toString(mIsActive));
 
             JSONArray sourcesArray = new JSONArray();
-            for(TaskSource source: mTaskSources)
+            for(TaskSource source: mObjectiveSources)
             {
                 JSONObject taskSourceObject = new JSONObject();
 
@@ -87,7 +87,7 @@ public class TaskPool
         return result;
     }
 
-    public static TaskPool fromJSON(JSONObject jsonObject)
+    public static ObjectivePool fromJSON(JSONObject jsonObject)
     {
         try
         {
@@ -110,7 +110,7 @@ public class TaskPool
                 return null;
             }
 
-            TaskPool taskPool = new TaskPool(name, description);
+            ObjectivePool objectivePool = new ObjectivePool(name, description);
 
             String isActiveString = jsonObject.optString("IsActive");
 
@@ -125,7 +125,7 @@ public class TaskPool
 
             if(!isActive)
             {
-                taskPool.pause();
+                objectivePool.pause();
             }
 
             JSONArray sourcesJsonArray = jsonObject.getJSONArray("Sources");
@@ -146,7 +146,7 @@ public class TaskPool
                                 SingleTaskSource singleTaskSource = SingleTaskSource.fromJSON(sourceData);
                                 if(singleTaskSource != null)
                                 {
-                                    taskPool.addTaskSource(singleTaskSource);
+                                    objectivePool.addTaskSource(singleTaskSource);
                                 }
                             }
                             else if(sourceType.equals(TaskChain.getSourceTypeString()))
@@ -154,7 +154,7 @@ public class TaskPool
                                 TaskChain taskChain = TaskChain.fromJSON(sourceData);
                                 if(taskChain != null)
                                 {
-                                    taskPool.addTaskSource(taskChain);
+                                    objectivePool.addTaskSource(taskChain);
                                 }
                             }
                         }
@@ -162,7 +162,7 @@ public class TaskPool
                 }
             }
 
-            return taskPool;
+            return objectivePool;
         }
         catch(JSONException e)
         {
@@ -173,10 +173,10 @@ public class TaskPool
     }
 
     //Updates all the task sources, removing the finished ones
-    void updateTaskSources(LocalDateTime referenceTime)
+    void updateObjectiveSources(LocalDateTime referenceTime)
     {
         ArrayList<TaskSource> updatedSourceList = new ArrayList<>();
-        for(TaskSource source: mTaskSources)
+        for(TaskSource source: mObjectiveSources)
         {
             //Throw away finished task sources
             if(source.getState(referenceTime) != TaskSource.SourceState.SOURCE_STATE_FINISHED)
@@ -185,11 +185,11 @@ public class TaskPool
             }
         }
 
-        mTaskSources = updatedSourceList;
+        mObjectiveSources = updatedSourceList;
     }
 
     //Gets a task from a random source
-    EnlistedObjective getRandomTask(LocalDateTime referenceTime)
+    EnlistedObjective getRandomObjective(LocalDateTime referenceTime)
     {
         if(!mIsActive)
         {
@@ -198,7 +198,7 @@ public class TaskPool
 
         //Check non-empty sources only
         ArrayList<TaskSource> availableSources = new ArrayList<>();
-        for(TaskSource source: mTaskSources)
+        for(TaskSource source: mObjectiveSources)
         {
             if(source.getState(referenceTime) == TaskSource.SourceState.SOURCE_STATE_REGULAR)
             {
@@ -212,22 +212,26 @@ public class TaskPool
         }
 
         int  randomSourceIndex  = (int) RandomUtils.getInstance().getRandomUniform(0, availableSources.size() - 1);
-        EnlistedObjective resultTask = availableSources.get(randomSourceIndex).obtainTask(referenceTime);
+        EnlistedObjective resultObjective = availableSources.get(randomSourceIndex).obtainTask(referenceTime);
 
-        setLastProvidedTaskId(resultTask.getId());
-        return resultTask;
+        if(resultObjective != null)
+        {
+            setLastProvidedObjectiveId(resultObjective.getId());
+        }
+
+        return resultObjective;
     }
 
     //Returns true for a single-source, single-task pool
     boolean isSingleSingleTaskPool()
     {
-        return (mTaskSources.size() == 1) && (mTaskSources.get(0) instanceof SingleTaskSource);
+        return (mObjectiveSources.size() == 1) && (mObjectiveSources.get(0) instanceof SingleTaskSource);
     }
 
     public long getMaxTaskId()
     {
         long maxId = -1;
-        for(TaskSource source: mTaskSources)
+        for(TaskSource source: mObjectiveSources)
         {
             long sourceMaxId = source.getMaxTaskId();
             if(sourceMaxId > maxId)
@@ -251,13 +255,13 @@ public class TaskPool
 
     int getTaskSourceCount()
     {
-        return mTaskSources.size();
+        return mObjectiveSources.size();
     }
 
     //Adds a new task source to choose from
     void addTaskSource(TaskSource source)
     {
-        mTaskSources.add(source);
+        mObjectiveSources.add(source);
     }
 
     //Pauses the pool
@@ -273,13 +277,13 @@ public class TaskPool
     }
 
     //Gets the last provided task id, to check if it has been finished yet
-    long getLastProvidedTaskId()
+    long getLastProvidedObjectiveId()
     {
-        return mLastProvidedTaskId;
+        return mLastProvidedObjectiveId;
     }
 
-    private void setLastProvidedTaskId(long taskId)
+    private void setLastProvidedObjectiveId(long objectiveId)
     {
-        mLastProvidedTaskId = taskId;
+        mLastProvidedObjectiveId = objectiveId;
     }
 }
