@@ -19,7 +19,7 @@ public class ObjectivePool
     private String mDescription;
 
     //The list of all the task sources the pool can choose from
-    private ArrayList<TaskSource> mObjectiveSources;
+    private ArrayList<ObjectiveSource> mObjectiveSources;
 
     //The id of the task that was most recently provided by this pool.
     private long mLastProvidedObjectiveId;
@@ -54,18 +54,18 @@ public class ObjectivePool
             result.put("IsActive", Boolean.toString(mIsActive));
 
             JSONArray sourcesArray = new JSONArray();
-            for(TaskSource source: mObjectiveSources)
+            for(ObjectiveSource source: mObjectiveSources)
             {
                 JSONObject taskSourceObject = new JSONObject();
 
                 //Another poke at Java! It can't into static methods in interfaces
-                if(source instanceof SingleTaskSource)
+                if(source instanceof SingleObjectiveSource)
                 {
-                    taskSourceObject.put("Type", SingleTaskSource.getSourceTypeString());
+                    taskSourceObject.put("Type", SingleObjectiveSource.getSourceTypeString());
                 }
-                else if(source instanceof TaskChain)
+                else if(source instanceof ObjectiveChain)
                 {
-                    taskSourceObject.put("Type", TaskChain.getSourceTypeString());
+                    taskSourceObject.put("Type", ObjectiveChain.getSourceTypeString());
                 }
                 else
                 {
@@ -141,17 +141,17 @@ public class ObjectivePool
 
                         if(sourceData != null)
                         {
-                            if(sourceType.equals(SingleTaskSource.getSourceTypeString()))
+                            if(sourceType.equals(SingleObjectiveSource.getSourceTypeString()))
                             {
-                                SingleTaskSource singleTaskSource = SingleTaskSource.fromJSON(sourceData);
+                                SingleObjectiveSource singleTaskSource = SingleObjectiveSource.fromJSON(sourceData);
                                 if(singleTaskSource != null)
                                 {
                                     objectivePool.addTaskSource(singleTaskSource);
                                 }
                             }
-                            else if(sourceType.equals(TaskChain.getSourceTypeString()))
+                            else if(sourceType.equals(ObjectiveChain.getSourceTypeString()))
                             {
-                                TaskChain taskChain = TaskChain.fromJSON(sourceData);
+                                ObjectiveChain taskChain = ObjectiveChain.fromJSON(sourceData);
                                 if(taskChain != null)
                                 {
                                     objectivePool.addTaskSource(taskChain);
@@ -175,11 +175,11 @@ public class ObjectivePool
     //Updates all the task sources, removing the finished ones
     void updateObjectiveSources(LocalDateTime referenceTime)
     {
-        ArrayList<TaskSource> updatedSourceList = new ArrayList<>();
-        for(TaskSource source: mObjectiveSources)
+        ArrayList<ObjectiveSource> updatedSourceList = new ArrayList<>();
+        for(ObjectiveSource source: mObjectiveSources)
         {
             //Throw away finished task sources
-            if(source.getState(referenceTime) != TaskSource.SourceState.SOURCE_STATE_FINISHED)
+            if(source.getState(referenceTime) != ObjectiveSource.SourceState.SOURCE_STATE_FINISHED)
             {
                 updatedSourceList.add(source);
             }
@@ -197,10 +197,10 @@ public class ObjectivePool
         }
 
         //Check non-empty sources only
-        ArrayList<TaskSource> availableSources = new ArrayList<>();
-        for(TaskSource source: mObjectiveSources)
+        ArrayList<ObjectiveSource> availableSources = new ArrayList<>();
+        for(ObjectiveSource source: mObjectiveSources)
         {
-            if(source.getState(referenceTime) == TaskSource.SourceState.SOURCE_STATE_REGULAR)
+            if(source.getState(referenceTime) == ObjectiveSource.SourceState.SOURCE_STATE_REGULAR)
             {
                 availableSources.add(source);
             }
@@ -225,13 +225,13 @@ public class ObjectivePool
     //Returns true for a single-source, single-task pool
     boolean isSingleSingleTaskPool()
     {
-        return (mObjectiveSources.size() == 1) && (mObjectiveSources.get(0) instanceof SingleTaskSource);
+        return (mObjectiveSources.size() == 1) && (mObjectiveSources.get(0) instanceof SingleObjectiveSource);
     }
 
     public long getMaxTaskId()
     {
         long maxId = -1;
-        for(TaskSource source: mObjectiveSources)
+        for(ObjectiveSource source: mObjectiveSources)
         {
             long sourceMaxId = source.getMaxTaskId();
             if(sourceMaxId > maxId)
@@ -241,6 +241,19 @@ public class ObjectivePool
         }
 
         return maxId;
+    }
+
+    public ObjectiveSource findSourceForObjective(long objectiveId)
+    {
+        for(ObjectiveSource source: mObjectiveSources)
+        {
+            if(source.containedObjective(objectiveId))
+            {
+                return source;
+            }
+        }
+
+        return null;
     }
 
     public String getName()
@@ -259,7 +272,7 @@ public class ObjectivePool
     }
 
     //Adds a new task source to choose from
-    void addTaskSource(TaskSource source)
+    void addTaskSource(ObjectiveSource source)
     {
         mObjectiveSources.add(source);
     }

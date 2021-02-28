@@ -7,18 +7,18 @@ import org.json.JSONObject;
 import java.time.LocalDateTime;
 
 //A task source that contains a single task
-public class SingleTaskSource implements TaskSource
+public class SingleObjectiveSource implements ObjectiveSource
 {
     //The task that this source can provide
-    private ScheduledObjective mTask;
+    private ScheduledObjective mObjective;
 
     //After returning the task the source declares itself finished if the task is not repeatable
     private boolean mIsFinished;
 
     //Creates a task source from a task
-    SingleTaskSource(ScheduledObjective task)
+    SingleObjectiveSource(ScheduledObjective task)
     {
-        mTask       = task;
+        mObjective = task;
         mIsFinished = false;
     }
 
@@ -36,7 +36,7 @@ public class SingleTaskSource implements TaskSource
 
             try
             {
-                JSONObject taskJsonObject = mTask.toJSON();
+                JSONObject taskJsonObject = mObjective.toJSON();
                 result.put("Task", taskJsonObject);
             }
             catch (JSONException e)
@@ -48,7 +48,7 @@ public class SingleTaskSource implements TaskSource
         }
     }
 
-    public static SingleTaskSource fromJSON(JSONObject object)
+    public static SingleObjectiveSource fromJSON(JSONObject object)
     {
         JSONObject taskJsonObject = object.optJSONObject("Task");
         if(taskJsonObject == null)
@@ -62,7 +62,7 @@ public class SingleTaskSource implements TaskSource
             return null;
         }
 
-        return new SingleTaskSource(task);
+        return new SingleObjectiveSource(task);
     }
 
     @Override
@@ -73,7 +73,25 @@ public class SingleTaskSource implements TaskSource
             return -1;
         }
 
-        return mTask.getId();
+        return mObjective.getId();
+    }
+
+    @Override
+    public boolean containedObjective(long objectiveId)
+    {
+        return mObjective.getId() == objectiveId;
+    }
+
+    @Override
+    public boolean putBack(ScheduledObjective objective)
+    {
+        if(objective.getId() == mObjective.getId())
+        {
+            mObjective.rescheduleUnregulated(objective.getScheduledEnlistDate());
+            return true;
+        }
+
+        return false;
     }
 
     public static String getSourceTypeString()
@@ -87,16 +105,16 @@ public class SingleTaskSource implements TaskSource
         if(getState(referenceTime) == SourceState.SOURCE_STATE_REGULAR)
         {
             //Becomes invalid if it's not a repeated task
-            if(mTask.getRepeatProbability() < 0.0001f)
+            if(mObjective.getRepeatProbability() < 0.0001f)
             {
                 mIsFinished = true;
             }
             else
             {
-                mTask.reschedule(referenceTime);
+                mObjective.reschedule(referenceTime);
             }
 
-            return mTask.toEnlisted(referenceTime);
+            return mObjective.toEnlisted(referenceTime);
         }
         else
         {
@@ -113,7 +131,7 @@ public class SingleTaskSource implements TaskSource
         }
 
         //We need to check if the task is currently available
-        if(mTask.isActive() && referenceTime.isAfter(mTask.getScheduledEnlistDate()))
+        if(mObjective.isActive() && referenceTime.isAfter(mObjective.getScheduledEnlistDate()))
         {
             return SourceState.SOURCE_STATE_REGULAR;
         }

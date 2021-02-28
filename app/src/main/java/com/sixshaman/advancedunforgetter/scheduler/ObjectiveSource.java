@@ -5,7 +5,7 @@ import org.json.JSONObject;
 
 import java.time.LocalDateTime;
 
-interface TaskSource
+interface ObjectiveSource
 {
     enum SourceState
     {
@@ -21,6 +21,12 @@ interface TaskSource
 
     //Gets the largest id for the tasks in the source
     long getMaxTaskId();
+
+    //Returns true if the source contains the objective with given id
+    boolean containedObjective(long objectiveId);
+
+    //Put the objective back into the source
+    boolean putBack(ScheduledObjective objective);
 
     //Serializes the task source into its JSON representation
     JSONObject toJSON();

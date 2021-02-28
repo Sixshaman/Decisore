@@ -2,10 +2,12 @@ package com.sixshaman.advancedunforgetter.list;
 
 import androidx.annotation.NonNull;
 import com.sixshaman.advancedunforgetter.archive.ArchivedObjective;
+import com.sixshaman.advancedunforgetter.scheduler.ScheduledObjective;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -173,6 +175,11 @@ public class EnlistedObjective implements Comparable<Long>
     public ArchivedObjective toArchived(LocalDateTime finishDate)
     {
         return new ArchivedObjective(mDateCreated, mDateEnlisted, finishDate, mName, mDescription, mTags);
+    }
+
+    public ScheduledObjective toScheduled(LocalDateTime nextEnlistDate)
+    {
+        return new ScheduledObjective(mId, mName, mDescription, mDateCreated, nextEnlistDate, mTags, Duration.ZERO, 0.0f);
     }
 
     //Returns true if tag is in mTags, otherwise returns false
