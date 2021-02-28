@@ -7,6 +7,6 @@
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         tools:showIn="@layout/activity_task_scheduler"
-        tools:context=".scheduler.TaskSchedulerActivity">
+        tools:context=".scheduler.ObjectiveSchedulerActivity">
 
 </androidx.constraintlayout.widget.ConstraintLayout>
