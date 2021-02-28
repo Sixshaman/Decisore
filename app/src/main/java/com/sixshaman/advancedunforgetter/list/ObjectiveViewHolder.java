@@ -1,5 +1,7 @@
 package com.sixshaman.advancedunforgetter.list;
 
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.os.Bundle;
@@ -12,9 +14,12 @@ import android.widget.DatePicker;
 import android.widget.TextView;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.RecyclerView;
 import com.sixshaman.advancedunforgetter.BuildConfig;
 import com.sixshaman.advancedunforgetter.R;
+import com.sixshaman.advancedunforgetter.utils.EditObjectiveDialogFragment;
+import com.sixshaman.advancedunforgetter.utils.NewObjectiveDialogFragment;
 import com.sixshaman.advancedunforgetter.utils.TransactionDispatcher;
 
 import java.time.LocalDateTime;
@@ -70,8 +75,8 @@ class ObjectiveViewHolder extends RecyclerView.ViewHolder implements View.OnCrea
 
         MenuItem scheduleTomorrowItem = contextMenu.add(0, MENU_SCHEDULE_FOR_TOMORROW,  Menu.NONE, R.string.menu_schedule_for_tomorrow);
         MenuItem scheduleItem         = contextMenu.add(0, MENU_SCHEDULE_FOR_ARBITRARY, Menu.NONE, R.string.menu_schedule_for_arbitrary);
-        MenuItem addBeforeItem        = contextMenu.add(1, MENU_ADD_OBJECTIVE_BEFORE,   Menu.NONE, R.string.menu_add_objective_before);
-        MenuItem addAfterItem         = contextMenu.add(1, MENU_ADD_OBJECTIVE_AFTER,    Menu.NONE, R.string.menu_add_objective_after);
+        //MenuItem addBeforeItem        = contextMenu.add(1, MENU_ADD_OBJECTIVE_BEFORE,   Menu.NONE, R.string.menu_add_objective_before);
+        //MenuItem addAfterItem         = contextMenu.add(1, MENU_ADD_OBJECTIVE_AFTER,    Menu.NONE, R.string.menu_add_objective_after);
         MenuItem editItem             = contextMenu.add(2, MENU_EDIT_OBJECTIVE,         Menu.NONE, R.string.menu_edit_objective);
         MenuItem deleteItem           = contextMenu.add(2, MENU_DELETE_OBJECTIVE,       Menu.NONE, R.string.menu_delete_objective);
 
@@ -113,6 +118,48 @@ class ObjectiveViewHolder extends RecyclerView.ViewHolder implements View.OnCrea
             });
 
             datePickerDialog.show();
+            return true;
+        });
+
+        editItem.setOnMenuItemClickListener(menuItem ->
+        {
+            assert mObjectiveListCache != null;
+            assert mObjectiveId        != -1;
+
+            EnlistedObjective objective = mObjectiveListCache.getObjective(mObjectiveId);
+
+            EditObjectiveDialogFragment editObjectiveDialogFragment = new EditObjectiveDialogFragment(mObjectiveId, objective.getName(), objective.getDescription());
+            editObjectiveDialogFragment.setListCache(mObjectiveListCache);
+
+            FragmentActivity activity = (FragmentActivity)(view.getContext());
+            editObjectiveDialogFragment.show(activity.getSupportFragmentManager(), activity.getString(R.string.newTaskDialogName));
+
+            return true;
+        });
+
+        deleteItem.setOnMenuItemClickListener(menuItem ->
+        {
+            assert mObjectiveListCache != null;
+            assert mObjectiveId        != -1;
+
+            EnlistedObjective objective = mObjectiveListCache.getObjective(mObjectiveId);
+
+            AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(view.getContext());
+            alertDialogBuilder.setMessage(view.getContext().getString(R.string.deleteObjectiveAreYouSure) + " " + objective.getName() + "?");
+            alertDialogBuilder.setPositiveButton("Yes", (dialogInterface, i) ->
+            {
+                TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
+                transactionDispatcher.setListCache(mObjectiveListCache);
+
+                String configFolder = Objects.requireNonNull(view.getContext().getExternalFilesDir("/app")).getAbsolutePath();
+                transactionDispatcher.deleteObjectiveTransaction(configFolder, objective);
+            });
+            alertDialogBuilder.setNegativeButton("No", (dialogInterface, i) ->
+            {
+
+            });
+            alertDialogBuilder.show();
+
             return true;
         });
 

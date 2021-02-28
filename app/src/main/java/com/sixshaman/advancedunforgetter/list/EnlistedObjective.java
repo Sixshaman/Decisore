@@ -234,6 +234,17 @@ public class EnlistedObjective implements Comparable<Long>
         return mCharm;
     }
 
+    //Sets the name
+    public void setName(String name)
+    {
+        mName = name;
+    }
+
+    public void setDescription(String description)
+    {
+        mDescription = description;
+    }
+
     @Override
     public int compareTo(@NonNull Long id)
     {
