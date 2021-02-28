@@ -10,6 +10,13 @@
     <string name="enlistDate">Enlist date:</string>
     <string name="createTask">DO IT, MOTHERFUCKER!</string>
 
+    <string name="menu_schedule_for_tomorrow">Schedule for tomorrow</string>
+    <string name="menu_schedule_for_arbitrary">Schedule for...</string>
+    <string name="menu_add_objective_before">Add objective before...</string>
+    <string name="menu_add_objective_after">Add objective after...</string>
+    <string name="menu_edit_objective">Edit objective...</string>
+    <string name="menu_delete_objective">Delete objective</string>
+
     <string name="invalidTaskName">Invalid task name</string>
     <string name="openArchive">Open tasks archive</string>
     <string name="unixStartDate" tools:ignore="TypographyDashes">1970-01-01</string>

@@ -52,7 +52,7 @@ public class ObjectiveSchedulerCache
         {
             //Only add the objective to the list if the previous objective from the pool is finished
             //This is true for all types of objectives
-            if(!listCache.isObjectiveInList(pool.getLastProvidedObjectiveId()))
+            if(listCache.getObjective(pool.getLastProvidedObjectiveId()) != null)
             {
                 EnlistedObjective objective = pool.getRandomObjective(enlistDateTime);
                 if(objective != null)
@@ -150,17 +150,17 @@ public class ObjectiveSchedulerCache
     //Creates a new explicit task chain and adds it to the provided pool
     public void addObjectiveChainToPool(ObjectivePool pool, String name, String description)
     {
-        TaskChain chain = new TaskChain(name, description);
+        ObjectiveChain chain = new ObjectiveChain(name, description);
         pool.addTaskSource(chain);
     }
 
     //Adds a general task to task pool pool or task chain chain scheduled to be added at deferTime with repeat duration repeatDuration and repeat probability repeatProbability
-    public boolean addObjective(ObjectivePool pool, TaskChain chain, ScheduledObjective scheduledObjective)
+    public boolean addObjective(ObjectivePool pool, ObjectiveChain chain, ScheduledObjective scheduledObjective)
     {
         if(pool == null && chain == null) //Add a single task source to the new pool
         {
             //Neither task chain nor pool is provided, create an implicit pool and add task there
-            SingleTaskSource taskSource = new SingleTaskSource(scheduledObjective);
+            SingleObjectiveSource taskSource = new SingleObjectiveSource(scheduledObjective);
 
             ObjectivePool implicitPool = new ObjectivePool("", "");
             implicitPool.addTaskSource(taskSource);
@@ -175,8 +175,38 @@ public class ObjectiveSchedulerCache
         else
         {
             //Task pool provided, add the task there
-            SingleTaskSource taskSource = new SingleTaskSource(scheduledObjective);
+            SingleObjectiveSource taskSource = new SingleObjectiveSource(scheduledObjective);
             pool.addTaskSource(taskSource);
+        }
+
+        return true;
+    }
+
+    public boolean putObjectiveBack(ScheduledObjective objective)
+    {
+        //Rule: already existing scheduled objective consumes the newly added one if the newly added one was scheduled after existing
+        //Example 1: a daily objective was rescheduled for tomorrow. It gets consumed.
+        //Example 2: a weekly objective was rescheduled for tomorrow and the next time it gets added is 2 days after. It gets added both tomorrow and 2 days after
+
+        boolean alreadyExisting = false;
+        for(ObjectivePool objectivePool: mObjectivePools)
+        {
+            ObjectiveSource source = objectivePool.findSourceForObjective(objective.getId());
+            if(source != null)
+            {
+                if(!source.putBack(objective))
+                {
+                    return false;
+                }
+
+                alreadyExisting = true;
+            }
+        }
+
+        //Simply add the objective if no source contains it
+        if(!alreadyExisting)
+        {
+            return addObjective(null, null, objective);
         }
 
         return true;

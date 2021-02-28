@@ -317,6 +317,127 @@ public class TransactionDispatcher
         return false;
     }
 
+    public synchronized boolean recheduleObjectiveTransaction(String configFolder, EnlistedObjective objective, LocalDateTime nextEnlistDate)
+    {
+        String listFilePath      = configFolder + "/" + ObjectiveListCache.LIST_FILENAME;
+        String schedulerFilePath = configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME;
+
+        if(objective.getEnlistDate().isAfter(nextEnlistDate))
+        {
+            return false;
+        }
+
+        if(mListCache == null)
+        {
+            mListCache = new ObjectiveListCache();
+
+            try
+            {
+                LockedReadFile listFile = new LockedReadFile(listFilePath);
+                mListCache.invalidate(listFile);
+                listFile.close();
+            }
+            catch(IOException e)
+            {
+                e.printStackTrace();
+            }
+        }
+
+        if(mSchedulerCache == null)
+        {
+            mSchedulerCache = new ObjectiveSchedulerCache();
+
+            try
+            {
+                LockedReadFile schedulerFile = new LockedReadFile(schedulerFilePath);
+                mSchedulerCache.invalidate(schedulerFile);
+                schedulerFile.close();
+            }
+            catch(IOException e)
+            {
+                e.printStackTrace();
+            }
+        }
+
+        //1. Lock list file
+        LockedWriteFile listWriteFile = null;
+        try
+        {
+            listWriteFile = new LockedWriteFile(listFilePath);
+        }
+        catch(FileNotFoundException e)
+        {
+            e.printStackTrace();
+        }
+
+        if(listWriteFile != null)
+        {
+            //2. Lock scheduler file
+            LockedWriteFile schedulerWriteFile = null;
+            try
+            {
+                schedulerWriteFile = new LockedWriteFile(schedulerFilePath);
+            }
+            catch(FileNotFoundException e)
+            {
+                e.printStackTrace();
+            }
+
+            if(schedulerWriteFile != null)
+            {
+                //3. Remove objective from list
+                if(mListCache.removeObjective(objective))
+                {
+                    //4. Add objective to the archive
+                    ScheduledObjective scheduledObjective = objective.toScheduled(nextEnlistDate);
+                    if(mSchedulerCache.putObjectiveBack(scheduledObjective))
+                    {
+                        //5. List cache flush
+                        if(mListCache.flush(listWriteFile))
+                        {
+                            //6. Archive cache flush
+                            if(mSchedulerCache.flush(schedulerWriteFile))
+                            {
+                                schedulerWriteFile.close();
+                                listWriteFile.close();
+
+                                return true;
+                            }
+                        }
+                    }
+                }
+
+                schedulerWriteFile.close();
+
+                try
+                {
+                    LockedReadFile schedulerReadFile = new LockedReadFile(schedulerFilePath);
+                    mSchedulerCache.invalidate(schedulerReadFile);
+                    schedulerReadFile.close();
+                }
+                catch(IOException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+
+            listWriteFile.close();
+
+            try
+            {
+                LockedReadFile listReadFile = new LockedReadFile(listFilePath);
+                mListCache.invalidate(listReadFile);
+                listReadFile.close();
+            }
+            catch(IOException e)
+            {
+                e.printStackTrace();
+            }
+        }
+
+        return false;
+    }
+
     public synchronized boolean finishObjectiveTransaction(String configFolder, EnlistedObjective objective, LocalDateTime finishDate)
     {
         String listFilePath    = configFolder + "/" + ObjectiveListCache.LIST_FILENAME;

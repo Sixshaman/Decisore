@@ -15,24 +15,28 @@ import java.util.ArrayList;
 
 public class ScheduledObjective
 {
-    private static final String JSON_TASK_ID                 = "Id";
-    private static final String JSON_TASK_NAME               = "Name";
-    private static final String JSON_TASK_DESCRIPTION        = "Description";
-    private static final String JSON_TASK_TAGS               = "Tags";
-    private static final String JSON_TASK_CREATE_DATE        = "DateCreated";
-    private static final String JSON_TASK_SCHEDULE_DATE      = "DateScheduled";
-    private static final String JSON_TASK_IS_ACTIVE          = "IsActive";
-    private static final String JSON_TASK_REPEAT_DURATION    = "RepeatDuration";
-    private static final String JSON_TASK_REPEAT_PROBABILITY = "RepeatProbability";
+    private static final String JSON_TASK_ID                    = "Id";
+    private static final String JSON_TASK_NAME                  = "Name";
+    private static final String JSON_TASK_DESCRIPTION           = "Description";
+    private static final String JSON_TASK_TAGS                  = "Tags";
+    private static final String JSON_TASK_CREATE_DATE           = "DateCreated";
+    private static final String JSON_TASK_SCHEDULE_DATE         = "DateScheduled";
+    private static final String JSON_TASK_REGULAR_SCHEDULE_DATE = "DateScheduledRegular";
+    private static final String JSON_TASK_IS_ACTIVE             = "IsActive";
+    private static final String JSON_TASK_REPEAT_DURATION       = "RepeatDuration";
+    private static final String JSON_TASK_REPEAT_PROBABILITY    = "RepeatProbability";
 
     //The objective ID
     private final long mId;
 
-    //The date when the task was created and added to the task scheduler
+    //The date when the objective was created and added to the scheduler
     private LocalDateTime mDateCreated;
 
-    //The date when the task will be added to the main task list next time
+    //The date when the objective will be added to the main task list next time
     private LocalDateTime mScheduledAddDate;
+
+    //The date when the objective is regularly added to the main list
+    private LocalDateTime mRegularScheduledAddDate;
 
     //The task name
     private String mName;
@@ -59,8 +63,9 @@ public class ScheduledObjective
 
         mId = id;
 
-        mDateCreated      = createdDate;
-        mScheduledAddDate = scheduleDate;
+        mDateCreated             = createdDate;
+        mScheduledAddDate        = scheduleDate;
+        mRegularScheduledAddDate = scheduleDate;
 
         mName        = name;
         mDescription = description;
@@ -107,6 +112,12 @@ public class ScheduledObjective
                 result.put(JSON_TASK_SCHEDULE_DATE, scheduledDateString);
             }
 
+            if(mRegularScheduledAddDate != null)
+            {
+                String regularScheduledDateString = dateTimeFormatter.format(mRegularScheduledAddDate);
+                result.put(JSON_TASK_REGULAR_SCHEDULE_DATE, regularScheduledDateString);
+            }
+
             result.put(JSON_TASK_IS_ACTIVE, Boolean.toString(mIsActive));
 
             result.put(JSON_TASK_REPEAT_DURATION,    Long.toString(mRepeatDuration.toMinutes()));
@@ -130,8 +141,9 @@ public class ScheduledObjective
         String name        = jsonObject.optString(JSON_TASK_NAME);
         String description = jsonObject.optString(JSON_TASK_DESCRIPTION);
 
-        String createdDateString   = jsonObject.optString(JSON_TASK_CREATE_DATE);
-        String scheduledDateString = jsonObject.optString(JSON_TASK_SCHEDULE_DATE);
+        String createdDateString          = jsonObject.optString(JSON_TASK_CREATE_DATE);
+        String scheduledDateString        = jsonObject.optString(JSON_TASK_SCHEDULE_DATE);
+        String regularScheduledDateString = jsonObject.optString(JSON_TASK_REGULAR_SCHEDULE_DATE);
 
         String isActiveString = jsonObject.optString(JSON_TASK_IS_ACTIVE);
 
@@ -172,6 +184,16 @@ public class ScheduledObjective
             e.printStackTrace();
         }
 
+        LocalDateTime regularScheduleDate = null;
+        try
+        {
+            regularScheduleDate = LocalDateTime.parse(regularScheduledDateString, dateTimeFormatter);
+        }
+        catch (DateTimeParseException e)
+        {
+            e.printStackTrace();
+        }
+
         //Java can't into proper parsing... And I thought C++ is bad
         boolean isActive = true;
         if(isActiveString != null && !isActiveString.isEmpty())
@@ -202,23 +224,24 @@ public class ScheduledObjective
             e.printStackTrace();
         }
 
-        ScheduledObjective task;
+        ScheduledObjective objective = null;
         if(id != -1 && !name.isEmpty() && createdDate != null && scheduledDate != null && repeatDurationMinutes != null && repeatProbability != null)
         {
             Duration repeatDuration = Duration.ofMinutes(repeatDurationMinutes);
-            task = new ScheduledObjective(id, name, description, createdDate, scheduledDate, taskTags, repeatDuration, repeatProbability);
+            objective = new ScheduledObjective(id, name, description, createdDate, scheduledDate, taskTags, repeatDuration, repeatProbability);
+
+            if(regularScheduleDate != null)
+            {
+                objective.mRegularScheduledAddDate = regularScheduleDate; //Can be different from scheduledDate
+            }
 
             if(!isActive)
             {
-                task.pause();
+                objective.pause();
             }
         }
-        else
-        {
-            return null; //Can't create even a basic task
-        }
 
-        return task;
+        return objective;
     }
 
     //Reschedules the objective to the new enlist date
@@ -230,8 +253,7 @@ public class ScheduledObjective
             return;
         }
 
-        LocalDateTime nextDateTime = mScheduledAddDate;
-        while(nextDateTime.isBefore(referenceTime)) //Simulate the passing of time
+        while(mRegularScheduledAddDate.isBefore(referenceTime)) //Simulate the passing of time
         {
             long hoursToAdd = 0;
             if(mRepeatProbability > 0.9999f) //If it's a strictly repeated task, just add the duration
@@ -248,10 +270,19 @@ public class ScheduledObjective
                 }
             }
 
-            nextDateTime = referenceTime.plusHours(hoursToAdd);
+            mRegularScheduledAddDate = mRegularScheduledAddDate.plusHours(hoursToAdd);
         }
 
-        mScheduledAddDate = nextDateTime.truncatedTo(ChronoUnit.HOURS);
+        mScheduledAddDate = mRegularScheduledAddDate.truncatedTo(ChronoUnit.HOURS);
+    }
+
+    //Reschedules the objective to the new enlist date (possibly out-of-order)
+    public void rescheduleUnregulated(LocalDateTime newEnlistDate)
+    {
+        if(newEnlistDate.isBefore(mScheduledAddDate))
+        {
+           mScheduledAddDate = newEnlistDate;
+        }
     }
 
     //Transforms scheduled task to an enlisted

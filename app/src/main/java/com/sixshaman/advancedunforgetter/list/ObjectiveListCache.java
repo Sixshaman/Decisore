@@ -3,13 +3,9 @@ package com.sixshaman.advancedunforgetter.list;
 import android.content.Context;
 import android.view.*;
 import androidx.annotation.NonNull;
-import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
-import android.widget.CheckBox;
-import android.widget.TextView;
 import android.widget.Toast;
 import com.sixshaman.advancedunforgetter.R;
-import com.sixshaman.advancedunforgetter.archive.ObjectiveArchiveCache;
 import com.sixshaman.advancedunforgetter.utils.LockedReadFile;
 import com.sixshaman.advancedunforgetter.utils.LockedWriteFile;
 import com.sixshaman.advancedunforgetter.utils.TransactionDispatcher;
@@ -125,23 +121,28 @@ public class ObjectiveListCache
         return true;
     }
 
-    //Checks if the task with specified id is in the list
-    public boolean isObjectiveInList(long objectiveId)
+    public EnlistedObjective getObjective(long objectiveId)
     {
         //Special case for empty list
         if(mEnlistedObjectives.size() == 0)
         {
-            return false;
+            return null;
         }
 
         //Special case: since mTasks is sorted by id, then last element having lesser id means the task is not in mTasks. This is a pretty common case.
         if(mEnlistedObjectives.get(mEnlistedObjectives.size() - 1).getId() < objectiveId)
         {
-            return false;
+            return null;
         }
 
         //The mTasks list is sorted by id, so find the index with binary search
-        return (Collections.binarySearch(mEnlistedObjectives, objectiveId) >= 0);
+        int index = (Collections.binarySearch(mEnlistedObjectives, objectiveId));
+        if(index < 0)
+        {
+            return null;
+        }
+
+        return mEnlistedObjectives.get(index);
     }
 
     //Loads objective from JSON config file
@@ -226,22 +227,22 @@ public class ObjectiveListCache
         }
     }
 
-    private class ListCacheViewHolder extends RecyclerView.Adapter<ObjectiveListCache.ObjectiveViewHolder>
+    private class ListCacheViewHolder extends RecyclerView.Adapter<ObjectiveViewHolder>
     {
         private Context mContext;
 
         @NonNull
         @Override
-        public ObjectiveListCache.ObjectiveViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i)
+        public ObjectiveViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i)
         {
             mContext = viewGroup.getContext();
 
             View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.layout_task_view, viewGroup, false);
-            return new ObjectiveListCache.ObjectiveViewHolder(view);
+            return new ObjectiveViewHolder(view);
         }
 
         @Override
-        public void onBindViewHolder(@NonNull ObjectiveListCache.ObjectiveViewHolder taskViewHolder, int position)
+        public void onBindViewHolder(@NonNull ObjectiveViewHolder taskViewHolder, int position)
         {
             taskViewHolder.mTextView.setText(mEnlistedObjectives.get(position).getName());
 
@@ -260,30 +261,14 @@ public class ObjectiveListCache
             taskViewHolder.mParentLayout.setOnClickListener(view -> Toast.makeText(mContext, mEnlistedObjectives.get(position).getDescription(), Toast.LENGTH_LONG).show());
 
             taskViewHolder.mCheckbox.setChecked(false);
+
+            taskViewHolder.setObjectiveMetadata(ObjectiveListCache.this, ObjectiveListCache.this.mEnlistedObjectives.get(position).getId());
         }
 
         @Override
         public int getItemCount()
         {
             return mEnlistedObjectives.size();
-        }
-    }
-
-    static class ObjectiveViewHolder extends RecyclerView.ViewHolder
-    {
-        TextView mTextView;
-        CheckBox mCheckbox;
-
-        ConstraintLayout mParentLayout;
-
-        public ObjectiveViewHolder(View itemView)
-        {
-            super(itemView);
-
-            mTextView = itemView.findViewById(R.id.textTaskName);
-            mCheckbox = itemView.findViewById(R.id.checkBoxTaskDone);
-
-            mParentLayout = itemView.findViewById(R.id.layoutTaskView);
         }
     }
 }
