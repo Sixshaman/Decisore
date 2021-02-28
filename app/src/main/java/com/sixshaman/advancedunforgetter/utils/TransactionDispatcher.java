@@ -191,6 +191,111 @@ public class TransactionDispatcher
         return correctTransaction;
     }
 
+    public synchronized boolean editObjectiveTransaction(String configFolder, long objectiveId, String objectiveName, String objectiveDescription)
+    {
+        String listFilePath = configFolder + "/" + ObjectiveListCache.LIST_FILENAME;
+
+        if(mListCache == null)
+        {
+            mListCache = new ObjectiveListCache();
+
+            try
+            {
+                LockedReadFile listFile = new LockedReadFile(listFilePath);
+                mListCache.invalidate(listFile);
+                listFile.close();
+            }
+            catch(IOException e)
+            {
+                e.printStackTrace();
+            }
+        }
+
+        EnlistedObjective objectiveToEdit = mListCache.getObjective(objectiveId);
+        if(objectiveToEdit != null)
+        {
+            //1. Lock list file
+            try
+            {
+                LockedWriteFile listWriteFile = new LockedWriteFile(listFilePath);
+                if(mListCache.editObjectiveName(objectiveId, objectiveName, objectiveDescription))
+                {
+                    if(mListCache.flush(listWriteFile))
+                    {
+                        listWriteFile.close();
+                        return true;
+                    }
+                }
+
+                listWriteFile.close();
+            }
+            catch(FileNotFoundException e)
+            {
+                e.printStackTrace();
+            }
+        }
+
+        return false;
+    }
+
+    public synchronized boolean deleteObjectiveTransaction(String configFolder, EnlistedObjective objective)
+    {
+        String listFilePath = configFolder + "/" + ObjectiveListCache.LIST_FILENAME;
+
+        if(mListCache == null)
+        {
+            mListCache = new ObjectiveListCache();
+
+            try
+            {
+                LockedReadFile listFile = new LockedReadFile(listFilePath);
+                mListCache.invalidate(listFile);
+                listFile.close();
+            }
+            catch(IOException e)
+            {
+                e.printStackTrace();
+            }
+        }
+
+        LockedWriteFile listWriteFile = null;
+        try
+        {
+            listWriteFile = new LockedWriteFile(listFilePath);
+        }
+        catch(FileNotFoundException e)
+        {
+            e.printStackTrace();
+        }
+
+        if(listWriteFile != null)
+        {
+            if(mListCache.removeObjective(objective))
+            {
+                if(mListCache.flush(listWriteFile))
+                {
+                    listWriteFile.close();
+                    return true;
+                }
+            }
+
+            listWriteFile.close();
+
+            try
+            {
+                LockedReadFile listReadFile = new LockedReadFile(listFilePath);
+                mListCache.invalidate(listReadFile);
+                listReadFile.close();
+            }
+            catch(IOException e)
+            {
+                e.printStackTrace();
+            }
+        }
+
+        return false;
+    }
+
     public synchronized boolean updateObjectiveListTransaction(String configFolder, LocalDateTime enlistDateTime)
     {
         String schedulerFilePath = configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME;

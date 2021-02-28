@@ -121,6 +121,27 @@ public class ObjectiveListCache
         return true;
     }
 
+    public boolean editObjectiveName(long objectiveId, String name, String description)
+    {
+        int index = Collections.binarySearch(mEnlistedObjectives, objectiveId);
+        if(index >= 0)
+        {
+            mEnlistedObjectives.get(index).setName(name);
+            mEnlistedObjectives.get(index).setDescription(description);
+        }
+        else
+        {
+            return false;
+        }
+
+        if(mListViewHolder != null)
+        {
+            mListViewHolder.notifyItemChanged(index);
+        }
+
+        return true;
+    }
+
     public EnlistedObjective getObjective(long objectiveId)
     {
         //Special case for empty list

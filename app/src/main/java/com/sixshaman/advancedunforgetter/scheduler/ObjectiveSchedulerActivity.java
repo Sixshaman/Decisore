@@ -80,6 +80,8 @@ public class ObjectiveSchedulerActivity extends AppCompatActivity
     private void openAddTaskDialog()
     {
         NewObjectiveDialogFragment newObjectiveDialogFragment = new NewObjectiveDialogFragment();
+        newObjectiveDialogFragment.setSchedulerCache(mSchedulerCache);
+
         newObjectiveDialogFragment.show(getSupportFragmentManager(), "Test");
     }
 }

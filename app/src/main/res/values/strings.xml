@@ -5,7 +5,9 @@
     <string name="placeholderTask">Task</string>
     <string name="taskName">Name</string>
     <string name="taskDescription">Description</string>
-    <string name="newTaskDialogName">New task</string>
+    <string name="newTaskDialogName">New objective</string>
+    <string name="editObjectiveDialogName">Edit objective</string>
+    <string name="deleteObjectiveAreYouSure">Are you sure you want to delete</string>
     <string name="objectiveSchedule">Schedule for:</string>
     <string name="objectiveRepeats">Repeats:</string>
     <string name="objectiveOccasional">Occasional:</string>
