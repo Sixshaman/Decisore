@@ -1,141 +1,122 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
                                                    xmlns:app="http://schemas.android.com/apk/res-auto"
-                                                   xmlns:tools="http://schemas.android.com/tools"
                                                    android:layout_width="wrap_content"
                                                    android:layout_height="wrap_content"
-                                                   android:layout_margin="16dp" android:id="@+id/layoutDialogNewTask">
-
-    <EditText
-            android:theme="@style/AdditionalTheme"
+                                                   app:layout_constraintStart_toStartOf="parent"
+                                                   app:layout_constraintEnd_toEndOf="parent"
+                                                   android:layout_margin="16dp"
+                                                   android:id="@+id/layoutDialogNewTask">
+    <GridLayout
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:inputType="text"
-            android:ems="10"
-            android:id="@+id/editTaskName"
-            android:hint="@string/taskName"
-            android:autofillHints=""
-            android:importantForAutofill="no"
+            android:layout_height="match_parent"
+            android:layout_margin="16dp"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"/>
+            app:layout_constraintEnd_toEndOf="parent">
 
-    <EditText
-            android:theme="@style/AdditionalTheme"
-            android:layout_width="wrap_content"
-            android:layout_height="200dp"
-            android:inputType="textMultiLine"
-            android:gravity="start|top"
-            android:ems="10"
-            android:id="@+id/editTaskDescription"
-            android:layout_marginTop="8dp"
-            app:layout_constraintTop_toBottomOf="@+id/editTaskName"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            android:autofillHints=""
-            android:hint="@string/taskDescription"/>
-
-    <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:id="@+id/layoutSelectTaskType"
-            app:layout_constraintTop_toBottomOf="@+id/editTaskDescription"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent">
-        <TextView
-                android:text="@string/taskType"
+        <EditText
+                android:theme="@style/AdditionalTheme"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:inputType="text"
+                android:layout_row="0"
+                android:layout_column="0"
+                android:layout_rowSpan="1"
+                android:layout_columnSpan="2"
+                android:ems="10"
+                android:id="@+id/editTaskName"
+                android:hint="@string/taskName"
+                android:autofillHints=""
+                android:importantForAutofill="no"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"/>
+
+        <EditText
+                android:theme="@style/AdditionalTheme"
+                android:layout_width="wrap_content"
+                android:layout_height="200dp"
+                android:layout_row="1"
+                android:layout_column="0"
+                android:layout_rowSpan="2"
+                android:layout_columnSpan="2"
+                android:inputType="textMultiLine"
+                android:gravity="start|top"
+                android:ems="10"
+                android:id="@+id/editTaskDescription"
+                android:layout_marginTop="8dp"
+                app:layout_constraintTop_toBottomOf="@+id/editTaskName"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:autofillHints=""
+                android:hint="@string/taskDescription"/>
+
+        <TextView
+                android:text="@string/objectiveSchedule"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_row="3"
+                android:layout_column="0"
                 android:id="@+id/textViewTaskType"
-                android:layout_marginTop="0dp"
-                android:textSize="18sp"/>
+                android:layout_marginTop="0dp"/>
         <Spinner
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/spinnerTaskType"
-                android:entries="@array/taskTypes"/>
-    </LinearLayout>
-
-    <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:layout_constraintTop_toBottomOf="@+id/layoutSelectTaskType"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginTop="8dp"
-            android:id="@+id/layoutSelectDeferDate">
+                android:layout_row="3"
+                android:layout_column="1"
+                android:id="@+id/spinnerObjectiveSchedule"
+                android:entries="@array/objectiveScheduleTypes"/>
 
         <TextView
-                android:text="@string/enlistDate"
-                android:layout_width="0dp"
+                android:text="@string/objectiveRepeats"
+                android:layout_width="wrap_content"
+                android:layout_row="4"
+                android:layout_column="0"
                 android:layout_height="wrap_content"
                 android:id="@+id/textViewDeferTime"
-                android:layout_weight="1"
                 android:textAlignment="center"/>
 
-        <EditText
-                android:layout_width="0dp"
+        <Spinner
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:inputType="date"
-                android:ems="10"
-                android:id="@+id/editDeferDate"
-                android:layout_weight="1"
-                android:autofillHints=""
-                android:hint="@string/unixStartDate"/>
-    </LinearLayout>
-
-    <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:layout_constraintTop_toBottomOf="@+id/layoutSelectDeferDate"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginTop="8dp"
-            android:id="@+id/layoutSelectRepeatInterval">
+                android:layout_row="4"
+                android:layout_column="1"
+                android:id="@+id/spinnerObjectiveRepeats"
+                android:entries="@array/objectiveRepeatTypes"/>
 
         <TextView
                 android:text="@string/repeat_interval"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:singleLine="true"
-                android:id="@+id/textViewRepeatInterval"
-                android:layout_weight="1"/>
-
-        <RelativeLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="0"
-                android:focusable="false">
+                android:layout_row="5"
+                android:layout_column="0"
+                android:singleLine="true"
+                android:id="@+id/textViewRepeatInterval"/>
 
-            <TextView
-                    android:text="@string/placeholder_number_of_days"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:focusable="false"
-                    android:layout_alignBaseline="@id/editTextRepeatInterval"
-                    android:ems="10"
-                    android:textSize="14sp"
-                    android:padding="8sp"
-                    android:id="@+id/textViewBackHintAlwaysShown"/>
+        <Spinner
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_row="5"
+                android:layout_column="1"
+                android:id="@+id/spinnerObjectiveInterval"
+                android:entries="@array/objectiveIntervalTypes"/>
 
-            <EditText
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:inputType="numberDecimal"
-                    android:ems="10"
-                    android:textSize="14sp"
-                    android:id="@+id/editTextRepeatInterval"
-                    android:autofillHints=""
-                    android:padding="8sp"
-                    android:hint=""
-                    tools:ignore="LabelFor" android:singleLine="true"/>
+        <TextView
+                android:text="@string/objectiveOccasional"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_row="6"
+                android:layout_column="0"
+                android:layout_columnSpan="2"
+                android:singleLine="true"
+                android:id="@+id/textViewOccasional"/>
 
-        </RelativeLayout>
-
-    </LinearLayout>
+        <CheckBox
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_row="6"
+                android:layout_column="1"
+                android:id="@+id/checkboxOccasional"/>
+    </GridLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -6,9 +6,11 @@
     <string name="taskName">Name</string>
     <string name="taskDescription">Description</string>
     <string name="newTaskDialogName">New task</string>
-    <string name="taskType">Type:</string>
-    <string name="enlistDate">Enlist date:</string>
+    <string name="objectiveSchedule">Schedule for:</string>
+    <string name="objectiveRepeats">Repeats:</string>
+    <string name="objectiveOccasional">Occasional:</string>
     <string name="createTask">DO IT, MOTHERFUCKER!</string>
+    <string name="createCancel">Cancel</string>
 
     <string name="menu_schedule_for_tomorrow">Schedule for tomorrow</string>
     <string name="menu_schedule_for_arbitrary">Schedule for...</string>
@@ -22,7 +24,7 @@
     <string name="unixStartDate" tools:ignore="TypographyDashes">1970-01-01</string>
     <string name="dateParseErrorISO8601">Error parsing date. Enter the date in ISO 8601 format</string>
     <string name="frequencyParseError">Please enter the correct frwquency in days</string>
-    <string name="repeat_interval">Repeat interval:</string>
+    <string name="repeat_interval">Repeat every:</string>
     <string name="approx_frequency">Approx frequency:</string>
     <string name="placeholder_number_of_days">X days</string>
 

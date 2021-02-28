@@ -1,9 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string-array name="taskTypes">
-        <item>Immediate</item>
-        <item>Deferred</item>
-        <item>Regular</item>
-        <item>Irregular</item>
+    <string-array name="objectiveScheduleTypes">
+        <item>Now</item>
+        <item>Tomorrow</item>
+        <item>In a week</item>
+        <item>Custom...</item>
+    </string-array>
+
+    <string-array name="objectiveRepeatTypes">
+        <item>1</item>
+        <item>∞</item>
+    </string-array>
+
+    <string-array name="objectiveIntervalTypes">
+        <item>Day</item>
+        <item>Week</item>
+        <item>Month</item>
     </string-array>
 </resources>
