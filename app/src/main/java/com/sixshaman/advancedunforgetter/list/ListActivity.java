@@ -35,8 +35,8 @@ public class ListActivity extends AppCompatActivity
         //The only way to get the name for the application right
         setTitle(R.string.title_activity_task_list);
 
-        FloatingActionButton buttonNewTask = findViewById(R.id.addNewTask);
-        buttonNewTask.setOnClickListener(view -> openAddTaskDialog());
+        FloatingActionButton buttonNewObjective = findViewById(R.id.addNewTask);
+        buttonNewObjective.setOnClickListener(view -> openAddTaskDialog());
     }
 
     @Override

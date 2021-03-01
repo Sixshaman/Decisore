@@ -64,41 +64,34 @@ public class EditObjectiveDialogFragment extends DialogFragment
         builder.setView(inflater.inflate(R.layout.layout_dialog_edit_objective, null));
         builder.setTitle(R.string.editObjectiveDialogName);
 
-        builder.setPositiveButton(R.string.createTask, new DialogInterface.OnClickListener()
+        builder.setPositiveButton(R.string.createTask, (dialog, id) ->
         {
-            @Override
-            public void onClick(DialogInterface dialog, int id)
+            final EditText editTextName         = resultDialog.getValue().findViewById(R.id.editEditTaskName);
+            final EditText editTextNDescription = resultDialog.getValue().findViewById(R.id.editEditTaskDescription);
+
+            String nameText = editTextName.getEditableText().toString();
+            if(nameText.isEmpty())
             {
-                final EditText editTextName         = resultDialog.getValue().findViewById(R.id.editEditTaskName);
-                final EditText editTextNDescription = resultDialog.getValue().findViewById(R.id.editEditTaskDescription);
+                Toast toast = Toast.makeText(activity, R.string.invalidTaskName, Toast.LENGTH_SHORT);
+                toast.show();
+            }
+            else
+            {
+                String descriptionText = editTextNDescription.getEditableText().toString();
 
-                String nameText = editTextName.getEditableText().toString();
-                if(nameText.isEmpty())
-                {
-                    Toast toast = Toast.makeText(activity, R.string.invalidTaskName, Toast.LENGTH_SHORT);
-                    toast.show();
-                }
-                else
-                {
-                    String descriptionText = editTextNDescription.getEditableText().toString();
+                String configFolder = Objects.requireNonNull(activity.getExternalFilesDir("/app")).getAbsolutePath();
 
-                    String configFolder = Objects.requireNonNull(activity.getExternalFilesDir("/app")).getAbsolutePath();
+                TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
+                transactionDispatcher.setSchedulerCache(mSchedulerCache);
+                transactionDispatcher.setListCache(mListCache);
 
-                    TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
-                    transactionDispatcher.setSchedulerCache(mSchedulerCache);
-                    transactionDispatcher.setListCache(mListCache);
-
-                    transactionDispatcher.editObjectiveTransaction(configFolder, mObjectiveId, nameText, descriptionText);
-                }
+                transactionDispatcher.editObjectiveTransaction(configFolder, mObjectiveId, nameText, descriptionText);
             }
         });
 
-        builder.setNegativeButton(R.string.createCancel, new DialogInterface.OnClickListener()
+        builder.setNegativeButton(R.string.createCancel, (dialog, id) ->
         {
-            public void onClick(DialogInterface dialog, int id)
-            {
-                //Nothing
-            }
+            //Nothing
         });
 
         resultDialog.setValue(builder.create());

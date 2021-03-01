@@ -58,6 +58,12 @@ public class ObjectiveSchedulerCache
         mObjectivePools = new ArrayList<>();
     }
 
+    public void attachToView(RecyclerView recyclerView)
+    {
+        mSchedulerViewHolder = new ObjectiveSchedulerCache.SchedulerCacheViewHolder();
+        recyclerView.setAdapter(mSchedulerViewHolder);
+    }
+
     //Updates the task scheduler. Returns the list of objectives ready to-do
     public ArrayList<EnlistedObjective> dumpReadyObjectives(final ObjectiveListCache listCache, LocalDateTime enlistDateTime)
     {
@@ -86,12 +92,6 @@ public class ObjectiveSchedulerCache
 
         mObjectivePools = changedPools;
         return result;
-    }
-
-    public void attachToView(RecyclerView recyclerView)
-    {
-        mSchedulerViewHolder = new ObjectiveSchedulerCache.SchedulerCacheViewHolder();
-        recyclerView.setAdapter(mSchedulerViewHolder);
     }
 
     //Loads tasks from JSON config file

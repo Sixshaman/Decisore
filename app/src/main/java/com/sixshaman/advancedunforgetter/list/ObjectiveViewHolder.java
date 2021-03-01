@@ -85,7 +85,7 @@ class ObjectiveViewHolder extends RecyclerView.ViewHolder implements View.OnCrea
             assert mObjectiveListCache != null;
             assert mObjectiveId        != -1;
 
-            LocalDateTime enlistDateTime = LocalDateTime.now();
+            LocalDateTime enlistDateTime = LocalDateTime.now().minusHours(6); //Day starts at 6AM!
             enlistDateTime = enlistDateTime.plusDays(1).truncatedTo(ChronoUnit.DAYS);
             enlistDateTime = enlistDateTime.plusHours(6); //Day starts at 6AM
 

@@ -63,147 +63,140 @@ public class NewObjectiveDialogFragment extends DialogFragment
         builder.setView(inflater.inflate(R.layout.layout_dialog_new_task, null));
         builder.setTitle(R.string.newTaskDialogName);
 
-        builder.setPositiveButton(R.string.createTask, new DialogInterface.OnClickListener()
+        builder.setPositiveButton(R.string.createTask, (dialog, id) ->
         {
-            @Override
-            public void onClick(DialogInterface dialog, int id)
+            final EditText editTextName         = resultDialog.getValue().findViewById(R.id.editTaskName);
+            final EditText editTextNDescription = resultDialog.getValue().findViewById(R.id.editTaskDescription);
+
+            final Spinner  scheduleSpinner    = resultDialog.getValue().findViewById(R.id.spinnerObjectiveSchedule);
+            final Spinner  repeatSpinner      = resultDialog.getValue().findViewById(R.id.spinnerObjectiveRepeats);
+            final Spinner  intervalSpinner    = resultDialog.getValue().findViewById(R.id.spinnerObjectiveInterval);
+            final CheckBox occasionalCheckbox = resultDialog.getValue().findViewById(R.id.checkboxOccasional);
+
+            String nameText = editTextName.getEditableText().toString();
+            if(nameText.isEmpty())
             {
-                final EditText editTextName         = resultDialog.getValue().findViewById(R.id.editTaskName);
-                final EditText editTextNDescription = resultDialog.getValue().findViewById(R.id.editTaskDescription);
+                Toast toast = Toast.makeText(activity, R.string.invalidTaskName, Toast.LENGTH_SHORT);
+                toast.show();
+            }
+            else
+            {
+                String descriptionText = editTextNDescription.getEditableText().toString();
 
-                final Spinner  scheduleSpinner    = resultDialog.getValue().findViewById(R.id.spinnerObjectiveSchedule);
-                final Spinner  repeatSpinner      = resultDialog.getValue().findViewById(R.id.spinnerObjectiveRepeats);
-                final Spinner  intervalSpinner    = resultDialog.getValue().findViewById(R.id.spinnerObjectiveInterval);
-                final CheckBox occasionalCheckbox = resultDialog.getValue().findViewById(R.id.checkboxOccasional);
+                LocalDateTime objectiveCreateDate                      = LocalDateTime.now();
+                final ValueHolder<LocalDateTime> objectiveScheduleDate = new ValueHolder<>(objectiveCreateDate);
 
-                String nameText = editTextName.getEditableText().toString();
-                if(nameText.isEmpty())
+                Duration objectiveRepeatDuration = Duration.ZERO;
+                float objectiveRepeatProbability = 0.0f;
+
+                int objectiveScheduleIndex = scheduleSpinner.getSelectedItemPosition();
+                switch(objectiveScheduleIndex)
                 {
-                    Toast toast = Toast.makeText(activity, R.string.invalidTaskName, Toast.LENGTH_SHORT);
-                    toast.show();
+                    case 0: //Now
+                    {
+                        objectiveScheduleDate.setValue(objectiveCreateDate);
+                        break;
+                    }
+                    case 1: //Tomorrow
+                    {
+                        //Day starts at 6 AM
+                        objectiveScheduleDate.setValue(objectiveCreateDate.minusHours(6).plusDays(1).truncatedTo(ChronoUnit.DAYS).plusHours(6));
+                        break;
+                    }
+                    case 2: //In a week
+                    {
+                        //Day starts at 6 AM
+                        objectiveScheduleDate.setValue(objectiveCreateDate.minusHours(6).plusDays(7).truncatedTo(ChronoUnit.DAYS).plusHours(6));
+                        break;
+                    }
+                    case 3: //Custom
+                    {
+                        DatePickerDialog datePickerDialog = new DatePickerDialog(activity);
+                        datePickerDialog.setOnDateSetListener((datePicker, year, month, day) ->
+                        {
+                            //Day starts at 6 AM
+                            //Also Java numerates months from 0, not from 1
+                            LocalDateTime dateTime = LocalDateTime.of(year, month + 1, day, 6, 0, 0);
+                            objectiveScheduleDate.setValue(dateTime);
+                        });
+
+                        datePickerDialog.show();
+                        break;
+                    }
+                    default:
+                        break;
                 }
-                else
+
+                boolean objectiveRepeatable = false;
+
+                int objectiveRepeatIndex = repeatSpinner.getSelectedItemPosition();
+                switch(objectiveRepeatIndex)
                 {
-                    String descriptionText = editTextNDescription.getEditableText().toString();
-
-                    LocalDateTime objectiveCreateDate                      = LocalDateTime.now();
-                    final ValueHolder<LocalDateTime> objectiveScheduleDate = new ValueHolder<>(objectiveCreateDate);
-
-                    Duration objectiveRepeatDuration = Duration.ZERO;
-                    float objectiveRepeatProbability = 0.0f;
-
-                    int objectiveScheduleIndex = scheduleSpinner.getSelectedItemPosition();
-                    switch(objectiveScheduleIndex)
+                    case 0: //1
                     {
-                        case 0: //Now
-                        {
-                            objectiveScheduleDate.setValue(objectiveCreateDate);
-                            break;
-                        }
-                        case 1: //Tomorrow
-                        {
-                            //Day starts at 6 AM
-                            objectiveScheduleDate.setValue(objectiveCreateDate.plusDays(1).truncatedTo(ChronoUnit.DAYS).plusHours(6));
-                            break;
-                        }
-                        case 2: //In a week
-                        {
-                            //Day starts at 6 AM
-                            objectiveScheduleDate.setValue(objectiveCreateDate.plusDays(7).truncatedTo(ChronoUnit.DAYS).plusHours(6));
-                            break;
-                        }
-                        case 3: //Custom
-                        {
-                            DatePickerDialog datePickerDialog = new DatePickerDialog(activity);
-                            datePickerDialog.setOnDateSetListener((datePicker, year, month, day) ->
-                            {
-                                //Day starts at 6 AM
-                                //Also Java numerates months from 0, not from 1
-                                LocalDateTime dateTime = LocalDateTime.of(year, month + 1, day, 6, 0, 0);
-                                objectiveScheduleDate.setValue(dateTime);
-                            });
-
-                            datePickerDialog.show();
-                            break;
-                        }
-                        default:
-                            break;
+                        objectiveRepeatable = false;
+                        break;
                     }
-
-                    boolean objectiveRepeatable = false;
-
-                    int objectiveRepeatIndex = repeatSpinner.getSelectedItemPosition();
-                    switch(objectiveRepeatIndex)
+                    case 1: //Infinity
                     {
-                        case 0: //1
-                        {
-                            objectiveRepeatable = false;
-                            break;
-                        }
-                        case 1: //Infinity
-                        {
-                            objectiveRepeatable = true;
-                            break;
-                        }
+                        objectiveRepeatable = true;
+                        break;
                     }
+                }
 
-                    int objectiveIntervalIndex = intervalSpinner.getSelectedItemPosition();
-                    switch(objectiveIntervalIndex)
+                int objectiveIntervalIndex = intervalSpinner.getSelectedItemPosition();
+                switch(objectiveIntervalIndex)
+                {
+                    case 0: //Day
                     {
-                        case 0: //Day
-                        {
-                            objectiveRepeatDuration = Duration.ofDays(1);
-                            break;
-                        }
-                        case 1: //Week
-                        {
-                            objectiveRepeatDuration = Duration.ofDays(7);
-                            break;
-                        }
-                        case 2: //Month
-                        {
-                            objectiveRepeatDuration = Duration.ofDays(30);
-                            break;
-                        }
+                        objectiveRepeatDuration = Duration.ofDays(1);
+                        break;
                     }
-
-                    if(objectiveRepeatable)
+                    case 1: //Week
                     {
-                        if(occasionalCheckbox.isChecked())
-                        {
-                            objectiveRepeatProbability = 0.5f;
-                        }
-                        else
-                        {
-                            objectiveRepeatProbability = 1.0f;
-                        }
+                        objectiveRepeatDuration = Duration.ofDays(7);
+                        break;
+                    }
+                    case 2: //Month
+                    {
+                        objectiveRepeatDuration = Duration.ofDays(30);
+                        break;
+                    }
+                }
+
+                if(objectiveRepeatable)
+                {
+                    if(occasionalCheckbox.isChecked())
+                    {
+                        objectiveRepeatProbability = 0.5f;
                     }
                     else
                     {
-                        //No repetition!
-                        objectiveRepeatDuration = Duration.ZERO;
-                        objectiveRepeatProbability = 0.0f;
+                        objectiveRepeatProbability = 1.0f;
                     }
-
-                    String configFolder = Objects.requireNonNull(activity.getExternalFilesDir("/app")).getAbsolutePath();
-
-                    TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
-                    transactionDispatcher.setSchedulerCache(mSchedulerCache);
-                    transactionDispatcher.setListCache(mListCache);
-
-                    transactionDispatcher.addObjectiveTransaction(configFolder, objectiveCreateDate, objectiveScheduleDate.getValue(),
-                                                                  objectiveRepeatDuration, objectiveRepeatProbability,
-                                                                  nameText, descriptionText, new ArrayList<>());
                 }
+                else
+                {
+                    //No repetition!
+                    objectiveRepeatDuration = Duration.ZERO;
+                    objectiveRepeatProbability = 0.0f;
+                }
+
+                String configFolder = Objects.requireNonNull(activity.getExternalFilesDir("/app")).getAbsolutePath();
+
+                TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
+                transactionDispatcher.setSchedulerCache(mSchedulerCache);
+                transactionDispatcher.setListCache(mListCache);
+
+                transactionDispatcher.addObjectiveTransaction(configFolder, objectiveCreateDate, objectiveScheduleDate.getValue(),
+                                                              objectiveRepeatDuration, objectiveRepeatProbability,
+                                                              nameText, descriptionText, new ArrayList<>());
             }
         });
 
-        builder.setNegativeButton(R.string.createCancel, new DialogInterface.OnClickListener()
+        builder.setNegativeButton(R.string.createCancel, (dialog, id) ->
         {
-            public void onClick(DialogInterface dialog, int id)
-            {
-                //Nothing
-            }
+            //Nothing
         });
 
         resultDialog.setValue(builder.create());
