@@ -306,6 +306,16 @@ public class ScheduledObjective
         return mScheduledAddDate;
     }
 
+    String getName()
+    {
+        return mName;
+    }
+
+    String getDescription()
+    {
+        return mDescription;
+    }
+
     //Pauses the task so it's not repeated anymore
     void pause()
     {

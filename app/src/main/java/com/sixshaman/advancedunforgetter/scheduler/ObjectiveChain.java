@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 
 public class ObjectiveChain implements ObjectiveSource
 {
@@ -148,6 +149,27 @@ public class ObjectiveChain implements ObjectiveSource
     public static String getSourceTypeString()
     {
         return "TaskChain";
+    }
+
+    int getObjectiveCount()
+    {
+        return mObjectives.size();
+    }
+
+    ScheduledObjective getObjective(int position)
+    {
+        Iterator<ScheduledObjective> objectiveIterator = mObjectives.iterator();
+
+        ScheduledObjective result = null;
+
+        int counter = 0;
+        while(counter < position && objectiveIterator.hasNext())
+        {
+            result = objectiveIterator.next();
+            counter++;
+        }
+
+        return result;
     }
 
     @Override

@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.appcompat.widget.Toolbar;
 import com.sixshaman.advancedunforgetter.R;
 import com.sixshaman.advancedunforgetter.archive.ArchiveActivity;
+import com.sixshaman.advancedunforgetter.scheduler.SchedulerActivity;
 import com.sixshaman.advancedunforgetter.utils.LockedReadFile;
 import com.sixshaman.advancedunforgetter.utils.NewObjectiveDialogFragment;
 import com.sixshaman.advancedunforgetter.utils.TransactionDispatcher;
@@ -78,6 +79,13 @@ public class ListActivity extends AppCompatActivity
         {
             Intent archiveOpenIntent = new Intent(ListActivity.this, ArchiveActivity.class);
             startActivity(archiveOpenIntent);
+            return true;
+        });
+
+        menu.findItem(R.id.menuOpenScheduler).setOnMenuItemClickListener(item ->
+        {
+            Intent schedulerOpenIntent = new Intent(ListActivity.this, SchedulerActivity.class);
+            startActivity(schedulerOpenIntent);
             return true;
         });
 

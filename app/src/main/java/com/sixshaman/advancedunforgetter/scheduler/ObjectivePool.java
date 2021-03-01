@@ -222,10 +222,22 @@ public class ObjectivePool
         return resultObjective;
     }
 
-    //Returns true for a single-source, single-task pool
-    boolean isSingleSingleTaskPool()
+    //Returns the number of objective sources in pool
+    int getSourceCount()
     {
-        return (mObjectiveSources.size() == 1) && (mObjectiveSources.get(0) instanceof SingleObjectiveSource);
+        return mObjectiveSources.size();
+    }
+
+    //Returns the source with given index
+    ObjectiveSource getSource(int position)
+    {
+        return mObjectiveSources.get(position);
+    }
+
+    //Returns true if the pool contains the source
+    boolean containsSource(ObjectiveSource source)
+    {
+        return mObjectiveSources.contains(source);
     }
 
     public long getMaxTaskId()

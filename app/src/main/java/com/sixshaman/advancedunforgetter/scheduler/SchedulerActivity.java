@@ -24,7 +24,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
-public class ObjectiveSchedulerActivity extends AppCompatActivity
+public class SchedulerActivity extends AppCompatActivity
 {
     //Scheduler cache model
     private ObjectiveSchedulerCache mSchedulerCache;
@@ -45,8 +45,7 @@ public class ObjectiveSchedulerActivity extends AppCompatActivity
             @Override
             public void onClick(View view)
             {
-                //COPIED FROM TASKLISTACTIVITY
-                openAddTaskDialog();
+                openAddObjectiveDialog();
             }
         });
     }
@@ -60,11 +59,15 @@ public class ObjectiveSchedulerActivity extends AppCompatActivity
 
         String configFolder = Objects.requireNonNull(getExternalFilesDir("/app")).getAbsolutePath();
 
+        RecyclerView recyclerView = findViewById(R.id.objectiveSchedulerView);
+        mSchedulerCache.attachToView(recyclerView);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+
         try
         {
-            LockedReadFile listFile = new LockedReadFile(configFolder + "/" + ObjectiveListCache.LIST_FILENAME);
-            mSchedulerCache.invalidate(listFile);
-            listFile.close();
+            LockedReadFile schedulerFile = new LockedReadFile(configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME);
+            mSchedulerCache.invalidate(schedulerFile);
+            schedulerFile.close();
 
             TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
             transactionDispatcher.setSchedulerCache(mSchedulerCache);
@@ -77,11 +80,8 @@ public class ObjectiveSchedulerActivity extends AppCompatActivity
         }
     }
 
-    private void openAddTaskDialog()
+    private void openAddObjectiveDialog()
     {
-        NewObjectiveDialogFragment newObjectiveDialogFragment = new NewObjectiveDialogFragment();
-        newObjectiveDialogFragment.setSchedulerCache(mSchedulerCache);
-
-        newObjectiveDialogFragment.show(getSupportFragmentManager(), "Test");
+        Toast.makeText(this, R.string.not_implemented, Toast.LENGTH_SHORT).show();
     }
 }

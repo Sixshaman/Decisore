@@ -8,4 +8,10 @@
         app:showAsAction="never">
     </item>
 
+    <item
+        android:id="@+id/menuOpenScheduler"
+        android:title="@string/openScheduler"
+        app:showAsAction="never">
+    </item>
+
 </menu>
