@@ -65,6 +65,11 @@ public class SingleObjectiveSource implements ObjectiveSource
         return new SingleObjectiveSource(task);
     }
 
+    public ScheduledObjective getObjective()
+    {
+        return mObjective;
+    }
+
     @Override
     public long getMaxTaskId()
     {

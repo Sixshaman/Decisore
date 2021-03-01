@@ -2,7 +2,7 @@
     <string name="app_name">Decisore</string>
     <string name="title_activity_task_list">Today objectives</string>\
     <string name="title_activity_task_archive">Finished objectives</string>
-    <string name="placeholderTask">Task</string>
+    <string name="placeholderTask">Objective</string>
     <string name="taskName">Name</string>
     <string name="taskDescription">Description</string>
     <string name="newTaskDialogName">New objective</string>
@@ -22,19 +22,19 @@
     <string name="menu_delete_objective">Delete objective</string>
 
     <string name="invalidTaskName">Invalid task name</string>
-    <string name="openArchive">Open tasks archive</string>
+    <string name="openArchive">Objective archive</string>
+    <string name="openScheduler">Objective scheduler</string>
     <string name="unixStartDate" tools:ignore="TypographyDashes">1970-01-01</string>
     <string name="dateParseErrorISO8601">Error parsing date. Enter the date in ISO 8601 format</string>
     <string name="frequencyParseError">Please enter the correct frwquency in days</string>
     <string name="repeat_interval">Repeat every:</string>
     <string name="approx_frequency">Approx frequency:</string>
     <string name="placeholder_number_of_days">X days</string>
+    <string name="not_implemented">Not implemented</string>
 
     <plurals name="plural_number_of_days">
         <item quantity="one">%1$d day</item>
         <item quantity="other">%1$d days</item>
     </plurals>
-    <string name="title_activity_task_pools">TaskPoolsActivity</string>
-    <string name="title_activity_task_chains">TaskChainsActivity</string>
-    <string name="title_activity_task_scheduler">Scheduled tasks</string>
+    <string name="title_activity_task_scheduler">Scheduled objectives</string>
 </resources>
