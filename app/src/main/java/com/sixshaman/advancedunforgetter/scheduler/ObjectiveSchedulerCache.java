@@ -19,6 +19,7 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
@@ -315,6 +316,8 @@ public class ObjectiveSchedulerCache
             String viewName = "";
             final ValueHolder<String> viewDescription = new ValueHolder<>("");
 
+            int iconId = 0;
+
             ObjectivePool pool = mObjectivePools.get(position);
             if(pool.getSourceCount() == 1 && pool.getName().equals("")) //Implicit pool
             {
@@ -325,21 +328,27 @@ public class ObjectiveSchedulerCache
                     if(chain.getObjectiveCount() == 1 && chain.getName().equals("")) //Implicit chain
                     {
                         ScheduledObjective objective = chain.getObjective(0);
-                        viewDescription.setValue("Objective, scheduled to: " + objective.getScheduledEnlistDate());
+                        viewDescription.setValue("Scheduled to: " + objective.getScheduledEnlistDate());
+
+                        iconId = R.drawable.ic_scheduler_objective;
                     }
                     else
                     {
                         viewName = chain.getName();
 
                         ScheduledObjective objective = chain.getObjective(0);
-                        viewDescription.setValue("Chain, next objective: " + objective.getName());
+                        viewDescription.setValue("Next objective: " + objective.getName());
+
+                        iconId = R.drawable.ic_scheduler_chain;
                     }
                 }
                 else if(source instanceof SingleObjectiveSource)
                 {
                     SingleObjectiveSource singleSource = (SingleObjectiveSource)source;
                     viewName = singleSource.getObjective().getName();
-                    viewDescription.setValue("Objective, scheduled to: " + singleSource.getObjective().getScheduledEnlistDate());
+                    viewDescription.setValue("Scheduled to: " + singleSource.getObjective().getScheduledEnlistDate());
+
+                    iconId = R.drawable.ic_scheduler_objective;
                 }
             }
             else
@@ -347,10 +356,13 @@ public class ObjectiveSchedulerCache
                 viewName = pool.getName();
                 viewDescription.setValue(pool.getDescription());
 
-                viewDescription.setValue("Pool, number of sources: " + pool.getSourceCount());
+                viewDescription.setValue("Number of sources: " + pool.getSourceCount());
+
+                iconId = R.drawable.ic_scheduler_pool;
             }
 
             taskViewHolder.mTextView.setText(viewName);
+            taskViewHolder.mIconView.setImageResource(iconId);
 
             taskViewHolder.mParentLayout.setOnClickListener(view -> Toast.makeText(mContext, viewDescription.getValue(), Toast.LENGTH_LONG).show());
         }
@@ -364,7 +376,8 @@ public class ObjectiveSchedulerCache
 
     static class SchedulerSourceViewHolder extends RecyclerView.ViewHolder
     {
-        TextView mTextView;
+        ImageView mIconView;
+        TextView  mTextView;
 
         ConstraintLayout mParentLayout;
 
@@ -373,6 +386,7 @@ public class ObjectiveSchedulerCache
             super(itemView);
 
             mTextView = itemView.findViewById(R.id.textScheduledSourceName);
+            mIconView = itemView.findViewById(R.id.iconScheduledSource);
 
             mParentLayout = itemView.findViewById(R.id.layoutScheduledSourceView);
         }
