@@ -286,7 +286,7 @@ public class ObjectiveSchedulerCache
         for(ObjectivePool pool: mObjectivePools)
         {
             long poolMaxId = pool.getMaxTaskId();
-            if(maxId > poolMaxId)
+            if(poolMaxId > maxId)
             {
                 maxId = poolMaxId;
             }
