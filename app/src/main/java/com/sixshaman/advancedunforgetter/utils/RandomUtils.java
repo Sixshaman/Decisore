@@ -8,7 +8,7 @@ import java.util.Random;
 //Singleton class to provide utilities, for example, hold an instance of Random
 public class RandomUtils
 {
-    private Random mRandomGenerator;
+    private final Random mRandomGenerator;
 
     //Creates a new RandomUtils instance
     private RandomUtils()
