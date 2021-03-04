@@ -73,9 +73,9 @@ public class ObjectiveSchedulerCache
         ArrayList<ObjectivePool> changedPools = new ArrayList<>(); //Rebuild task pool list after each update event
         for(ObjectivePool pool: mObjectivePools)
         {
-            //Only add the objective to the list if the previous objective from the pool is finished
+            //Only add the objective to the list if the previous objective from the pool is finished (i.e. isn't in list)
             //This is true for all types of objectives
-            if(listCache.getObjective(pool.getLastProvidedObjectiveId()) != null)
+            if(listCache.getObjective(pool.getLastProvidedObjectiveId()) == null)
             {
                 EnlistedObjective objective = pool.getRandomObjective(enlistDateTime);
                 if(objective != null)

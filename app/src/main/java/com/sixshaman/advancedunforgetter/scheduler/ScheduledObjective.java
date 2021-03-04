@@ -273,7 +273,8 @@ public class ScheduledObjective
             mRegularScheduledAddDate = mRegularScheduledAddDate.plusHours(hoursToAdd);
         }
 
-        mScheduledAddDate = mRegularScheduledAddDate.truncatedTo(ChronoUnit.HOURS);
+        //Day starts at 6AM
+        mScheduledAddDate = mRegularScheduledAddDate.truncatedTo(ChronoUnit.DAYS).plusHours(6);
     }
 
     //Reschedules the objective to the new enlist date (possibly out-of-order)
