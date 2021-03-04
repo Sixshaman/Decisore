@@ -81,7 +81,7 @@ public class ObjectiveListCache
 
                 //Shift elements to the right
                 mEnlistedObjectives.add(null);
-                for(int i = mEnlistedObjectives.size() - 1; i > insertIndex; i++)
+                for(int i = mEnlistedObjectives.size() - 1; i > insertIndex; i--)
                 {
                     mEnlistedObjectives.set(i, mEnlistedObjectives.get(i - 1));
                 }
