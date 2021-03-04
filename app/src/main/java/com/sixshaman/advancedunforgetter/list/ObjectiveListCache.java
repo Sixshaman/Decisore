@@ -68,10 +68,11 @@ public class ObjectiveListCache
                 //Insert at selected position
                 int insertIndex = -(index + 1);
 
+                //Shift elements to the right
                 mEnlistedObjectives.add(null);
-                for(int i = insertIndex; i < mEnlistedObjectives.size() - 1; i++)
+                for(int i = mEnlistedObjectives.size() - 1; i > insertIndex; i++)
                 {
-                    mEnlistedObjectives.set(i + 1, mEnlistedObjectives.get(i));
+                    mEnlistedObjectives.set(i, mEnlistedObjectives.get(i - 1));
                 }
 
                 mEnlistedObjectives.set(insertIndex, objective);
