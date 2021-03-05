@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <RelativeLayout
+            android:id="@+id/fab_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:layout_marginEnd="8dp"
+            android:clipChildren="false" >
+
+        <!-- Please note that the @id are defined the first time they're referenced from top to bottom -->
+        <ImageButton
+                android:id="@+id/fab_action_3"
+                style="@style/AdditionalTheme"
+                android:src="@drawable/ic_scheduler_pool"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_above="@+id/fab_action_2"
+                android:layout_alignEnd="@+id/fab"
+                android:contentDescription="@null"
+                android:backgroundTint="@color/colorAccent"
+                android:width="24dp"
+                android:height="24dp"/>
+
+        <ImageButton
+                android:id="@id/fab_action_2"
+                style="@style/AdditionalTheme"
+                android:src="@drawable/ic_scheduler_chain"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_above="@+id/fab_action_1"
+                android:layout_alignEnd="@id/fab"
+                android:contentDescription="@null"
+                android:backgroundTint="@color/colorAccent"
+                android:width="24dp"
+                android:height="24dp"/>
+
+        <ImageButton
+                android:id="@id/fab_action_1"
+                style="@style/AdditionalTheme"
+                android:src="@drawable/ic_scheduler_objective"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_above="@id/fab"
+                android:layout_alignEnd="@id/fab"
+                android:contentDescription="@null"
+                android:backgroundTint="@color/colorAccent"
+                android:width="24dp"
+                android:height="24dp"/>
+
+        <ImageButton
+                android:id="@id/fab"
+                style="@style/Widget.Design.FloatingActionButton"
+                android:src="@drawable/plus"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentBottom="true"
+                android:contentDescription="@null"
+                android:visibility="visible"
+                android:layout_marginTop="8dp" />
+
+    </RelativeLayout>
+</merge>
