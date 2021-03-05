@@ -5,6 +5,6 @@
             android:animation="@animator/rotate_clockwise"
             android:name="plus_group" />
     <target
-            android:animation="@animator/plus_to_minus"
+            android:animation="@animator/plus_to_cross"
             android:name="plus_path" />
 </animated-vector>

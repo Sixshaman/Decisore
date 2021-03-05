@@ -31,4 +31,9 @@
         <item name="windowNoTitle">true</item>
     </style>
 
+    <style name="FloatingActionButtonSpeedDial" parent="Widget.Design.FloatingActionButton">
+        <item name="android:background">@drawable/round_fab</item>
+        <item name="backgroundTint">@color/colorPrimary</item>
+    </style>
+
 </resources>
