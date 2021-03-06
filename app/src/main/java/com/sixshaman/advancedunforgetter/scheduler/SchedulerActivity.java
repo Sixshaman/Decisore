@@ -16,8 +16,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import android.view.View;
 import com.sixshaman.advancedunforgetter.R;
-import com.sixshaman.advancedunforgetter.utils.LockedReadFile;
-import com.sixshaman.advancedunforgetter.utils.TransactionDispatcher;
+import com.sixshaman.advancedunforgetter.utils.*;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -141,17 +140,26 @@ public class SchedulerActivity extends AppCompatActivity
 
     public void addObjectivePool(View view)
     {
-        Toast.makeText(this, "Add objective pool", Toast.LENGTH_SHORT).show();
+        NewPoolDialogFragment newPoolDialogFragment = new NewPoolDialogFragment();
+        newPoolDialogFragment.setSchedulerCache(mSchedulerCache);
+
+        newPoolDialogFragment.show(getSupportFragmentManager(), getString(R.string.newPoolDialogName));
     }
 
     public void addObjectiveChain(View view)
     {
-        Toast.makeText(this, "Add objective chain", Toast.LENGTH_SHORT).show();
+        NewChainDialogFragment newChainDialogFragment = new NewChainDialogFragment();
+        newChainDialogFragment.setSchedulerCache(mSchedulerCache);
+
+        newChainDialogFragment.show(getSupportFragmentManager(), getString(R.string.newChainDialogName));
     }
 
     public void addObjective(View view)
     {
-        Toast.makeText(this, "Add objective", Toast.LENGTH_SHORT).show();
+        NewObjectiveDialogFragment newObjectiveDialogFragment = new NewObjectiveDialogFragment();
+        newObjectiveDialogFragment.setSchedulerCache(mSchedulerCache);
+
+        newObjectiveDialogFragment.show(getSupportFragmentManager(), getString(R.string.newTaskDialogName));
     }
 
     @Override

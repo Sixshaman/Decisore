@@ -4,29 +4,16 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
-import android.content.Context;
-import android.content.DialogInterface;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
 import android.widget.*;
-import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.DialogFragment;
 import com.sixshaman.advancedunforgetter.R;
-import com.sixshaman.advancedunforgetter.list.ListActivity;
 import com.sixshaman.advancedunforgetter.list.ObjectiveListCache;
 import com.sixshaman.advancedunforgetter.scheduler.ObjectiveSchedulerCache;
-import com.sixshaman.advancedunforgetter.scheduler.SingleObjectiveSource;
 
 import java.time.Duration;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Objects;
@@ -60,7 +47,7 @@ public class NewObjectiveDialogFragment extends DialogFragment
         AlertDialog.Builder builder = new AlertDialog.Builder(activity);
         LayoutInflater inflater = activity.getLayoutInflater();
 
-        builder.setView(inflater.inflate(R.layout.layout_dialog_new_task, null));
+        builder.setView(inflater.inflate(R.layout.layout_dialog_new_objective, null));
         builder.setTitle(R.string.newTaskDialogName);
 
         builder.setPositiveButton(R.string.createTask, (dialog, id) ->

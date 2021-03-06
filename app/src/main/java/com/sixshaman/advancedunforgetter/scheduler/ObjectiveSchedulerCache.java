@@ -85,7 +85,7 @@ public class ObjectiveSchedulerCache
             }
 
             pool.updateObjectiveSources(enlistDateTime);
-            if(pool.getTaskSourceCount() != 0) //Don't add empty pools
+            if(pool.getTaskSourceCount() != 0 || !pool.getName().isEmpty()) //Don't add empty implicit pools
             {
                 changedPools.add(pool);
             }
@@ -160,7 +160,7 @@ public class ObjectiveSchedulerCache
     }
 
     //Creates a new explicit task chain
-    public void addObjectiveChain(String name, String description)
+    public boolean addObjectiveChain(String name, String description)
     {
         //Create a new unnamed task pool to hold the chain
         ObjectivePool pool = new ObjectivePool("", "");
@@ -172,10 +172,12 @@ public class ObjectiveSchedulerCache
             mSchedulerViewHolder.notifyItemInserted(mObjectivePools.size() - 1);
             mSchedulerViewHolder.notifyItemRangeChanged(mObjectivePools.size() - 1, mSchedulerViewHolder.getItemCount());
         }
+
+        return true;
     }
 
     //Creates a new explicit task pool
-    public void addObjectivePool(String name, String description)
+    public boolean addObjectivePool(String name, String description)
     {
         ObjectivePool pool = new ObjectivePool(name, description);
         mObjectivePools.add(pool);
@@ -185,6 +187,8 @@ public class ObjectiveSchedulerCache
             mSchedulerViewHolder.notifyItemInserted(mObjectivePools.size() - 1);
             mSchedulerViewHolder.notifyItemRangeChanged(mObjectivePools.size() - 1, mSchedulerViewHolder.getItemCount());
         }
+
+        return true;
     }
 
     //Creates a new explicit task chain and adds it to the provided pool

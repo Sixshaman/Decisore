@@ -6,12 +6,16 @@
     <string name="taskName">Name</string>
     <string name="taskDescription">Description</string>
     <string name="newTaskDialogName">New objective</string>
+    <string name="newChainDialogName">New chain</string>
+    <string name="newPoolDialogName">New pool</string>
     <string name="editObjectiveDialogName">Edit objective</string>
     <string name="deleteObjectiveAreYouSure">Are you sure you want to delete</string>
     <string name="objectiveSchedule">Schedule for:</string>
     <string name="objectiveRepeats">Repeats:</string>
     <string name="objectiveOccasional">Occasional:</string>
     <string name="createTask">DO IT, MOTHERFUCKER!</string>
+    <string name="createChain">DO IT, MOTHERFUCKER!</string>
+    <string name="createPool">DO IT, MOTHERFUCKER!</string>
     <string name="createCancel">Cancel</string>
 
     <string name="menu_schedule_for_tomorrow">Schedule for tomorrow</string>
@@ -22,6 +26,8 @@
     <string name="menu_delete_objective">Delete objective</string>
 
     <string name="invalidTaskName">Invalid task name</string>
+    <string name="invalidChainName">Invalid chain name</string>
+    <string name="invalidPoolName">Invalid pool name</string>
     <string name="openArchive">Objective archive</string>
     <string name="openScheduler">Objective scheduler</string>
     <string name="unixStartDate" tools:ignore="TypographyDashes">1970-01-01</string>
