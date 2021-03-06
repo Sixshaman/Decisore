@@ -41,6 +41,64 @@ public class TransactionDispatcher
         mArchiveCache = archiveCache;
     }
 
+    public synchronized boolean addPoolTransaction(String configFolder, String poolName, String poolDescription)
+    {
+        String schedulerFilePath = configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME;
+
+        invalidateSchedulerCache(schedulerFilePath);
+
+        try
+        {
+            LockedWriteFile schedulerWriteFile = new LockedWriteFile(schedulerFilePath);
+            if(mSchedulerCache.addObjectivePool(poolName, poolDescription))
+            {
+                if(mSchedulerCache.flush(schedulerWriteFile))
+                {
+                    schedulerWriteFile.close();
+                    return true;
+                }
+            }
+
+            schedulerWriteFile.close();
+        }
+        catch(FileNotFoundException e)
+        {
+            e.printStackTrace();
+        }
+
+        invalidateSchedulerCache(schedulerFilePath);
+        return false;
+    }
+
+    public synchronized boolean addChainTransaction(String configFolder, String chainName, String chainDescription)
+    {
+        String schedulerFilePath = configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME;
+
+        invalidateSchedulerCache(schedulerFilePath);
+
+        try
+        {
+            LockedWriteFile schedulerWriteFile = new LockedWriteFile(schedulerFilePath);
+            if(mSchedulerCache.addObjectiveChain(chainName, chainDescription))
+            {
+                if(mSchedulerCache.flush(schedulerWriteFile))
+                {
+                    schedulerWriteFile.close();
+                    return true;
+                }
+            }
+
+            schedulerWriteFile.close();
+        }
+        catch(FileNotFoundException e)
+        {
+            e.printStackTrace();
+        }
+
+        invalidateSchedulerCache(schedulerFilePath);
+        return false;
+    }
+
     public synchronized boolean addObjectiveTransaction(String configFolder, LocalDateTime createDateTime, LocalDateTime enlistDateTime,
                                                         Duration repeatDuration, float repeatProbability,
                                                         String objectiveName, String objectiveDescription, ArrayList<String> objectiveTags)
@@ -48,37 +106,8 @@ public class TransactionDispatcher
         String schedulerFilePath = configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME;
         String listFilePath      = configFolder + "/" + ObjectiveListCache.LIST_FILENAME;
 
-        if(mSchedulerCache == null)
-        {
-            mSchedulerCache = new ObjectiveSchedulerCache();
-
-            try
-            {
-                LockedReadFile schedulerFile = new LockedReadFile(schedulerFilePath);
-                mSchedulerCache.invalidate(schedulerFile);
-                schedulerFile.close();
-            }
-            catch(IOException e)
-            {
-                e.printStackTrace();
-            }
-        }
-
-        if(mListCache == null)
-        {
-            mListCache = new ObjectiveListCache();
-
-            try
-            {
-                LockedReadFile listFile = new LockedReadFile(listFilePath);
-                mListCache.invalidate(listFile);
-                listFile.close();
-            }
-            catch(IOException e)
-            {
-                e.printStackTrace();
-            }
-        }
+        invalidateSchedulerCache(schedulerFilePath);
+        invalidateListCache(listFilePath);
 
         long maxSchedulerId = mSchedulerCache.getMaxObjectiveId();
         long maxListId      = mListCache.getMaxObjectiveId();
@@ -172,20 +201,8 @@ public class TransactionDispatcher
 
         if(!correctTransaction)
         {
-            try
-            {
-                LockedReadFile schedulerReadFile = new LockedReadFile(schedulerFilePath);
-                mSchedulerCache.invalidate(schedulerReadFile);
-                schedulerReadFile.close();
-
-                LockedReadFile listReadFile = new LockedReadFile(listFilePath);
-                mListCache.invalidate(listReadFile);
-                listReadFile.close();
-            }
-            catch(IOException e)
-            {
-                e.printStackTrace();
-            }
+            invalidateSchedulerCache(schedulerFilePath);
+            invalidateListCache(listFilePath);
         }
 
         return correctTransaction;
@@ -195,21 +212,7 @@ public class TransactionDispatcher
     {
         String listFilePath = configFolder + "/" + ObjectiveListCache.LIST_FILENAME;
 
-        if(mListCache == null)
-        {
-            mListCache = new ObjectiveListCache();
-
-            try
-            {
-                LockedReadFile listFile = new LockedReadFile(listFilePath);
-                mListCache.invalidate(listFile);
-                listFile.close();
-            }
-            catch(IOException e)
-            {
-                e.printStackTrace();
-            }
-        }
+        invalidateListCache(listFilePath);
 
         EnlistedObjective objectiveToEdit = mListCache.getObjective(objectiveId);
         if(objectiveToEdit != null)
@@ -235,6 +238,7 @@ public class TransactionDispatcher
             }
         }
 
+        invalidateListCache(listFilePath);
         return false;
     }
 
@@ -242,21 +246,7 @@ public class TransactionDispatcher
     {
         String listFilePath = configFolder + "/" + ObjectiveListCache.LIST_FILENAME;
 
-        if(mListCache == null)
-        {
-            mListCache = new ObjectiveListCache();
-
-            try
-            {
-                LockedReadFile listFile = new LockedReadFile(listFilePath);
-                mListCache.invalidate(listFile);
-                listFile.close();
-            }
-            catch(IOException e)
-            {
-                e.printStackTrace();
-            }
-        }
+        invalidateListCache(listFilePath);
 
         LockedWriteFile listWriteFile = null;
         try
@@ -293,6 +283,7 @@ public class TransactionDispatcher
             }
         }
 
+        invalidateListCache(listFilePath);
         return false;
     }
 
@@ -301,37 +292,8 @@ public class TransactionDispatcher
         String schedulerFilePath = configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME;
         String listFilePath      = configFolder + "/" + ObjectiveListCache.LIST_FILENAME;
 
-        if(mSchedulerCache == null)
-        {
-            mSchedulerCache = new ObjectiveSchedulerCache();
-
-            try
-            {
-                LockedReadFile schedulerFile = new LockedReadFile(schedulerFilePath);
-                mSchedulerCache.invalidate(schedulerFile);
-                schedulerFile.close();
-            }
-            catch(IOException e)
-            {
-                e.printStackTrace();
-            }
-        }
-
-        if(mListCache == null)
-        {
-            mListCache = new ObjectiveListCache();
-
-            try
-            {
-                LockedReadFile listFile = new LockedReadFile(listFilePath);
-                mListCache.invalidate(listFile);
-                listFile.close();
-            }
-            catch(IOException e)
-            {
-                e.printStackTrace();
-            }
-        }
+        invalidateSchedulerCache(schedulerFilePath);
+        invalidateListCache(listFilePath);
 
         //1. Lock scheduler file
         LockedWriteFile schedulerWriteFile = null;
@@ -392,31 +354,11 @@ public class TransactionDispatcher
                 }
 
                 listWriteFile.close();
-
-                try
-                {
-                    LockedReadFile listReadFile = new LockedReadFile(listFilePath);
-                    mListCache.invalidate(listReadFile);
-                    listReadFile.close();
-                }
-                catch(IOException e)
-                {
-                    e.printStackTrace();
-                }
+                invalidateListCache(listFilePath);
             }
 
             schedulerWriteFile.close();
-
-            try
-            {
-                LockedReadFile schedulerReadFile = new LockedReadFile(schedulerFilePath);
-                mSchedulerCache.invalidate(schedulerReadFile);
-                schedulerReadFile.close();
-            }
-            catch(IOException e)
-            {
-                e.printStackTrace();
-            }
+            invalidateSchedulerCache(schedulerFilePath);
         }
 
         return false;
@@ -432,37 +374,8 @@ public class TransactionDispatcher
             return false;
         }
 
-        if(mListCache == null)
-        {
-            mListCache = new ObjectiveListCache();
-
-            try
-            {
-                LockedReadFile listFile = new LockedReadFile(listFilePath);
-                mListCache.invalidate(listFile);
-                listFile.close();
-            }
-            catch(IOException e)
-            {
-                e.printStackTrace();
-            }
-        }
-
-        if(mSchedulerCache == null)
-        {
-            mSchedulerCache = new ObjectiveSchedulerCache();
-
-            try
-            {
-                LockedReadFile schedulerFile = new LockedReadFile(schedulerFilePath);
-                mSchedulerCache.invalidate(schedulerFile);
-                schedulerFile.close();
-            }
-            catch(IOException e)
-            {
-                e.printStackTrace();
-            }
-        }
+        invalidateSchedulerCache(schedulerFilePath);
+        invalidateListCache(listFilePath);
 
         //1. Lock list file
         LockedWriteFile listWriteFile = null;
@@ -513,31 +426,11 @@ public class TransactionDispatcher
                 }
 
                 schedulerWriteFile.close();
-
-                try
-                {
-                    LockedReadFile schedulerReadFile = new LockedReadFile(schedulerFilePath);
-                    mSchedulerCache.invalidate(schedulerReadFile);
-                    schedulerReadFile.close();
-                }
-                catch(IOException e)
-                {
-                    e.printStackTrace();
-                }
+                invalidateSchedulerCache(schedulerFilePath);
             }
 
             listWriteFile.close();
-
-            try
-            {
-                LockedReadFile listReadFile = new LockedReadFile(listFilePath);
-                mListCache.invalidate(listReadFile);
-                listReadFile.close();
-            }
-            catch(IOException e)
-            {
-                e.printStackTrace();
-            }
+            invalidateListCache(listFilePath);
         }
 
         return false;
@@ -548,37 +441,8 @@ public class TransactionDispatcher
         String listFilePath    = configFolder + "/" + ObjectiveListCache.LIST_FILENAME;
         String archiveFilePath = configFolder + "/" + ObjectiveArchiveCache.ARCHIVE_FILENAME;
 
-        if(mListCache == null)
-        {
-            mListCache = new ObjectiveListCache();
-
-            try
-            {
-                LockedReadFile listFile = new LockedReadFile(listFilePath);
-                mListCache.invalidate(listFile);
-                listFile.close();
-            }
-            catch(IOException e)
-            {
-                e.printStackTrace();
-            }
-        }
-
-        if(mArchiveCache == null)
-        {
-            mArchiveCache = new ObjectiveArchiveCache();
-
-            try
-            {
-                LockedReadFile archiveFile = new LockedReadFile(archiveFilePath);
-                mArchiveCache.invalidate(archiveFile);
-                archiveFile.close();
-            }
-            catch(IOException e)
-            {
-                e.printStackTrace();
-            }
-        }
+        invalidateListCache(listFilePath);
+        invalidateArchiveCache(archiveFilePath);
 
         //1. Lock list file
         LockedWriteFile listWriteFile = null;
@@ -629,33 +493,70 @@ public class TransactionDispatcher
                 }
 
                 archiveWriteFile.close();
-
-                try
-                {
-                    LockedReadFile archiveReadFile = new LockedReadFile(archiveFilePath);
-                    mArchiveCache.invalidate(archiveReadFile);
-                    archiveReadFile.close();
-                }
-                catch(IOException e)
-                {
-                    e.printStackTrace();
-                }
+                invalidateArchiveCache(archiveFilePath);
             }
 
             listWriteFile.close();
+            invalidateListCache(listFilePath);
+        }
+
+        return false;
+    }
+
+    private synchronized void invalidateSchedulerCache(String schedulerFilePath)
+    {
+        if(mSchedulerCache == null)
+        {
+            mSchedulerCache = new ObjectiveSchedulerCache();
 
             try
             {
-                LockedReadFile listReadFile = new LockedReadFile(listFilePath);
-                mListCache.invalidate(listReadFile);
-                listReadFile.close();
+                LockedReadFile schedulerFile = new LockedReadFile(schedulerFilePath);
+                mSchedulerCache.invalidate(schedulerFile);
+                schedulerFile.close();
             }
             catch(IOException e)
             {
                 e.printStackTrace();
             }
         }
+    }
 
-        return false;
+    private synchronized void invalidateListCache(String listFilePath)
+    {
+        if(mListCache == null)
+        {
+            mListCache = new ObjectiveListCache();
+
+            try
+            {
+                LockedReadFile listFile = new LockedReadFile(listFilePath);
+                mListCache.invalidate(listFile);
+                listFile.close();
+            }
+            catch(IOException e)
+            {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private synchronized void invalidateArchiveCache(String archiveFilePath)
+    {
+        if(mArchiveCache == null)
+        {
+            mArchiveCache = new ObjectiveArchiveCache();
+
+            try
+            {
+                LockedReadFile archiveFile = new LockedReadFile(archiveFilePath);
+                mArchiveCache.invalidate(archiveFile);
+                archiveFile.close();
+            }
+            catch(IOException e)
+            {
+                e.printStackTrace();
+            }
+        }
     }
 }
