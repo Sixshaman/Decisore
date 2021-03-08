@@ -21,13 +21,6 @@
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <androidx.fragment.app.FragmentContainerView
-            android:id="@+id/pool_fragment_container_view"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:name="com.sixshaman.advancedunforgetter.scheduler.PoolFragment" />
-
     <include layout="@layout/content_task_scheduler"/>
-    <include layout="@layout/speed_dial_fab"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

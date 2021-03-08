@@ -7,19 +7,19 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.sixshaman.advancedunforgetter.R;
-import com.sixshaman.advancedunforgetter.scheduler.DummyContent.DummyItem;
+import com.sixshaman.advancedunforgetter.scheduler.DummyContent2.DummyItem2;
 
 import java.util.List;
 
 /**
- * {@link RecyclerView.Adapter} that can display a {@link DummyItem}.
+ * {@link RecyclerView.Adapter} that can display a {@link DummyItem2}.
  * TODO: Replace the implementation with code for your data type.
  */
 public class PoolRecyclerViewAdapter extends RecyclerView.Adapter<PoolRecyclerViewAdapter.ViewHolder> {
 
-    private final List<DummyItem> mValues;
+    private final List<DummyItem2> mValues;
 
-    public PoolRecyclerViewAdapter(List<DummyItem> items) {
+    public PoolRecyclerViewAdapter(List<DummyItem2> items) {
         mValues = items;
     }
 
@@ -46,7 +46,7 @@ public class PoolRecyclerViewAdapter extends RecyclerView.Adapter<PoolRecyclerVi
         public final View mView;
         public final TextView mIdView;
         public final TextView mContentView;
-        public DummyItem mItem;
+        public DummyItem2 mItem;
 
         public ViewHolder(View view) {
             super(view);
