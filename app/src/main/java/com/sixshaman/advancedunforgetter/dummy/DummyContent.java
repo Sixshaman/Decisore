@@ -1,4 +1,4 @@
-package com.sixshaman.advancedunforgetter.scheduler;
+package com.sixshaman.advancedunforgetter.dummy;
 
 import java.util.ArrayList;
 import java.util.HashMap;

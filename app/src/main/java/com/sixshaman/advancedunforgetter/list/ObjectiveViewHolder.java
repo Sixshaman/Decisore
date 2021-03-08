@@ -19,7 +19,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.sixshaman.advancedunforgetter.BuildConfig;
 import com.sixshaman.advancedunforgetter.R;
 import com.sixshaman.advancedunforgetter.utils.EditObjectiveDialogFragment;
-import com.sixshaman.advancedunforgetter.utils.NewObjectiveDialogFragment;
 import com.sixshaman.advancedunforgetter.utils.TransactionDispatcher;
 
 import java.time.LocalDateTime;

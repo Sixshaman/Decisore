@@ -70,6 +70,7 @@ public class NewPoolDialogFragment extends DialogFragment
             //Nothing
         });
 
+        resultDialog.setValue(builder.create());
         return resultDialog.getValue();
     }
 }

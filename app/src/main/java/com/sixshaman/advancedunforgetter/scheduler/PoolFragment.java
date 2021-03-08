@@ -63,7 +63,7 @@ public class PoolFragment extends Fragment {
             } else {
                 recyclerView.setLayoutManager(new GridLayoutManager(context, mColumnCount));
             }
-            recyclerView.setAdapter(new PoolRecyclerViewAdapter(DummyContent.ITEMS));
+            recyclerView.setAdapter(new PoolRecyclerViewAdapter(DummyContent2.ITEMS));
         }
         return view;
     }
