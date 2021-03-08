@@ -10,6 +10,8 @@ import android.util.Log;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.*;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.appcompat.app.AppCompatActivity;
@@ -46,6 +48,16 @@ public class SchedulerActivity extends AppCompatActivity
         setSupportActionBar(toolbar);
 
         setTitle(R.string.title_activity_task_scheduler);
+
+        if (savedInstanceState == null)
+        {
+            FragmentManager fragmentManager = getSupportFragmentManager();
+
+            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+            fragmentTransaction.setReorderingAllowed(true);
+            fragmentTransaction.add(R.id.pool_fragment_container_view, PoolFragment.class, null);
+            fragmentTransaction.commit();
+        }
 
         mFabExpanded = false;
 
