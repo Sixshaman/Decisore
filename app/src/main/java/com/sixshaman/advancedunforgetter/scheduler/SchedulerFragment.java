@@ -68,7 +68,7 @@ public class SchedulerFragment extends Fragment
         String configFolder = Objects.requireNonNull(mFragmentView.getContext().getExternalFilesDir("/app")).getAbsolutePath();
 
         RecyclerView recyclerView = mFragmentView.findViewById(R.id.objectiveSchedulerView);
-        mSchedulerCache.attachToView(recyclerView);
+        mSchedulerCache.attachToSchedulerView(recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(mFragmentView.getContext()));
 
         try

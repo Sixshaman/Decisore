@@ -59,10 +59,15 @@ public class ObjectiveSchedulerCache
         mObjectivePools = new ArrayList<>();
     }
 
-    public void attachToView(RecyclerView recyclerView)
+    public void attachToSchedulerView(RecyclerView recyclerView)
     {
         mSchedulerViewHolder = new ObjectiveSchedulerCache.SchedulerCacheViewHolder();
         recyclerView.setAdapter(mSchedulerViewHolder);
+    }
+
+    public void attachToPoolView(RecyclerView recyclerView)
+    {
+        throw new RuntimeException("Not implemented");
     }
 
     //Updates the task scheduler. Returns the list of objectives ready to-do
