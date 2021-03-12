@@ -7,7 +7,7 @@ import org.json.JSONObject;
 import java.time.LocalDateTime;
 
 //A task source that contains a single task
-public class SingleObjectiveSource implements ObjectiveSource
+public class SingleObjectivePoolSource implements ObjectivePoolSource
 {
     //The task that this source can provide
     private ScheduledObjective mObjective;
@@ -16,7 +16,7 @@ public class SingleObjectiveSource implements ObjectiveSource
     private boolean mIsFinished;
 
     //Creates a task source from a task
-    SingleObjectiveSource(ScheduledObjective task)
+    SingleObjectivePoolSource(ScheduledObjective task)
     {
         mObjective = task;
         mIsFinished = false;
@@ -48,7 +48,7 @@ public class SingleObjectiveSource implements ObjectiveSource
         }
     }
 
-    public static SingleObjectiveSource fromJSON(JSONObject object)
+    public static SingleObjectivePoolSource fromJSON(JSONObject object)
     {
         JSONObject taskJsonObject = object.optJSONObject("Task");
         if(taskJsonObject == null)
@@ -62,7 +62,7 @@ public class SingleObjectiveSource implements ObjectiveSource
             return null;
         }
 
-        return new SingleObjectiveSource(task);
+        return new SingleObjectivePoolSource(task);
     }
 
     public ScheduledObjective getObjective()

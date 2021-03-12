@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 //A pool that can randomly choose from several task sources
-public class ObjectivePool
+public class ObjectivePool implements SchedulerElement
 {
     //The name of the pool
     private String mName;
@@ -19,7 +19,7 @@ public class ObjectivePool
     private String mDescription;
 
     //The list of all the task sources the pool can choose from
-    private ArrayList<ObjectiveSource> mObjectiveSources;
+    private ArrayList<ObjectivePoolSource> mObjectiveSources;
 
     //The id of the task that was most recently provided by this pool.
     private long mLastProvidedObjectiveId;
@@ -54,14 +54,14 @@ public class ObjectivePool
             result.put("IsActive", Boolean.toString(mIsActive));
 
             JSONArray sourcesArray = new JSONArray();
-            for(ObjectiveSource source: mObjectiveSources)
+            for(ObjectivePoolSource source: mObjectiveSources)
             {
                 JSONObject taskSourceObject = new JSONObject();
 
                 //Another poke at Java! It can't into static methods in interfaces
-                if(source instanceof SingleObjectiveSource)
+                if(source instanceof SingleObjectivePoolSource)
                 {
-                    taskSourceObject.put("Type", SingleObjectiveSource.getSourceTypeString());
+                    taskSourceObject.put("Type", SingleObjectivePoolSource.getSourceTypeString());
                 }
                 else if(source instanceof ObjectiveChain)
                 {
@@ -141,9 +141,9 @@ public class ObjectivePool
 
                         if(sourceData != null)
                         {
-                            if(sourceType.equals(SingleObjectiveSource.getSourceTypeString()))
+                            if(sourceType.equals(SingleObjectivePoolSource.getSourceTypeString()))
                             {
-                                SingleObjectiveSource singleTaskSource = SingleObjectiveSource.fromJSON(sourceData);
+                                SingleObjectivePoolSource singleTaskSource = SingleObjectivePoolSource.fromJSON(sourceData);
                                 if(singleTaskSource != null)
                                 {
                                     objectivePool.addTaskSource(singleTaskSource);
@@ -175,11 +175,11 @@ public class ObjectivePool
     //Updates all the task sources, removing the finished ones
     void updateObjectiveSources(LocalDateTime referenceTime)
     {
-        ArrayList<ObjectiveSource> updatedSourceList = new ArrayList<>();
-        for(ObjectiveSource source: mObjectiveSources)
+        ArrayList<ObjectivePoolSource> updatedSourceList = new ArrayList<>();
+        for(ObjectivePoolSource source: mObjectiveSources)
         {
             //Throw away finished task sources
-            if(source.getState(referenceTime) != ObjectiveSource.SourceState.SOURCE_STATE_FINISHED)
+            if(source.getState(referenceTime) != ObjectivePoolSource.SourceState.SOURCE_STATE_FINISHED)
             {
                 updatedSourceList.add(source);
             }
@@ -197,10 +197,10 @@ public class ObjectivePool
         }
 
         //Check non-empty sources only
-        ArrayList<ObjectiveSource> availableSources = new ArrayList<>();
-        for(ObjectiveSource source: mObjectiveSources)
+        ArrayList<ObjectivePoolSource> availableSources = new ArrayList<>();
+        for(ObjectivePoolSource source: mObjectiveSources)
         {
-            if(source.getState(referenceTime) == ObjectiveSource.SourceState.SOURCE_STATE_REGULAR)
+            if(source.getState(referenceTime) == ObjectivePoolSource.SourceState.SOURCE_STATE_REGULAR)
             {
                 availableSources.add(source);
             }
@@ -229,13 +229,13 @@ public class ObjectivePool
     }
 
     //Returns the source with given index
-    ObjectiveSource getSource(int position)
+    ObjectivePoolSource getSource(int position)
     {
         return mObjectiveSources.get(position);
     }
 
     //Returns true if the pool contains the source
-    boolean containsSource(ObjectiveSource source)
+    boolean containsSource(ObjectivePoolSource source)
     {
         return mObjectiveSources.contains(source);
     }
@@ -243,7 +243,7 @@ public class ObjectivePool
     public long getMaxTaskId()
     {
         long maxId = -1;
-        for(ObjectiveSource source: mObjectiveSources)
+        for(ObjectivePoolSource source: mObjectiveSources)
         {
             long sourceMaxId = source.getMaxTaskId();
             if(sourceMaxId > maxId)
@@ -255,9 +255,9 @@ public class ObjectivePool
         return maxId;
     }
 
-    public ObjectiveSource findSourceForObjective(long objectiveId)
+    public ObjectivePoolSource findSourceForObjective(long objectiveId)
     {
-        for(ObjectiveSource source: mObjectiveSources)
+        for(ObjectivePoolSource source: mObjectiveSources)
         {
             if(source.containedObjective(objectiveId))
             {
@@ -268,11 +268,13 @@ public class ObjectivePool
         return null;
     }
 
+    @Override
     public String getName()
     {
         return mName;
     }
 
+    @Override
     public String getDescription()
     {
         return mDescription;
@@ -284,7 +286,7 @@ public class ObjectivePool
     }
 
     //Adds a new task source to choose from
-    void addTaskSource(ObjectiveSource source)
+    void addTaskSource(ObjectivePoolSource source)
     {
         mObjectiveSources.add(source);
     }

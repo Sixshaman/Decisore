@@ -5,7 +5,7 @@ import org.json.JSONObject;
 
 import java.time.LocalDateTime;
 
-interface ObjectiveSource
+interface ObjectivePoolSource
 {
     enum SourceState
     {
