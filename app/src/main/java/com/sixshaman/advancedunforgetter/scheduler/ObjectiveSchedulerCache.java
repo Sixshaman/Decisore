@@ -19,14 +19,9 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.TextView;
-import android.widget.Toast;
 import androidx.annotation.NonNull;
-import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 import com.sixshaman.advancedunforgetter.R;
-import com.sixshaman.advancedunforgetter.archive.ObjectiveArchiveCache;
 import com.sixshaman.advancedunforgetter.list.EnlistedObjective;
 import com.sixshaman.advancedunforgetter.list.ObjectiveListCache;
 import com.sixshaman.advancedunforgetter.utils.LockedReadFile;
@@ -38,17 +33,14 @@ import org.json.JSONObject;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Observable;
 
 //The class to schedule all deferred tasks. The model for the scheduler UI
 public class ObjectiveSchedulerCache
 {
     public static final String SCHEDULER_FILENAME = "TaskScheduler.json";
 
-    //The list of all the task pools.
-    //All single tasks are task pools with a single SingleTaskSource
-    //All single task chains are task pools with a single TaskChain
-    private ArrayList<ObjectivePool> mObjectivePools;
+    //The list of all the scheduler elements
+    private ArrayList<SchedulerElement> mSchedulerElements;
 
     //The view holder of the cached data
     private SchedulerCacheViewHolder mSchedulerViewHolder;
@@ -56,7 +48,7 @@ public class ObjectiveSchedulerCache
     //Creates a new task scheduler that is bound to mainList
     public ObjectiveSchedulerCache()
     {
-        mObjectivePools = new ArrayList<>();
+        mSchedulerElements = new ArrayList<>();
     }
 
     public void attachToSchedulerView(RecyclerView recyclerView)
@@ -75,35 +67,66 @@ public class ObjectiveSchedulerCache
     {
         ArrayList<EnlistedObjective> result = new ArrayList<>();
 
-        ArrayList<ObjectivePool> changedPools = new ArrayList<>(); //Rebuild task pool list after each update event
-        for(ObjectivePool pool: mObjectivePools)
+        ArrayList<SchedulerElement> changedElements = new ArrayList<>(); //Rebuild task pool list after each update event
+        for(SchedulerElement element: mSchedulerElements)
         {
-            //Only add the objective to the list if the previous objective from the pool is finished (i.e. isn't in list)
-            //This is true for all types of objectives
-            if(listCache.getObjective(pool.getLastProvidedObjectiveId()) == null)
+            if(element instanceof ScheduledObjective)
             {
-                EnlistedObjective objective = pool.getRandomObjective(enlistDateTime);
-                if(objective != null)
+                ScheduledObjective scheduledObjective = (ScheduledObjective)element;
+                if(listCache.getObjective(scheduledObjective.getId()) == null)
                 {
-                    result.add(objective);
+                    //The list doesn't contain this objective
+                    EnlistedObjective enlistedObjective = scheduledObjective.toEnlisted(enlistDateTime);
+                    result.add(enlistedObjective);
+
+                    if(scheduledObjective.isRepeatable())
+                    {
+                        changedElements.add(scheduledObjective);
+                    }
                 }
             }
-
-            pool.updateObjectiveSources(enlistDateTime);
-            if(pool.getTaskSourceCount() != 0 || !pool.getName().isEmpty()) //Don't add empty implicit pools
+            else if(element instanceof ObjectiveChain)
             {
-                changedPools.add(pool);
+                ObjectiveChain objectiveChain = (ObjectiveChain)element;
+                if(listCache.getObjective(objectiveChain.getFirstObjective().getId()) == null)
+                {
+                    EnlistedObjective objective = objectiveChain.obtainTask(enlistDateTime);
+                    if(objective != null)
+                    {
+                        result.add(objective);
+                    }
+
+                    changedElements.add(objectiveChain);
+                }
+            }
+            else if(element instanceof ObjectivePool)
+            {
+                ObjectivePool objectivePool = (ObjectivePool)element;
+
+                //Only add the objective to the list if the previous objective from the pool is finished (i.e. isn't in list)
+                //This is true for all types of objectives
+                if(listCache.getObjective(objectivePool.getLastProvidedObjectiveId()) == null)
+                {
+                    EnlistedObjective objective = objectivePool.getRandomObjective(enlistDateTime);
+                    if(objective != null)
+                    {
+                        result.add(objective);
+                    }
+                }
+
+                objectivePool.updateObjectiveSources(enlistDateTime);
+                changedElements.add(objectivePool);
             }
         }
 
-        mObjectivePools = changedPools;
+        mSchedulerElements = changedElements;
         return result;
     }
 
     //Loads tasks from JSON config file
     public boolean invalidate(LockedReadFile schedulerReadFile)
     {
-        mObjectivePools.clear();
+        mSchedulerElements.clear();
 
         try
         {
@@ -168,14 +191,13 @@ public class ObjectiveSchedulerCache
     public boolean addObjectiveChain(String name, String description)
     {
         //Create a new unnamed task pool to hold the chain
-        ObjectivePool pool = new ObjectivePool("", "");
-        addObjectiveChainToPool(pool, name, description);
-        mObjectivePools.add(pool);
+        ObjectiveChain chain = new ObjectiveChain(name, description);
+        mSchedulerElements.add(chain);
 
         if(mSchedulerViewHolder != null)
         {
-            mSchedulerViewHolder.notifyItemInserted(mObjectivePools.size() - 1);
-            mSchedulerViewHolder.notifyItemRangeChanged(mObjectivePools.size() - 1, mSchedulerViewHolder.getItemCount());
+            mSchedulerViewHolder.notifyItemInserted(mSchedulerElements.size() - 1);
+            mSchedulerViewHolder.notifyItemRangeChanged(mSchedulerElements.size() - 1, mSchedulerViewHolder.getItemCount());
         }
 
         return true;
@@ -185,12 +207,12 @@ public class ObjectiveSchedulerCache
     public boolean addObjectivePool(String name, String description)
     {
         ObjectivePool pool = new ObjectivePool(name, description);
-        mObjectivePools.add(pool);
+        mSchedulerElements.add(pool);
 
         if(mSchedulerViewHolder != null)
         {
-            mSchedulerViewHolder.notifyItemInserted(mObjectivePools.size() - 1);
-            mSchedulerViewHolder.notifyItemRangeChanged(mObjectivePools.size() - 1, mSchedulerViewHolder.getItemCount());
+            mSchedulerViewHolder.notifyItemInserted(mSchedulerElements.size() - 1);
+            mSchedulerViewHolder.notifyItemRangeChanged(mSchedulerElements.size() - 1, mSchedulerViewHolder.getItemCount());
         }
 
         return true;
@@ -204,7 +226,7 @@ public class ObjectiveSchedulerCache
 
         if(mSchedulerViewHolder != null)
         {
-            int index = mObjectivePools.indexOf(pool);
+            int index = mSchedulerElements.indexOf(pool);
             mSchedulerViewHolder.notifyItemChanged(index);
         }
     }
@@ -214,17 +236,13 @@ public class ObjectiveSchedulerCache
     {
         if(pool == null && chain == null) //Add a single task source to the new pool
         {
-            //Neither task chain nor pool is provided, create an implicit pool and add task there
-            SingleObjectiveSource taskSource = new SingleObjectiveSource(scheduledObjective);
+            //Neither task chain nor pool is provided
+            mSchedulerElements.add(scheduledObjective);
 
-            ObjectivePool implicitPool = new ObjectivePool("", "");
-            implicitPool.addTaskSource(taskSource);
-
-            mObjectivePools.add(implicitPool);
             if(mSchedulerViewHolder != null)
             {
-                mSchedulerViewHolder.notifyItemInserted(mObjectivePools.size() - 1);
-                mSchedulerViewHolder.notifyItemRangeChanged(mObjectivePools.size() - 1, mSchedulerViewHolder.getItemCount());
+                mSchedulerViewHolder.notifyItemInserted(mSchedulerElements.size() - 1);
+                mSchedulerViewHolder.notifyItemRangeChanged(mSchedulerElements.size() - 1, mSchedulerViewHolder.getItemCount());
             }
         }
         else if(pool == null)
@@ -234,9 +252,9 @@ public class ObjectiveSchedulerCache
 
             if(mSchedulerViewHolder != null)
             {
-                for(int i = 0; i < mObjectivePools.size(); i++)
+                for(int i = 0; i < mSchedulerElements.size(); i++)
                 {
-                    if(mObjectivePools.get(i).containsSource(chain))
+                    if(mSchedulerElements.get(i) instanceof ObjectivePool && ((ObjectivePool)mSchedulerElements.get(i)).containsSource(chain))
                     {
                         mSchedulerViewHolder.notifyItemChanged(i);
                     }
@@ -246,12 +264,12 @@ public class ObjectiveSchedulerCache
         else
         {
             //Task pool provided, add the task there
-            SingleObjectiveSource taskSource = new SingleObjectiveSource(scheduledObjective);
+            SingleObjectivePoolSource taskSource = new SingleObjectivePoolSource(scheduledObjective);
             pool.addTaskSource(taskSource);
 
             if(mSchedulerViewHolder != null)
             {
-                int index = mObjectivePools.indexOf(pool);
+                int index = mSchedulerElements.indexOf(pool);
                 mSchedulerViewHolder.notifyItemChanged(index);
             }
         }
@@ -266,17 +284,40 @@ public class ObjectiveSchedulerCache
         //Example 2: a weekly objective was rescheduled for tomorrow and the next time it gets added is 2 days after. It gets added both tomorrow and 2 days after
 
         boolean alreadyExisting = false;
-        for(ObjectivePool objectivePool: mObjectivePools)
+        for(SchedulerElement schedulerElement: mSchedulerElements)
         {
-            ObjectiveSource source = objectivePool.findSourceForObjective(objective.getId());
-            if(source != null)
+            if(schedulerElement instanceof ObjectivePool)
             {
-                if(!source.putBack(objective))
-                {
-                    return false;
-                }
+                ObjectivePool objectivePool = (ObjectivePool)schedulerElement;
 
-                alreadyExisting = true;
+                ObjectivePoolSource source = objectivePool.findSourceForObjective(objective.getId());
+                if(source != null)
+                {
+                    if(!source.putBack(objective))
+                    {
+                        return false;
+                    }
+
+                    alreadyExisting = true;
+                }
+            }
+            else if(schedulerElement instanceof ObjectiveChain)
+            {
+                ObjectiveChain objectiveChain = (ObjectiveChain)schedulerElement;
+
+                if(objectiveChain.containedObjective(objective.getId()))
+                {
+                    objectiveChain.putBack(objective);
+                }
+            }
+            else if(schedulerElement instanceof ScheduledObjective)
+            {
+                ScheduledObjective scheduledObjective = (ScheduledObjective)schedulerElement;
+
+                if(scheduledObjective.getId() == objective.getId())
+                {
+                    alreadyExisting = true;
+                }
             }
         }
 
@@ -293,75 +334,69 @@ public class ObjectiveSchedulerCache
     public long getMaxObjectiveId()
     {
         long maxId = -1;
-        for(ObjectivePool pool: mObjectivePools)
+        for(SchedulerElement schedulerElement: mSchedulerElements)
         {
-            long poolMaxId = pool.getMaxTaskId();
-            if(poolMaxId > maxId)
+            if(schedulerElement instanceof ObjectivePool)
             {
-                maxId = poolMaxId;
+                ObjectivePool objectivePool = (ObjectivePool)schedulerElement;
+
+                long poolMaxId = objectivePool.getMaxTaskId();
+                if(poolMaxId > maxId)
+                {
+                    maxId = poolMaxId;
+                }
+            }
+            else if(schedulerElement instanceof ObjectiveChain)
+            {
+                ObjectiveChain objectiveChain = (ObjectiveChain)schedulerElement;
+
+                long chainMaxId = objectiveChain.getMaxTaskId();
+                if(chainMaxId > maxId)
+                {
+                    maxId = chainMaxId;
+                }
+            }
+            else if(schedulerElement instanceof ScheduledObjective)
+            {
+                ScheduledObjective scheduledObjective = (ScheduledObjective)schedulerElement;
+
+                if(scheduledObjective.getId() > maxId)
+                {
+                    maxId = scheduledObjective.getId();
+                }
             }
         }
 
         return maxId;
     }
 
-    private class SchedulerCacheViewHolder extends RecyclerView.Adapter<ObjectiveSchedulerCache.SchedulerSourceViewHolder>
+    private class SchedulerCacheViewHolder extends RecyclerView.Adapter<SchedulerSourceViewHolder>
     {
         private Context mContext;
 
         @NonNull
         @Override
-        public ObjectiveSchedulerCache.SchedulerSourceViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i)
+        public SchedulerSourceViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i)
         {
             mContext = viewGroup.getContext();
 
             View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.layout_objective_source_view, viewGroup, false);
-            return new ObjectiveSchedulerCache.SchedulerSourceViewHolder(view);
+            return new SchedulerSourceViewHolder(view);
         }
 
         @Override
-        public void onBindViewHolder(@NonNull ObjectiveSchedulerCache.SchedulerSourceViewHolder taskViewHolder, int position)
+        public void onBindViewHolder(@NonNull SchedulerSourceViewHolder taskViewHolder, int position)
         {
             String viewName = "";
             final ValueHolder<String> viewDescription = new ValueHolder<>("");
 
             int iconId = 0;
 
-            ObjectivePool pool = mObjectivePools.get(position);
-            if(pool.getSourceCount() == 1 && pool.getName().equals("")) //Implicit pool
+            SchedulerElement schedulerElement = mSchedulerElements.get(position);
+            if(schedulerElement instanceof ObjectivePool) //Implicit pool
             {
-                ObjectiveSource source = pool.getSource(0);
-                if(source instanceof ObjectiveChain)
-                {
-                    ObjectiveChain chain = (ObjectiveChain)source;
-                    if(chain.getObjectiveCount() == 1 && chain.getName().equals("")) //Implicit chain
-                    {
-                        ScheduledObjective objective = chain.getObjective(0);
-                        viewDescription.setValue("Scheduled to: " + objective.getScheduledEnlistDate());
+                ObjectivePool pool = (ObjectivePool)schedulerElement;
 
-                        iconId = R.drawable.ic_scheduler_objective;
-                    }
-                    else
-                    {
-                        viewName = chain.getName();
-
-                        ScheduledObjective objective = chain.getObjective(0);
-                        viewDescription.setValue("Next objective: " + objective.getName());
-
-                        iconId = R.drawable.ic_scheduler_chain;
-                    }
-                }
-                else if(source instanceof SingleObjectiveSource)
-                {
-                    SingleObjectiveSource singleSource = (SingleObjectiveSource)source;
-                    viewName = singleSource.getObjective().getName();
-                    viewDescription.setValue("Scheduled to: " + singleSource.getObjective().getScheduledEnlistDate());
-
-                    iconId = R.drawable.ic_scheduler_objective;
-                }
-            }
-            else
-            {
                 viewName = pool.getName();
                 viewDescription.setValue(pool.getDescription());
 
@@ -369,35 +404,37 @@ public class ObjectiveSchedulerCache
 
                 iconId = R.drawable.ic_scheduler_pool;
             }
+            else if(schedulerElement instanceof ObjectiveChain)
+            {
+                ObjectiveChain chain = (ObjectiveChain)schedulerElement;
+
+                viewName = chain.getName();
+
+                ScheduledObjective objective = chain.getObjective(0);
+                viewDescription.setValue("Next objective: " + objective.getName());
+
+                iconId = R.drawable.ic_scheduler_chain;
+            }
+            else if(schedulerElement instanceof ScheduledObjective)
+            {
+                ScheduledObjective objective = (ScheduledObjective)schedulerElement;
+
+                viewName = objective.getName();
+                viewDescription.setValue("Scheduled to: " + objective.getScheduledEnlistDate());
+
+                iconId = R.drawable.ic_scheduler_objective;
+            }
 
             taskViewHolder.mTextView.setText(viewName);
             taskViewHolder.mIconView.setImageResource(iconId);
 
-            taskViewHolder.mParentLayout.setOnClickListener(view -> Toast.makeText(mContext, viewDescription.getValue(), Toast.LENGTH_LONG).show());
+            taskViewHolder.setSourceMetadata(ObjectiveSchedulerCache.this, schedulerElement);
         }
 
         @Override
         public int getItemCount()
         {
-            return mObjectivePools.size();
-        }
-    }
-
-    static class SchedulerSourceViewHolder extends RecyclerView.ViewHolder
-    {
-        ImageView mIconView;
-        TextView  mTextView;
-
-        ConstraintLayout mParentLayout;
-
-        public SchedulerSourceViewHolder(View itemView)
-        {
-            super(itemView);
-
-            mTextView = itemView.findViewById(R.id.textScheduledSourceName);
-            mIconView = itemView.findViewById(R.id.iconScheduledSource);
-
-            mParentLayout = itemView.findViewById(R.id.layoutScheduledSourceView);
+            return mSchedulerElements.size();
         }
     }
 }

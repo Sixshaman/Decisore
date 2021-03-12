@@ -13,7 +13,7 @@ import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 
-public class ScheduledObjective
+public class ScheduledObjective implements SchedulerElement
 {
     private static final String JSON_TASK_ID                    = "Id";
     private static final String JSON_TASK_NAME                  = "Name";
@@ -288,6 +288,11 @@ public class ScheduledObjective
         }
     }
 
+    public boolean isRepeatable()
+    {
+        return mRepeatProbability > 0.0001f;
+    }
+
     //Transforms scheduled task to an enlisted
     public EnlistedObjective toEnlisted(LocalDateTime enlistDate)
     {
@@ -309,12 +314,14 @@ public class ScheduledObjective
         return mScheduledAddDate;
     }
 
-    String getName()
+    @Override
+    public String getName()
     {
         return mName;
     }
 
-    String getDescription()
+    @Override
+    public String getDescription()
     {
         return mDescription;
     }

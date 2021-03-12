@@ -7,11 +7,10 @@ import org.json.JSONObject;
 
 import java.time.LocalDateTime;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 
-public class ObjectiveChain implements ObjectiveSource
+public class ObjectiveChain implements ObjectivePoolSource, SchedulerElement
 {
     //Objective chain name
     private String mName;
@@ -45,11 +44,13 @@ public class ObjectiveChain implements ObjectiveSource
         }
     }
 
+    @Override
     public String getName()
     {
         return mName;
     }
 
+    @Override
     public String getDescription()
     {
         return mDescription;
@@ -170,6 +171,11 @@ public class ObjectiveChain implements ObjectiveSource
         }
 
         return result;
+    }
+
+    ScheduledObjective getFirstObjective()
+    {
+        return mObjectives.getFirst();
     }
 
     @Override
