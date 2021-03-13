@@ -10,7 +10,7 @@ import java.util.ArrayDeque;
 import java.util.HashSet;
 import java.util.Iterator;
 
-public class ObjectiveChain implements ObjectivePoolSource, SchedulerElement
+public class ObjectiveChain implements PoolElement
 {
     //Objective chain name
     private String mName;
@@ -178,8 +178,7 @@ public class ObjectiveChain implements ObjectivePoolSource, SchedulerElement
         return mObjectives.getFirst();
     }
 
-    @Override
-    public long getMaxTaskId()
+    public long getMaxObjectiveId()
     {
         if(mObjectives == null)
         {
@@ -199,7 +198,6 @@ public class ObjectiveChain implements ObjectivePoolSource, SchedulerElement
         return maxId;
     }
 
-    @Override
     public boolean containedObjective(long objectiveId)
     {
         for(Long historicId: mObjectiveIdHistory)
@@ -213,7 +211,6 @@ public class ObjectiveChain implements ObjectivePoolSource, SchedulerElement
         return false;
     }
 
-    @Override
     public boolean putBack(ScheduledObjective objective)
     {
         if(mObjectives != null && !mObjectives.isEmpty())
@@ -235,13 +232,11 @@ public class ObjectiveChain implements ObjectivePoolSource, SchedulerElement
         return false;
     }
 
-    @Override
-    public EnlistedObjective obtainTask(LocalDateTime referenceTime)
+    public EnlistedObjective obtainObjective(LocalDateTime referenceTime)
     {
         if(mObjectives != null && !mObjectives.isEmpty())
         {
-            ScheduledObjective firstTask = mObjectives.getFirst();
-            if(referenceTime.isAfter(firstTask.getScheduledEnlistDate()))
+            if(mObjectives.getFirst().isAvailable(referenceTime))
             {
                 return mObjectives.removeFirst().toEnlisted(referenceTime);
             }
@@ -257,27 +252,27 @@ public class ObjectiveChain implements ObjectivePoolSource, SchedulerElement
     }
 
     @Override
-    public SourceState getState(LocalDateTime referenceTime)
+    public boolean isPaused()
     {
-        if(mObjectives == null) //The chain is finished and cannot be a task source anymore
+        return false;
+    }
+
+    @Override
+    public boolean isAvailable(LocalDateTime referenceTime)
+    {
+        if(isPaused())
         {
-            return SourceState.SOURCE_STATE_FINISHED;
+            return false;
         }
-        else if(mObjectives.isEmpty()) //The chain is valid but cannot provide task at this moment
+
+        if(mObjectives.isEmpty())
         {
-            return SourceState.SOURCE_STATE_EMPTY;
+            return true;
         }
         else
         {
-            ScheduledObjective firstTask = mObjectives.getFirst();
-            if(firstTask.isActive() && referenceTime.isAfter(firstTask.getScheduledEnlistDate())) //Also return EMPTY state if we can't provide the first task at this time
-            {
-                return SourceState.SOURCE_STATE_REGULAR;
-            }
-            else
-            {
-                return SourceState.SOURCE_STATE_EMPTY;
-            }
+            ScheduledObjective firstObjective = mObjectives.getFirst();
+            return firstObjective.isAvailable(referenceTime);
         }
     }
 }

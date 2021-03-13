@@ -13,7 +13,7 @@ import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 
-public class ScheduledObjective implements SchedulerElement
+public class ScheduledObjective implements PoolElement
 {
     private static final String JSON_TASK_ID                    = "Id";
     private static final String JSON_TASK_NAME                  = "Name";
@@ -299,6 +299,18 @@ public class ScheduledObjective implements SchedulerElement
         return new EnlistedObjective(mId, mDateCreated, enlistDate, mName, mDescription, mTags);
     }
 
+    @Override
+    public boolean isPaused()
+    {
+        return !mIsActive;
+    }
+
+    @Override
+    public boolean isAvailable(LocalDateTime referenceTime)
+    {
+        return !isPaused() && referenceTime.isAfter(getScheduledEnlistDate());
+    }
+
     public long getId()
     {
         return mId;
@@ -336,11 +348,6 @@ public class ScheduledObjective implements SchedulerElement
     void unpause()
     {
         mIsActive = false;
-    }
-
-    boolean isActive()
-    {
-        return mIsActive;
     }
 
     Duration getRepeatDuration()
