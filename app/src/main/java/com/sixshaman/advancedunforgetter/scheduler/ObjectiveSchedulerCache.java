@@ -90,7 +90,7 @@ public class ObjectiveSchedulerCache
                 ObjectiveChain objectiveChain = (ObjectiveChain)element;
                 if(listCache.getObjective(objectiveChain.getFirstObjective().getId()) == null)
                 {
-                    EnlistedObjective objective = objectiveChain.obtainTask(enlistDateTime);
+                    EnlistedObjective objective = objectiveChain.obtainObjective(enlistDateTime);
                     if(objective != null)
                     {
                         result.add(objective);
@@ -114,7 +114,6 @@ public class ObjectiveSchedulerCache
                     }
                 }
 
-                objectivePool.updateObjectiveSources(enlistDateTime);
                 changedElements.add(objectivePool);
             }
         }
@@ -169,12 +168,12 @@ public class ObjectiveSchedulerCache
             JSONObject jsonObject    = new JSONObject();
             JSONArray tasksJsonArray = new JSONArray();
 
-            for(ObjectivePool pool: mObjectivePools)
+            for(SchedulerElement element: mSchedulerElements)
             {
-                tasksJsonArray.put(pool.toJSON());
+                tasksJsonArray.put(element.toJSON());
             }
 
-            jsonObject.put("POOLS", tasksJsonArray);
+            jsonObject.put("ELEMENTS", tasksJsonArray);
 
             schedulerWriteFile.write(jsonObject.toString());
         }
@@ -186,6 +185,53 @@ public class ObjectiveSchedulerCache
 
         return true;
     }
+
+    /*
+        SINGLE OBJECTIVE SOURCE:
+
+        @Override
+    public JSONObject toJSON()
+    {
+        //Never save finished task sources
+        if(mIsFinished)
+        {
+            return null;
+        }
+        else
+        {
+            JSONObject result = new JSONObject();
+
+            try
+            {
+                JSONObject taskJsonObject = mObjective.toJSON();
+                result.put("Task", taskJsonObject);
+            }
+            catch (JSONException e)
+            {
+                e.printStackTrace();
+            }
+
+            return result;
+        }
+    }
+
+    public static SingleObjectivePoolSource fromJSON(JSONObject object)
+    {
+        JSONObject taskJsonObject = object.optJSONObject("Task");
+        if(taskJsonObject == null)
+        {
+            return null;
+        }
+
+        ScheduledObjective task = ScheduledObjective.fromJSON(taskJsonObject);
+        if(task == null)
+        {
+            return null;
+        }
+
+        return new SingleObjectivePoolSource(task);
+    }
+     */
 
     //Creates a new explicit task chain
     public boolean addObjectiveChain(String name, String description)
@@ -263,9 +309,8 @@ public class ObjectiveSchedulerCache
         }
         else
         {
-            //Task pool provided, add the task there
-            SingleObjectivePoolSource taskSource = new SingleObjectivePoolSource(scheduledObjective);
-            pool.addTaskSource(taskSource);
+            //Objective pool provided, add the objective there
+            pool.addTaskSource(scheduledObjective);
 
             if(mSchedulerViewHolder != null)
             {
@@ -290,12 +335,24 @@ public class ObjectiveSchedulerCache
             {
                 ObjectivePool objectivePool = (ObjectivePool)schedulerElement;
 
-                ObjectivePoolSource source = objectivePool.findSourceForObjective(objective.getId());
+                PoolElement source = objectivePool.findSourceForObjective(objective.getId());
                 if(source != null)
                 {
-                    if(!source.putBack(objective))
+                    if(source instanceof ObjectiveChain)
                     {
-                        return false;
+                        if(!((ObjectiveChain) source).putBack(objective))
+                        {
+                            return false;
+                        }
+                    }
+                    else if(source instanceof ScheduledObjective)
+                    {
+                        ScheduledObjective scheduledObjective = (ScheduledObjective)source;
+                        if(objective.getId() == scheduledObjective.getId())
+                        {
+                            scheduledObjective.rescheduleUnregulated(objective.getScheduledEnlistDate());
+                            return true;
+                        }
                     }
 
                     alreadyExisting = true;
@@ -340,7 +397,7 @@ public class ObjectiveSchedulerCache
             {
                 ObjectivePool objectivePool = (ObjectivePool)schedulerElement;
 
-                long poolMaxId = objectivePool.getMaxTaskId();
+                long poolMaxId = objectivePool.getMaxObjectiveId();
                 if(poolMaxId > maxId)
                 {
                     maxId = poolMaxId;
@@ -350,7 +407,7 @@ public class ObjectiveSchedulerCache
             {
                 ObjectiveChain objectiveChain = (ObjectiveChain)schedulerElement;
 
-                long chainMaxId = objectiveChain.getMaxTaskId();
+                long chainMaxId = objectiveChain.getMaxObjectiveId();
                 if(chainMaxId > maxId)
                 {
                     maxId = chainMaxId;

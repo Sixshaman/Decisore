@@ -19,7 +19,7 @@ public class ObjectivePool implements SchedulerElement
     private String mDescription;
 
     //The list of all the task sources the pool can choose from
-    private ArrayList<ObjectivePoolSource> mObjectiveSources;
+    private ArrayList<PoolElement> mObjectiveSources;
 
     //The id of the task that was most recently provided by this pool.
     private long mLastProvidedObjectiveId;
@@ -40,6 +40,7 @@ public class ObjectivePool implements SchedulerElement
         mIsActive = true;
     }
 
+    @Override
     public JSONObject toJSON()
     {
         JSONObject result = new JSONObject();
@@ -54,12 +55,12 @@ public class ObjectivePool implements SchedulerElement
             result.put("IsActive", Boolean.toString(mIsActive));
 
             JSONArray sourcesArray = new JSONArray();
-            for(ObjectivePoolSource source: mObjectiveSources)
+            for(PoolElement source: mObjectiveSources)
             {
                 JSONObject taskSourceObject = new JSONObject();
 
                 //Another poke at Java! It can't into static methods in interfaces
-                if(source instanceof SingleObjectivePoolSource)
+                if(source instanceof ScheduledObjective)
                 {
                     taskSourceObject.put("Type", SingleObjectivePoolSource.getSourceTypeString());
                 }
@@ -172,22 +173,6 @@ public class ObjectivePool implements SchedulerElement
         return null;
     }
 
-    //Updates all the task sources, removing the finished ones
-    void updateObjectiveSources(LocalDateTime referenceTime)
-    {
-        ArrayList<ObjectivePoolSource> updatedSourceList = new ArrayList<>();
-        for(ObjectivePoolSource source: mObjectiveSources)
-        {
-            //Throw away finished task sources
-            if(source.getState(referenceTime) != ObjectivePoolSource.SourceState.SOURCE_STATE_FINISHED)
-            {
-                updatedSourceList.add(source);
-            }
-        }
-
-        mObjectiveSources = updatedSourceList;
-    }
-
     //Gets a task from a random source
     EnlistedObjective getRandomObjective(LocalDateTime referenceTime)
     {
@@ -197,10 +182,10 @@ public class ObjectivePool implements SchedulerElement
         }
 
         //Check non-empty sources only
-        ArrayList<ObjectivePoolSource> availableSources = new ArrayList<>();
-        for(ObjectivePoolSource source: mObjectiveSources)
+        ArrayList<PoolElement> availableSources = new ArrayList<>();
+        for(PoolElement source: mObjectiveSources)
         {
-            if(source.getState(referenceTime) == ObjectivePoolSource.SourceState.SOURCE_STATE_REGULAR)
+            if(source.isAvailable(referenceTime))
             {
                 availableSources.add(source);
             }
@@ -212,7 +197,28 @@ public class ObjectivePool implements SchedulerElement
         }
 
         int  randomSourceIndex  = (int) RandomUtils.getInstance().getRandomUniform(0, availableSources.size() - 1);
-        EnlistedObjective resultObjective = availableSources.get(randomSourceIndex).obtainTask(referenceTime);
+        PoolElement randomPoolElement = availableSources.get(randomSourceIndex);
+
+        EnlistedObjective resultObjective = null;
+        if(randomPoolElement instanceof ObjectiveChain)
+        {
+            resultObjective = ((ObjectiveChain)randomPoolElement).obtainObjective(referenceTime);
+        }
+        else if(randomPoolElement instanceof ScheduledObjective)
+        {
+            ScheduledObjective scheduledObjective = (ScheduledObjective)randomPoolElement;
+            resultObjective = scheduledObjective.toEnlisted(referenceTime);
+
+            if(scheduledObjective.isRepeatable())
+            {
+                scheduledObjective.reschedule(referenceTime);
+            }
+            else
+            {
+                //Delete finished objectives
+                mObjectiveSources.remove(randomSourceIndex);
+            }
+        }
 
         if(resultObjective != null)
         {
@@ -229,23 +235,32 @@ public class ObjectivePool implements SchedulerElement
     }
 
     //Returns the source with given index
-    ObjectivePoolSource getSource(int position)
+    PoolElement getSource(int position)
     {
         return mObjectiveSources.get(position);
     }
 
     //Returns true if the pool contains the source
-    boolean containsSource(ObjectivePoolSource source)
+    boolean containsSource(PoolElement source)
     {
         return mObjectiveSources.contains(source);
     }
 
-    public long getMaxTaskId()
+    public long getMaxObjectiveId()
     {
         long maxId = -1;
-        for(ObjectivePoolSource source: mObjectiveSources)
+        for(PoolElement source: mObjectiveSources)
         {
-            long sourceMaxId = source.getMaxTaskId();
+            long sourceMaxId = 0;
+            if(source instanceof ObjectiveChain)
+            {
+                sourceMaxId = ((ObjectiveChain) source).getMaxObjectiveId();
+            }
+            else if(source instanceof ScheduledObjective)
+            {
+                sourceMaxId = ((ScheduledObjective)source).getId();
+            }
+
             if(sourceMaxId > maxId)
             {
                 maxId = sourceMaxId;
@@ -255,17 +270,33 @@ public class ObjectivePool implements SchedulerElement
         return maxId;
     }
 
-    public ObjectivePoolSource findSourceForObjective(long objectiveId)
+    public PoolElement findSourceForObjective(long objectiveId)
     {
-        for(ObjectivePoolSource source: mObjectiveSources)
+        for(PoolElement source: mObjectiveSources)
         {
-            if(source.containedObjective(objectiveId))
+            if(source instanceof ObjectiveChain)
             {
-                return source;
+                if(((ObjectiveChain)source).containedObjective(objectiveId))
+                {
+                    return source;
+                }
+            }
+            else if(source instanceof ScheduledObjective)
+            {
+                if(((ScheduledObjective) source).getId() == objectiveId)
+                {
+                    return source;
+                }
             }
         }
 
         return null;
+    }
+
+    @Override
+    public boolean isPaused()
+    {
+        return !mIsActive;
     }
 
     @Override
@@ -286,7 +317,7 @@ public class ObjectivePool implements SchedulerElement
     }
 
     //Adds a new task source to choose from
-    void addTaskSource(ObjectivePoolSource source)
+    void addTaskSource(PoolElement source)
     {
         mObjectiveSources.add(source);
     }
