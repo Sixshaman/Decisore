@@ -4,7 +4,7 @@ import com.sixshaman.advancedunforgetter.archive.ArchivedObjective;
 import com.sixshaman.advancedunforgetter.archive.ObjectiveArchiveCache;
 import com.sixshaman.advancedunforgetter.list.EnlistedObjective;
 import com.sixshaman.advancedunforgetter.list.ObjectiveListCache;
-import com.sixshaman.advancedunforgetter.scheduler.ScheduledObjective;
+import com.sixshaman.advancedunforgetter.scheduler.ScheduledObjective.ScheduledObjective;
 import com.sixshaman.advancedunforgetter.scheduler.ObjectiveSchedulerCache;
 
 import java.io.FileNotFoundException;

@@ -6,7 +6,7 @@ import org.json.JSONObject;
 
 import java.time.LocalDateTime;
 
-interface SchedulerElement
+public interface SchedulerElement
 {
     String getName();
 
@@ -15,4 +15,6 @@ interface SchedulerElement
     JSONObject toJSON();
 
     boolean isPaused();
+
+    String getElementName();
 }

@@ -1,17 +1,14 @@
-package com.sixshaman.advancedunforgetter.scheduler;
+package com.sixshaman.advancedunforgetter.scheduler.ObjectivePool;
 
-import android.content.Context;
 import android.os.Bundle;
-import android.view.ViewTreeObserver;
-import android.widget.ImageButton;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import com.sixshaman.advancedunforgetter.R;
+import com.sixshaman.advancedunforgetter.scheduler.ObjectiveSchedulerCache;
 import com.sixshaman.advancedunforgetter.utils.LockedReadFile;
 import com.sixshaman.advancedunforgetter.utils.TransactionDispatcher;
 

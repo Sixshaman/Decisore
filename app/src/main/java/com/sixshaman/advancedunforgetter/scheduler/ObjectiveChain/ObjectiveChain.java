@@ -1,6 +1,8 @@
-package com.sixshaman.advancedunforgetter.scheduler;
+package com.sixshaman.advancedunforgetter.scheduler.ObjectiveChain;
 
 import com.sixshaman.advancedunforgetter.list.EnlistedObjective;
+import com.sixshaman.advancedunforgetter.scheduler.ObjectivePool.PoolElement;
+import com.sixshaman.advancedunforgetter.scheduler.ScheduledObjective.ScheduledObjective;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -22,10 +24,10 @@ public class ObjectiveChain implements PoolElement
     private ArrayDeque<ScheduledObjective> mObjectives;
 
     //The list of ids of all objectives once provided by the chain
-    private HashSet<Long> mObjectiveIdHistory;
+    HashSet<Long> mObjectiveIdHistory;
 
     //Creates a new task chain
-    ObjectiveChain(String name, String description)
+    public ObjectiveChain(String name, String description)
     {
         mName        = name;
         mDescription = description;
@@ -35,7 +37,7 @@ public class ObjectiveChain implements PoolElement
     }
 
     //Adds a task to the chain
-    void addTaskToChain(ScheduledObjective objective)
+    public void addTaskToChain(ScheduledObjective objective)
     {
         if(mObjectives != null) //mObjectives can be null if the chain is finished
         {
@@ -79,7 +81,7 @@ public class ObjectiveChain implements PoolElement
                     objectivesArray.put(objective.toJSON());
                 }
 
-                result.put("Tasks", objectivesArray);
+                result.put("Objectives", objectivesArray);
 
                 JSONArray idHistoryArray = new JSONArray();
                 for(Long objectiveId: mObjectiveIdHistory)
@@ -87,7 +89,7 @@ public class ObjectiveChain implements PoolElement
                     idHistoryArray.put(objectiveId.longValue());
                 }
 
-                result.put("TasksHistory", idHistoryArray);
+                result.put("ObjectiveHistory", idHistoryArray);
             }
             catch (JSONException e)
             {
@@ -98,82 +100,12 @@ public class ObjectiveChain implements PoolElement
         }
     }
 
-    public static ObjectiveChain fromJSON(JSONObject jsonObject)
-    {
-        try
-        {
-            String name        = jsonObject.optString("Name");
-            String description = jsonObject.optString("Description");
-
-            ObjectiveChain objectiveChain = new ObjectiveChain(name, description);
-
-            JSONArray tasksJsonArray = jsonObject.getJSONArray("Tasks");
-            if(tasksJsonArray != null)
-            {
-                for(int i = 0; i < tasksJsonArray.length(); i++)
-                {
-                    JSONObject taskObject = tasksJsonArray.optJSONObject(i);
-                    if(taskObject != null)
-                    {
-                        ScheduledObjective task = ScheduledObjective.fromJSON(taskObject);
-                        if(task != null)
-                        {
-                            objectiveChain.addTaskToChain(task);
-                        }
-                    }
-                }
-            }
-
-            JSONArray idHistoryArray = jsonObject.getJSONArray("TasksHistory");
-            if(idHistoryArray != null)
-            {
-                for(int i = 0; i < idHistoryArray.length(); i++)
-                {
-                    long objectiveId = idHistoryArray.optLong(i, -1);
-                    if(objectiveId != -1)
-                    {
-                        objectiveChain.mObjectiveIdHistory.add(objectiveId);
-                    }
-                }
-            }
-
-            return objectiveChain;
-        }
-        catch(JSONException e)
-        {
-            e.printStackTrace();
-        }
-
-        return null;
-    }
-
-    public static String getSourceTypeString()
-    {
-        return "TaskChain";
-    }
-
-    int getObjectiveCount()
+    public int getObjectiveCount()
     {
         return mObjectives.size();
     }
 
-    ScheduledObjective getObjective(int position)
-    {
-        Iterator<ScheduledObjective> objectiveIterator = mObjectives.iterator();
-
-        ScheduledObjective result = null;
-
-        int counter = 0;
-        while(counter < position && objectiveIterator.hasNext())
-        {
-            result = objectiveIterator.next();
-            counter++;
-        }
-
-        return result;
-    }
-
-    ScheduledObjective getFirstObjective()
+    public ScheduledObjective getFirstObjective()
     {
         return mObjectives.getFirst();
     }
@@ -274,5 +206,11 @@ public class ObjectiveChain implements PoolElement
             ScheduledObjective firstObjective = mObjectives.getFirst();
             return firstObjective.isAvailable(referenceTime);
         }
+    }
+
+    @Override
+    public String getElementName()
+    {
+        return "ObjectiveChain";
     }
 }
