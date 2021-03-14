@@ -8,7 +8,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.sixshaman.advancedunforgetter.R;
 import com.sixshaman.advancedunforgetter.list.ObjectiveListCache;
 
-public class SchedulerSourceViewHolder extends RecyclerView.ViewHolder
+public class SchedulerElementViewHolder extends RecyclerView.ViewHolder
 {
     private ObjectiveSchedulerCache mObjectiveSchedulerCache;
 
@@ -19,7 +19,7 @@ public class SchedulerSourceViewHolder extends RecyclerView.ViewHolder
 
     ConstraintLayout mParentLayout;
 
-    public SchedulerSourceViewHolder(View itemView)
+    public SchedulerElementViewHolder(View itemView)
     {
         super(itemView);
 

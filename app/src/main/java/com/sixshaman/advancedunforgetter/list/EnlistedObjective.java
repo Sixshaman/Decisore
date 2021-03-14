@@ -2,7 +2,7 @@ package com.sixshaman.advancedunforgetter.list;
 
 import androidx.annotation.NonNull;
 import com.sixshaman.advancedunforgetter.archive.ArchivedObjective;
-import com.sixshaman.advancedunforgetter.scheduler.ScheduledObjective;
+import com.sixshaman.advancedunforgetter.scheduler.ScheduledObjective.ScheduledObjective;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
