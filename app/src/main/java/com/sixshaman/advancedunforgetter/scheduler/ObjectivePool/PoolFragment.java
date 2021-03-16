@@ -26,14 +26,22 @@ public class PoolFragment extends Fragment {
     //Scheduler cache model
     private ObjectiveSchedulerCache mSchedulerCache;
 
+    //The id of the pool displayed
+    private long mObjectivePoolId;
+
+    //The pool to display
+    private ObjectivePool mObjectivePool;
+
     public PoolFragment()
     {
+        mObjectivePoolId = -1;
     }
 
-    public static PoolFragment newInstance()
+    public static PoolFragment newInstance(long poolId)
     {
         PoolFragment fragment = new PoolFragment();
         Bundle args = new Bundle();
+        args.putLong("EyyDee", poolId);
         fragment.setArguments(args);
         return fragment;
     }
@@ -56,6 +64,8 @@ public class PoolFragment extends Fragment {
         RecyclerView recyclerView = mFragmentView.findViewById(R.id.objectiveSchedulerView);
         mSchedulerCache.attachToPoolView(recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(mFragmentView.getContext()));
+
+        mObjectivePool = mSchedulerCache.getPoolById(mObjectivePoolId);
 
         try
         {
@@ -80,5 +90,11 @@ public class PoolFragment extends Fragment {
         mFragmentView = inflater.inflate(R.layout.fragment_pool, container, false);
 
         return mFragmentView;
+    }
+
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState)
+    {
+        mObjectivePoolId = savedInstanceState.getLong("EyyDee");
     }
 }

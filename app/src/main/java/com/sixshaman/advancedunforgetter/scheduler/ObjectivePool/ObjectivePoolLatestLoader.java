@@ -14,6 +14,8 @@ public class ObjectivePoolLatestLoader implements ObjectivePoolLoader
     {
         try
         {
+            long id = jsonObject.getLong("Id");
+
             String name        = jsonObject.optString("Name");
             String description = jsonObject.optString("Description");
 
@@ -33,7 +35,7 @@ public class ObjectivePoolLatestLoader implements ObjectivePoolLoader
                 return null;
             }
 
-            ObjectivePool objectivePool = new ObjectivePool(name, description);
+            ObjectivePool objectivePool = new ObjectivePool(id, name, description);
 
             String isActiveString = jsonObject.optString("IsActive");
 

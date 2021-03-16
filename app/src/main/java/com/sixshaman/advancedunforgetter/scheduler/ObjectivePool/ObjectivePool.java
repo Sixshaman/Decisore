@@ -15,6 +15,9 @@ import java.util.ArrayList;
 //A pool that can randomly choose from several task sources
 public class ObjectivePool implements SchedulerElement
 {
+    //The id of the pool
+    private final long mId;
+
     //The name of the pool
     private String mName;
 
@@ -31,8 +34,10 @@ public class ObjectivePool implements SchedulerElement
     boolean mIsActive;
 
     //Constructs a new task pool
-    public ObjectivePool(String name, String description)
+    public ObjectivePool(long id, String name, String description)
     {
+        mId = id;
+
         mName        = name;
         mDescription = description;
 
@@ -50,6 +55,8 @@ public class ObjectivePool implements SchedulerElement
 
         try
         {
+            result.put("Id", mId);
+
             result.put("Name",        mName);
             result.put("Description", mDescription);
 
@@ -208,6 +215,11 @@ public class ObjectivePool implements SchedulerElement
     public boolean isPaused()
     {
         return !mIsActive;
+    }
+
+    public long getId()
+    {
+        return mId;
     }
 
     @Override
