@@ -252,7 +252,19 @@ public class ObjectiveSchedulerCache
     //Creates a new explicit task pool
     public boolean addObjectivePool(String name, String description)
     {
-        ObjectivePool pool = new ObjectivePool(name, description);
+        long poolId = 0;
+        for(int i = 0; i < mSchedulerElements.size(); i++)
+        {
+            if(mSchedulerElements.get(i) instanceof ObjectivePool)
+            {
+                ObjectivePool pool = (ObjectivePool)mSchedulerElements.get(i);
+                poolId = Math.max(poolId, pool.getId());
+            }
+        }
+
+        poolId = poolId + 1;
+
+        ObjectivePool pool = new ObjectivePool(poolId, name, description);
         mSchedulerElements.add(pool);
 
         if(mSchedulerViewHolder != null)
@@ -425,6 +437,23 @@ public class ObjectiveSchedulerCache
         }
 
         return maxId;
+    }
+
+    public ObjectivePool getPoolById(long id)
+    {
+        for(SchedulerElement schedulerElement: mSchedulerElements)
+        {
+            if(schedulerElement instanceof ObjectivePool)
+            {
+                ObjectivePool objectivePool = (ObjectivePool)schedulerElement;
+                if (objectivePool.getId() == id)
+                {
+                    return objectivePool;
+                }
+            }
+        }
+
+        return null;
     }
 
     private class SchedulerCacheViewHolder extends RecyclerView.Adapter<SchedulerElementViewHolder>
