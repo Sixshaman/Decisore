@@ -4,6 +4,8 @@ import com.sixshaman.advancedunforgetter.archive.ArchivedObjective;
 import com.sixshaman.advancedunforgetter.archive.ObjectiveArchiveCache;
 import com.sixshaman.advancedunforgetter.list.EnlistedObjective;
 import com.sixshaman.advancedunforgetter.list.ObjectiveListCache;
+import com.sixshaman.advancedunforgetter.scheduler.ObjectiveChain.ObjectiveChain;
+import com.sixshaman.advancedunforgetter.scheduler.ObjectivePool.ObjectivePool;
 import com.sixshaman.advancedunforgetter.scheduler.ScheduledObjective.ScheduledObjective;
 import com.sixshaman.advancedunforgetter.scheduler.ObjectiveSchedulerCache;
 
@@ -70,7 +72,7 @@ public class TransactionDispatcher
         return false;
     }
 
-    public synchronized boolean addChainTransaction(String configFolder, String chainName, String chainDescription)
+    public synchronized boolean addChainTransaction(ObjectivePool poolToAddTo, String configFolder, String chainName, String chainDescription)
     {
         String schedulerFilePath = configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME;
 
@@ -79,7 +81,7 @@ public class TransactionDispatcher
         try
         {
             LockedWriteFile schedulerWriteFile = new LockedWriteFile(schedulerFilePath);
-            if(mSchedulerCache.addObjectiveChain(chainName, chainDescription))
+            if(mSchedulerCache.addObjectiveChain(poolToAddTo, chainName, chainDescription))
             {
                 if(mSchedulerCache.flush(schedulerWriteFile))
                 {
@@ -99,7 +101,8 @@ public class TransactionDispatcher
         return false;
     }
 
-    public synchronized boolean addObjectiveTransaction(String configFolder, LocalDateTime createDateTime, LocalDateTime enlistDateTime,
+    public synchronized boolean addObjectiveTransaction(ObjectivePool poolToAddTo, ObjectiveChain chainToAddTo,
+                                                        String configFolder, LocalDateTime createDateTime, LocalDateTime enlistDateTime,
                                                         Duration repeatDuration, float repeatProbability,
                                                         String objectiveName, String objectiveDescription, ArrayList<String> objectiveTags)
     {
@@ -178,7 +181,7 @@ public class TransactionDispatcher
             try
             {
                 LockedWriteFile schedulerWriteFile = new LockedWriteFile(schedulerFilePath);
-                if(!mSchedulerCache.addObjective(null, null, scheduledObjectiveToAdd))
+                if(!mSchedulerCache.addObjective(poolToAddTo, chainToAddTo, scheduledObjectiveToAdd))
                 {
                     correctTransaction = false;
                 }

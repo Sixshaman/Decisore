@@ -227,16 +227,27 @@ public class ObjectiveSchedulerCache
     }
 
     //Creates a new explicit task chain
-    public boolean addObjectiveChain(String name, String description)
+    public boolean addObjectiveChain(ObjectivePool pool, String name, String description)
     {
-        //Create a new unnamed task pool to hold the chain
         ObjectiveChain chain = new ObjectiveChain(name, description);
-        mSchedulerElements.add(chain);
 
-        if(mSchedulerViewHolder != null)
+        if(pool == null)
         {
-            mSchedulerViewHolder.notifyItemInserted(mSchedulerElements.size() - 1);
-            mSchedulerViewHolder.notifyItemRangeChanged(mSchedulerElements.size() - 1, mSchedulerViewHolder.getItemCount());
+            mSchedulerElements.add(chain);
+            if(mSchedulerViewHolder != null)
+            {
+                mSchedulerViewHolder.notifyItemInserted(mSchedulerElements.size() - 1);
+                mSchedulerViewHolder.notifyItemRangeChanged(mSchedulerElements.size() - 1, mSchedulerViewHolder.getItemCount());
+            }
+        }
+        else
+        {
+            pool.addObjectiveSource(chain);
+            if(mSchedulerViewHolder != null)
+            {
+                int index = mSchedulerElements.indexOf(pool);
+                mSchedulerViewHolder.notifyItemChanged(index);
+            }
         }
 
         return true;
@@ -259,23 +270,10 @@ public class ObjectiveSchedulerCache
         return true;
     }
 
-    //Creates a new explicit task chain and adds it to the provided pool
-    public void addObjectiveChainToPool(ObjectivePool pool, String name, String description)
-    {
-        ObjectiveChain chain = new ObjectiveChain(name, description);
-        pool.addObjectiveSource(chain);
-
-        if(mSchedulerViewHolder != null)
-        {
-            int index = mSchedulerElements.indexOf(pool);
-            mSchedulerViewHolder.notifyItemChanged(index);
-        }
-    }
-
     //Adds a general task to task pool pool or task chain chain scheduled to be added at deferTime with repeat duration repeatDuration and repeat probability repeatProbability
     public boolean addObjective(ObjectivePool pool, ObjectiveChain chain, ScheduledObjective scheduledObjective)
     {
-        if(pool == null && chain == null) //Add a single task source to the new pool
+        if(pool == null && chain == null) //Add a single task source
         {
             //Neither task chain nor pool is provided
             mSchedulerElements.add(scheduledObjective);
@@ -285,6 +283,8 @@ public class ObjectiveSchedulerCache
                 mSchedulerViewHolder.notifyItemInserted(mSchedulerElements.size() - 1);
                 mSchedulerViewHolder.notifyItemRangeChanged(mSchedulerElements.size() - 1, mSchedulerViewHolder.getItemCount());
             }
+
+            return true;
         }
         else if(pool == null)
         {
@@ -300,9 +300,17 @@ public class ObjectiveSchedulerCache
                         mSchedulerViewHolder.notifyItemChanged(i);
                     }
                 }
+
+                int plainChainIndex = mSchedulerElements.indexOf(chain);
+                if(plainChainIndex != -1)
+                {
+                    mSchedulerViewHolder.notifyItemChanged(plainChainIndex);
+                }
             }
+
+            return true;
         }
-        else
+        else if(chain == null)
         {
             //Objective pool provided, add the objective there
             pool.addObjectiveSource(scheduledObjective);
@@ -312,9 +320,11 @@ public class ObjectiveSchedulerCache
                 int index = mSchedulerElements.indexOf(pool);
                 mSchedulerViewHolder.notifyItemChanged(index);
             }
+
+            return true;
         }
 
-        return true;
+        return false;
     }
 
     public boolean putObjectiveBack(ScheduledObjective objective)

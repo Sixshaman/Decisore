@@ -61,10 +61,21 @@ public class ObjectivePool implements SchedulerElement
         mIsActive = true;
     }
 
-    public void attachToSPoolView(RecyclerView recyclerView)
+    public void attachToPoolView(RecyclerView recyclerView)
     {
         mPoolViewHolder = new ObjectivePool.PoolViewHolder();
         recyclerView.setAdapter(mPoolViewHolder);
+    }
+
+    public void addObjectiveSource(PoolElement source)
+    {
+        mObjectiveSources.add(source);
+
+        if(mPoolViewHolder != null)
+        {
+            mPoolViewHolder.notifyItemInserted(mObjectiveSources.size() - 1);
+            mPoolViewHolder.notifyItemRangeChanged(mObjectiveSources.size() - 1, mObjectiveSources.size());
+        }
     }
 
     @Override
@@ -251,17 +262,6 @@ public class ObjectivePool implements SchedulerElement
     public String getDescription()
     {
         return mDescription;
-    }
-
-    public int getTaskSourceCount()
-    {
-        return mObjectiveSources.size();
-    }
-
-    //Adds a new task source to choose from
-    public void addObjectiveSource(PoolElement source)
-    {
-        mObjectiveSources.add(source);
     }
 
     //Pauses the pool

@@ -11,21 +11,30 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.DialogFragment;
 import com.sixshaman.advancedunforgetter.R;
 import com.sixshaman.advancedunforgetter.list.ObjectiveListCache;
+import com.sixshaman.advancedunforgetter.scheduler.ObjectivePool.ObjectivePool;
 import com.sixshaman.advancedunforgetter.scheduler.ObjectiveSchedulerCache;
 
 import java.util.Objects;
 
 public class NewChainDialogFragment extends DialogFragment
 {
+    private ObjectivePool mPoolToAddTo;
+
     private ObjectiveSchedulerCache mSchedulerCache;
 
     public NewChainDialogFragment()
     {
+        mPoolToAddTo = null;
     }
 
     public void setSchedulerCache(ObjectiveSchedulerCache schedulerCache)
     {
         mSchedulerCache = schedulerCache;
+    }
+
+    public void setPoolToAddTo(ObjectivePool pool)
+    {
+        mPoolToAddTo = pool;
     }
 
     @NonNull
@@ -62,7 +71,7 @@ public class NewChainDialogFragment extends DialogFragment
                 TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
                 transactionDispatcher.setSchedulerCache(mSchedulerCache);
 
-                transactionDispatcher.addChainTransaction(configFolder, nameText, descriptionText);
+                transactionDispatcher.addChainTransaction(mPoolToAddTo, configFolder, nameText, descriptionText);
             }
         });
 

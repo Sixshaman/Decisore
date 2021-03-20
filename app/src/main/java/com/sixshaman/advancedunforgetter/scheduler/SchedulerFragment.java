@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.view.ViewTreeObserver;
 import android.widget.ImageButton;
 import android.widget.Toast;
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
@@ -43,14 +44,11 @@ public class SchedulerFragment extends Fragment
 
     public SchedulerFragment()
     {
-    }
+        mFabExpanded = false;
 
-    public static SchedulerFragment newInstance(int columnCount)
-    {
-        SchedulerFragment fragment = new SchedulerFragment();
-        Bundle args = new Bundle();
-        fragment.setArguments(args);
-        return fragment;
+        mFabPoolOffset      = 0.0f;
+        mFabChainOffset     = 0.0f;
+        mFabObjectiveOffset = 0.0f;
     }
 
     @Override
@@ -92,8 +90,12 @@ public class SchedulerFragment extends Fragment
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
     {
-        mFragmentView = inflater.inflate(R.layout.fragment_scheduler, container, false);
+        return inflater.inflate(R.layout.fragment_scheduler, container, false);
+    }
 
+    @Override
+    public void onViewCreated(@NonNull View view, Bundle savedInstanceState)
+    {
         mFabExpanded = false;
 
         final ViewGroup fabContainer = mFragmentView.findViewById(R.id.fab_container);
@@ -103,7 +105,7 @@ public class SchedulerFragment extends Fragment
         final View fabAddObjective = mFragmentView.findViewById(R.id.fab_add_objective);
 
         final ImageButton fabSpeedDial = mFragmentView.findViewById(R.id.mainFabButton);
-        fabSpeedDial.setOnClickListener(view ->
+        fabSpeedDial.setOnClickListener(fabView ->
         {
             mFabExpanded = !mFabExpanded;
             if(mFabExpanded)
@@ -138,8 +140,6 @@ public class SchedulerFragment extends Fragment
                 return true;
             }
         });
-
-        return mFragmentView;
     }
 
     private void addObjectivePool(View view)
