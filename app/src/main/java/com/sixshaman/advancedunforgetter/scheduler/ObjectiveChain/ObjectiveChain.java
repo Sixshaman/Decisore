@@ -1,19 +1,33 @@
 package com.sixshaman.advancedunforgetter.scheduler.ObjectiveChain;
 
+import android.content.Context;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
+import com.sixshaman.advancedunforgetter.R;
 import com.sixshaman.advancedunforgetter.list.EnlistedObjective;
+import com.sixshaman.advancedunforgetter.scheduler.ObjectivePool.ObjectivePool;
 import com.sixshaman.advancedunforgetter.scheduler.ObjectivePool.PoolElement;
+import com.sixshaman.advancedunforgetter.scheduler.ObjectivePool.PoolElementViewHolder;
 import com.sixshaman.advancedunforgetter.scheduler.ScheduledObjective.ScheduledObjective;
+import com.sixshaman.advancedunforgetter.utils.ValueHolder;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.time.LocalDateTime;
-import java.util.ArrayDeque;
-import java.util.HashSet;
-import java.util.Iterator;
+import java.util.*;
 
 public class ObjectiveChain implements PoolElement
 {
+    //View holder
+    private ChainViewHolder mChainViewHolder;
+
+    //Objective chain id
+    private long mId;
+
     //Objective chain name
     private String mName;
 
@@ -21,28 +35,39 @@ public class ObjectiveChain implements PoolElement
     private String mDescription;
 
     //The objectives that this chain will provide one-by-one. Since Java doesn't have any non-deque Queue implementation, we will use ArrayDeque
-    private ArrayDeque<ScheduledObjective> mObjectives;
+    private LinkedList<ScheduledObjective> mObjectives;
 
     //The list of ids of all objectives once provided by the chain
     HashSet<Long> mObjectiveIdHistory;
 
     //Creates a new task chain
-    public ObjectiveChain(String name, String description)
+    public ObjectiveChain(long id, String name, String description)
     {
+        mId = id;
+
         mName        = name;
         mDescription = description;
 
-        mObjectives         = new ArrayDeque<>();
+        mObjectives         = new LinkedList<>();
         mObjectiveIdHistory = new HashSet<>();
+    }
+
+    public void attachToChainView(RecyclerView recyclerView)
+    {
+        mChainViewHolder = new ObjectiveChain.ChainViewHolder();
+        recyclerView.setAdapter(mChainViewHolder);
     }
 
     //Adds a task to the chain
     public void addTaskToChain(ScheduledObjective objective)
     {
-        if(mObjectives != null) //mObjectives can be null if the chain is finished
+        mObjectives.addLast(objective);
+        mObjectiveIdHistory.add(objective.getId());
+
+        if(mChainViewHolder != null)
         {
-            mObjectives.addLast(objective);
-            mObjectiveIdHistory.add(objective.getId());
+            mChainViewHolder.notifyItemInserted(mObjectives.size() - 1);
+            mChainViewHolder.notifyItemRangeChanged(mObjectives.size() - 1, mObjectives.size());
         }
     }
 
@@ -72,6 +97,8 @@ public class ObjectiveChain implements PoolElement
 
             try
             {
+                result.put("Id", mId);
+
                 result.put("Name",        mName);
                 result.put("Description", mDescription);
 
@@ -183,6 +210,11 @@ public class ObjectiveChain implements PoolElement
         }
     }
 
+    public long getId()
+    {
+        return mId;
+    }
+
     @Override
     public boolean isPaused()
     {
@@ -212,5 +244,38 @@ public class ObjectiveChain implements PoolElement
     public String getElementName()
     {
         return "ObjectiveChain";
+    }
+
+    private class ChainViewHolder extends RecyclerView.Adapter<ChainElementViewHolder>
+    {
+        private Context mContext;
+
+        @NonNull
+        @Override
+        public ChainElementViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i)
+        {
+            mContext = viewGroup.getContext();
+
+            View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.layout_pool_element_view, viewGroup, false);
+            return new ChainElementViewHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull ChainElementViewHolder elementViewHolder, int position)
+        {
+            String viewName = "";
+
+            ScheduledObjective objective = mObjectives.get(position);
+
+            elementViewHolder.mTextView.setText(objective.getName());
+
+            elementViewHolder.setSourceMetadata(objective);
+        }
+
+        @Override
+        public int getItemCount()
+        {
+            return mObjectives.size();
+        }
     }
 }
