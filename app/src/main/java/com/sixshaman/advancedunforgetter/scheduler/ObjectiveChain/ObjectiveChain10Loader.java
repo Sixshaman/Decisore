@@ -7,7 +7,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class ObjectiveChain10Loader implements ObjectiveChainJSONLoader
+public class ObjectiveChain10Loader implements ObjectiveChainLoader
 {
     @Override
     public ObjectiveChain fromJSON(JSONObject jsonObject)

@@ -13,18 +13,17 @@ import java.util.ArrayList;
 
 public class SchedulerOldVersionLoader
 {
-    static ArrayList<SchedulerElement> loadSchedulerElementsOld(JSONObject jsonObject, int version)
+    static ArrayList<SchedulerElement> loadSchedulerElementsOld(ObjectiveSchedulerCache schedulerCache, JSONObject jsonObject, int version)
     {
-        switch(version)
+        if(version == ObjectiveSchedulerCache.SCHEDULER_VERSION_1_0)
         {
-            case ObjectiveSchedulerCache.SCHEDULER_VERSION_1_0:
-                return loadSchedulerElements10(jsonObject);
-            default:
-                return null;
+            return loadSchedulerElements10(schedulerCache, jsonObject);
         }
+
+        return null;
     }
 
-    private static ArrayList<SchedulerElement> loadSchedulerElements10(JSONObject jsonObject)
+    private static ArrayList<SchedulerElement> loadSchedulerElements10(ObjectiveSchedulerCache schedulerCache, JSONObject jsonObject)
     {
         ArrayList<SchedulerElement> shedulerElements = new ArrayList<>();
 
@@ -38,7 +37,7 @@ public class SchedulerOldVersionLoader
                 JSONObject poolObject = poolsJsonArray.optJSONObject(i);
                 if(poolObject != null)
                 {
-                    ObjectivePool10Loader pool10Loader = new ObjectivePool10Loader();
+                    ObjectivePool10Loader pool10Loader = new ObjectivePool10Loader(schedulerCache);
 
                     ObjectivePool pool = pool10Loader.fromJSON(poolObject);
                     if(pool != null)
@@ -54,12 +53,11 @@ public class SchedulerOldVersionLoader
             return null;
         }
 
-        for(int i = 0; i < objectivePools.size(); i++)
+        for(ObjectivePool pool: objectivePools)
         {
-            ObjectivePool pool = objectivePools.get(i);
-            if(pool.getName().equals("")) //Empty pool was either a chain or a regular objective
+            if (pool.getName().equals("")) //Empty pool was either a chain or a regular objective
             {
-                if(pool.getSourceCount() != 1)
+                if (pool.getSourceCount() != 1)
                 {
                     //Implicit pools were always single-element
                     return null;
@@ -67,8 +65,7 @@ public class SchedulerOldVersionLoader
 
                 PoolElement poolElement = pool.getSource(0);
                 shedulerElements.add(poolElement);
-            }
-            else
+            } else
             {
                 shedulerElements.add(pool);
             }
