@@ -20,7 +20,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import com.sixshaman.advancedunforgetter.R;
-import com.sixshaman.advancedunforgetter.dummy.DummyContent;
 import com.sixshaman.advancedunforgetter.utils.*;
 
 import java.io.IOException;

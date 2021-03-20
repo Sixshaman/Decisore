@@ -1,6 +1,7 @@
 package com.sixshaman.advancedunforgetter.scheduler.ObjectivePool;
 
 import android.os.Bundle;
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -37,15 +38,6 @@ public class PoolFragment extends Fragment {
         mObjectivePoolId = -1;
     }
 
-    public static PoolFragment newInstance(long poolId)
-    {
-        PoolFragment fragment = new PoolFragment();
-        Bundle args = new Bundle();
-        args.putLong("EyyDee", poolId);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
@@ -61,11 +53,11 @@ public class PoolFragment extends Fragment {
 
         String configFolder = Objects.requireNonNull(mFragmentView.getContext().getExternalFilesDir("/app")).getAbsolutePath();
 
-        RecyclerView recyclerView = mFragmentView.findViewById(R.id.objectiveSchedulerView);
-        mSchedulerCache.attachToPoolView(recyclerView);
-        recyclerView.setLayoutManager(new LinearLayoutManager(mFragmentView.getContext()));
-
         mObjectivePool = mSchedulerCache.getPoolById(mObjectivePoolId);
+
+        RecyclerView recyclerView = mFragmentView.findViewById(R.id.objectiveSchedulerView);
+        mObjectivePool.attachToSPoolView(recyclerView);
+        recyclerView.setLayoutManager(new LinearLayoutManager(mFragmentView.getContext()));
 
         try
         {
@@ -87,13 +79,11 @@ public class PoolFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
     {
-        mFragmentView = inflater.inflate(R.layout.fragment_pool, container, false);
-
-        return mFragmentView;
+        return inflater.inflate(R.layout.fragment_pool, container, false);
     }
 
     @Override
-    public void onViewCreated(View view, Bundle savedInstanceState)
+    public void onViewCreated(@NonNull View view, Bundle savedInstanceState)
     {
         mObjectivePoolId = savedInstanceState.getLong("EyyDee");
     }

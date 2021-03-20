@@ -69,11 +69,6 @@ public class ObjectiveSchedulerCache
         recyclerView.setAdapter(mSchedulerViewHolder);
     }
 
-    public void attachToPoolView(RecyclerView recyclerView)
-    {
-        throw new RuntimeException("Not implemented");
-    }
-
     //Updates the task scheduler. Returns the list of objectives ready to-do
     public ArrayList<EnlistedObjective> dumpReadyObjectives(final ObjectiveListCache listCache, LocalDateTime enlistDateTime)
     {
@@ -160,30 +155,28 @@ public class ObjectiveSchedulerCache
                     String     elementType = elementObject.getString("Type");
                     JSONObject elementData = elementObject.getJSONObject("Data");
 
-                    if(elementType.equals("ObjectivePool"))
+                    switch (elementType)
                     {
-                        ObjectivePool pool = poolLatestLoader.fromJSON(elementData);
-                        mSchedulerElements.add(pool);
-                    }
-                    else if(elementType.equals("ObjectiveChain"))
-                    {
-                        ObjectiveChain chain = chainLatestLoader.fromJSON(elementData);
-                        mSchedulerElements.add(chain);
-                    }
-                    else if(elementType.equals("ScheduledObjective"))
-                    {
-                        ScheduledObjective objective = objectiveLatestLoader.fromJSON(elementData);
-                        mSchedulerElements.add(objective);
-                    }
-                    else
-                    {
-                        return false;
+                        case "ObjectivePool":
+                            ObjectivePool pool = poolLatestLoader.fromJSON(elementData);
+                            mSchedulerElements.add(pool);
+                            break;
+                        case "ObjectiveChain":
+                            ObjectiveChain chain = chainLatestLoader.fromJSON(elementData);
+                            mSchedulerElements.add(chain);
+                            break;
+                        case "ScheduledObjective":
+                            ScheduledObjective objective = objectiveLatestLoader.fromJSON(elementData);
+                            mSchedulerElements.add(objective);
+                            break;
+                        default:
+                            return false;
                     }
                 }
             }
             else
             {
-                SchedulerOldVersionLoader.loadSchedulerElementsOld(jsonObject, version);
+                mSchedulerElements = SchedulerOldVersionLoader.loadSchedulerElementsOld(this, jsonObject, version);
             }
         }
         catch(JSONException e)
@@ -252,17 +245,7 @@ public class ObjectiveSchedulerCache
     //Creates a new explicit task pool
     public boolean addObjectivePool(String name, String description)
     {
-        long poolId = 0;
-        for(int i = 0; i < mSchedulerElements.size(); i++)
-        {
-            if(mSchedulerElements.get(i) instanceof ObjectivePool)
-            {
-                ObjectivePool pool = (ObjectivePool)mSchedulerElements.get(i);
-                poolId = Math.max(poolId, pool.getId());
-            }
-        }
-
-        poolId = poolId + 1;
+        long poolId = getMaxPoolId() + 1;
 
         ObjectivePool pool = new ObjectivePool(poolId, name, description);
         mSchedulerElements.add(pool);
@@ -402,7 +385,7 @@ public class ObjectiveSchedulerCache
     //Sets the start id for the task id generator
     public long getMaxObjectiveId()
     {
-        long maxId = -1;
+        long maxId = 0;
         for(SchedulerElement schedulerElement: mSchedulerElements)
         {
             if(schedulerElement instanceof ObjectivePool)
@@ -432,6 +415,26 @@ public class ObjectiveSchedulerCache
                 if(scheduledObjective.getId() > maxId)
                 {
                     maxId = scheduledObjective.getId();
+                }
+            }
+        }
+
+        return maxId;
+    }
+
+    public long getMaxPoolId()
+    {
+        long maxId = 0;
+        for(SchedulerElement schedulerElement: mSchedulerElements)
+        {
+            if(schedulerElement instanceof ObjectivePool)
+            {
+                ObjectivePool objectivePool = (ObjectivePool)schedulerElement;
+
+                long poolId = objectivePool.getId();
+                if(poolId > maxId)
+                {
+                    maxId = poolId;
                 }
             }
         }

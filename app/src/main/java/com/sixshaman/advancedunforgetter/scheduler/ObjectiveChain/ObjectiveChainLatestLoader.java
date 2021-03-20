@@ -6,7 +6,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class ObjectiveChainLatestLoader implements ObjectiveChainJSONLoader
+public class ObjectiveChainLatestLoader implements ObjectiveChainLoader
 {
     @Override
     public ObjectiveChain fromJSON(JSONObject jsonObject)

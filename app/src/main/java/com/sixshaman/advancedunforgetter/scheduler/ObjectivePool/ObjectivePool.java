@@ -1,10 +1,20 @@
 package com.sixshaman.advancedunforgetter.scheduler.ObjectivePool;
 
+import android.content.Context;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
+import com.sixshaman.advancedunforgetter.R;
 import com.sixshaman.advancedunforgetter.list.EnlistedObjective;
 import com.sixshaman.advancedunforgetter.scheduler.ObjectiveChain.ObjectiveChain;
+import com.sixshaman.advancedunforgetter.scheduler.ObjectiveSchedulerCache;
 import com.sixshaman.advancedunforgetter.scheduler.ScheduledObjective.ScheduledObjective;
 import com.sixshaman.advancedunforgetter.scheduler.SchedulerElement;
+import com.sixshaman.advancedunforgetter.scheduler.SchedulerElementViewHolder;
 import com.sixshaman.advancedunforgetter.utils.RandomUtils;
+import com.sixshaman.advancedunforgetter.utils.ValueHolder;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -15,6 +25,9 @@ import java.util.ArrayList;
 //A pool that can randomly choose from several task sources
 public class ObjectivePool implements SchedulerElement
 {
+    ///The view holder of the pool
+    private PoolViewHolder mPoolViewHolder;
+
     //The id of the pool
     private final long mId;
 
@@ -46,6 +59,12 @@ public class ObjectivePool implements SchedulerElement
         setLastProvidedObjectiveId(0);
 
         mIsActive = true;
+    }
+
+    public void attachToSPoolView(RecyclerView recyclerView)
+    {
+        mPoolViewHolder = new ObjectivePool.PoolViewHolder();
+        recyclerView.setAdapter(mPoolViewHolder);
     }
 
     @Override
@@ -272,5 +291,62 @@ public class ObjectivePool implements SchedulerElement
     public String getElementName()
     {
         return "ObjectivePool";
+    }
+
+    private class PoolViewHolder extends RecyclerView.Adapter<PoolElementViewHolder>
+    {
+        private Context mContext;
+
+        @NonNull
+        @Override
+        public PoolElementViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i)
+        {
+            mContext = viewGroup.getContext();
+
+            View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.layout_pool_element_view, viewGroup, false);
+            return new PoolElementViewHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull PoolElementViewHolder taskViewHolder, int position)
+        {
+            String viewName = "";
+            final ValueHolder<String> viewDescription = new ValueHolder<>("");
+
+            int iconId = 0;
+
+            PoolElement poolElement = mObjectiveSources.get(position);
+            if(poolElement instanceof ObjectiveChain)
+            {
+                ObjectiveChain chain = (ObjectiveChain)poolElement;
+
+                viewName = chain.getName();
+
+                ScheduledObjective objective = chain.getFirstObjective();
+                viewDescription.setValue("Next objective: " + objective.getName());
+
+                iconId = R.drawable.ic_scheduler_chain;
+            }
+            else if(poolElement instanceof ScheduledObjective)
+            {
+                ScheduledObjective objective = (ScheduledObjective)poolElement;
+
+                viewName = objective.getName();
+                viewDescription.setValue("Scheduled to: " + objective.getScheduledEnlistDate());
+
+                iconId = R.drawable.ic_scheduler_objective;
+            }
+
+            taskViewHolder.mTextView.setText(viewName);
+            taskViewHolder.mIconView.setImageResource(iconId);
+
+            taskViewHolder.setSourceMetadata(poolElement);
+        }
+
+        @Override
+        public int getItemCount()
+        {
+            return mObjectiveSources.size();
+        }
     }
 }

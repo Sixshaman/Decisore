@@ -2,6 +2,7 @@ package com.sixshaman.advancedunforgetter.scheduler.ObjectivePool;
 
 import com.sixshaman.advancedunforgetter.scheduler.ObjectiveChain.ObjectiveChain;
 import com.sixshaman.advancedunforgetter.scheduler.ObjectiveChain.ObjectiveChain10Loader;
+import com.sixshaman.advancedunforgetter.scheduler.ObjectiveSchedulerCache;
 import com.sixshaman.advancedunforgetter.scheduler.ScheduledObjective.ScheduledObjective;
 import com.sixshaman.advancedunforgetter.scheduler.ScheduledObjective.SingleObjectiveSource10Loader;
 import org.json.JSONArray;
@@ -10,6 +11,13 @@ import org.json.JSONObject;
 
 public class ObjectivePool10Loader implements ObjectivePoolLoader
 {
+    private ObjectiveSchedulerCache mSchedulerCache;
+
+    public ObjectivePool10Loader(ObjectiveSchedulerCache schedulerCache)
+    {
+        mSchedulerCache = schedulerCache;
+    }
+
     @Override
     public ObjectivePool fromJSON(JSONObject jsonObject)
     {
@@ -34,7 +42,8 @@ public class ObjectivePool10Loader implements ObjectivePoolLoader
                 return null;
             }
 
-            ObjectivePool objectivePool = new ObjectivePool(name, description);
+            long poolId = mSchedulerCache.getMaxPoolId() + 1;
+            ObjectivePool objectivePool = new ObjectivePool(poolId, name, description);
 
             String isActiveString = jsonObject.optString("IsActive");
 
