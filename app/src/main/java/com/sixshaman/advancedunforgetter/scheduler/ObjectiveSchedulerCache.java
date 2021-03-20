@@ -229,7 +229,8 @@ public class ObjectiveSchedulerCache
     //Creates a new explicit task chain
     public boolean addObjectiveChain(ObjectivePool pool, String name, String description)
     {
-        ObjectiveChain chain = new ObjectiveChain(name, description);
+        long chainId = getMaxChainId() + 1;
+        ObjectiveChain chain = new ObjectiveChain(chainId, name, description);
 
         if(pool == null)
         {
@@ -392,7 +393,6 @@ public class ObjectiveSchedulerCache
         return true;
     }
 
-    //Sets the start id for the task id generator
     public long getMaxObjectiveId()
     {
         long maxId = 0;
@@ -432,6 +432,36 @@ public class ObjectiveSchedulerCache
         return maxId;
     }
 
+    public long getMaxChainId()
+    {
+        long maxId = 0;
+        for(SchedulerElement schedulerElement: mSchedulerElements)
+        {
+            if(schedulerElement instanceof ObjectivePool)
+            {
+                ObjectivePool objectivePool = (ObjectivePool)schedulerElement;
+
+                long poolMaxId = objectivePool.getMaxChainId();
+                if(poolMaxId > maxId)
+                {
+                    maxId = poolMaxId;
+                }
+            }
+            else if(schedulerElement instanceof ObjectiveChain)
+            {
+                ObjectiveChain objectiveChain = (ObjectiveChain)schedulerElement;
+
+                long chainId = objectiveChain.getId();
+                if(chainId > maxId)
+                {
+                    maxId = chainId;
+                }
+            }
+        }
+
+        return maxId;
+    }
+
     public long getMaxPoolId()
     {
         long maxId = 0;
@@ -462,6 +492,33 @@ public class ObjectiveSchedulerCache
                 if (objectivePool.getId() == id)
                 {
                     return objectivePool;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public ObjectiveChain getChainById(long id)
+    {
+        for(SchedulerElement schedulerElement: mSchedulerElements)
+        {
+            if(schedulerElement instanceof ObjectivePool)
+            {
+                ObjectivePool  objectivePool  = (ObjectivePool)schedulerElement;
+                ObjectiveChain objectiveChain = objectivePool.getChainById(id);
+
+                if(objectiveChain != null)
+                {
+                    return objectiveChain;
+                }
+            }
+            else if(schedulerElement instanceof ObjectiveChain)
+            {
+                ObjectiveChain objectiveChain = (ObjectiveChain)schedulerElement;
+                if(objectiveChain.getId() == id)
+                {
+                    return objectiveChain;
                 }
             }
         }

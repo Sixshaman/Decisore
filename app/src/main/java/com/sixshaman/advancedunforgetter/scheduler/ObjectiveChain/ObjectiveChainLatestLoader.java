@@ -13,10 +13,12 @@ public class ObjectiveChainLatestLoader implements ObjectiveChainLoader
     {
         try
         {
+            long id = jsonObject.getLong("Id");
+
             String name        = jsonObject.optString("Name");
             String description = jsonObject.optString("Description");
 
-            ObjectiveChain objectiveChain = new ObjectiveChain(name, description);
+            ObjectiveChain objectiveChain = new ObjectiveChain(id, name, description);
 
             JSONArray tasksJsonArray = jsonObject.getJSONArray("Objectives");
             if(tasksJsonArray != null)

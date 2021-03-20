@@ -57,7 +57,7 @@ public class SchedulerOldVersionLoader
         {
             if (pool.getName().equals("")) //Empty pool was either a chain or a regular objective
             {
-                if (pool.getSourceCount() != 1)
+                if(pool.getSourceCount() != 1)
                 {
                     //Implicit pools were always single-element
                     return null;
@@ -65,7 +65,8 @@ public class SchedulerOldVersionLoader
 
                 PoolElement poolElement = pool.getSource(0);
                 shedulerElements.add(poolElement);
-            } else
+            }
+            else
             {
                 shedulerElements.add(pool);
             }

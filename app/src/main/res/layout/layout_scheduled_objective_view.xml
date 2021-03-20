@@ -4,26 +4,16 @@
                                                    android:layout_width="match_parent"
                                                    android:layout_height="wrap_content"
                                                    android:padding="10dp"
-                                                   android:id="@+id/layoutPoolElementView">
+                                                   android:id="@+id/layoutScheduledObjectiveView">
 
-    <ImageView
-            android:id="@+id/iconPoolElement"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:src="@drawable/ic_scheduler_objective"
-            android:contentDescription="@null"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@id/textPoolElementName"
-            app:layout_constraintBottom_toBottomOf="@+id/textPoolElementName"/>
-
-    <TextView android:id="@+id/textPoolElementName"
+    <TextView android:id="@+id/textScheduledObjectiveName"
               android:text="@string/placeholderTask"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
               android:textColor="@android:color/black"
               android:textSize="26sp"
+              app:layout_constraintStart_toStartOf="parent"
               app:layout_constraintTop_toTopOf="parent"
-              app:layout_constraintBottom_toBottomOf="parent"
-              app:layout_constraintStart_toEndOf="@+id/iconPoolElement"/>
+              app:layout_constraintBottom_toBottomOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

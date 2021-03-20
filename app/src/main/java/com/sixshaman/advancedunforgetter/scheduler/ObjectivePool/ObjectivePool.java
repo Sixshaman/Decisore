@@ -194,9 +194,29 @@ public class ObjectivePool implements SchedulerElement
         return mObjectiveSources.contains(source);
     }
 
+    public long getMaxChainId()
+    {
+        long maxId = 0;
+        for(PoolElement source: mObjectiveSources)
+        {
+            long sourceMaxId = 0;
+            if(source instanceof ObjectiveChain)
+            {
+                sourceMaxId = ((ObjectiveChain)source).getId();
+            }
+
+            if(sourceMaxId > maxId)
+            {
+                maxId = sourceMaxId;
+            }
+        }
+
+        return maxId;
+    }
+
     public long getMaxObjectiveId()
     {
-        long maxId = -1;
+        long maxId = 0;
         for(PoolElement source: mObjectiveSources)
         {
             long sourceMaxId = 0;
@@ -216,6 +236,23 @@ public class ObjectivePool implements SchedulerElement
         }
 
         return maxId;
+    }
+
+    public ObjectiveChain getChainById(long id)
+    {
+        for(PoolElement source: mObjectiveSources)
+        {
+            if(source instanceof ObjectiveChain)
+            {
+                ObjectiveChain chain = ((ObjectiveChain)source);
+                if(chain.getId() == id)
+                {
+                    return chain;
+                }
+            }
+        }
+
+        return null;
     }
 
     public PoolElement findSourceForObjective(long objectiveId)
@@ -241,15 +278,15 @@ public class ObjectivePool implements SchedulerElement
         return null;
     }
 
+    public long getId()
+    {
+        return mId;
+    }
+
     @Override
     public boolean isPaused()
     {
         return !mIsActive;
-    }
-
-    public long getId()
-    {
-        return mId;
     }
 
     @Override
