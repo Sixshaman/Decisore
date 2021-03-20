@@ -10,6 +10,8 @@ import android.widget.*;
 import androidx.fragment.app.DialogFragment;
 import com.sixshaman.advancedunforgetter.R;
 import com.sixshaman.advancedunforgetter.list.ObjectiveListCache;
+import com.sixshaman.advancedunforgetter.scheduler.ObjectiveChain.ObjectiveChain;
+import com.sixshaman.advancedunforgetter.scheduler.ObjectivePool.ObjectivePool;
 import com.sixshaman.advancedunforgetter.scheduler.ObjectiveSchedulerCache;
 
 import java.time.Duration;
@@ -20,11 +22,16 @@ import java.util.Objects;
 
 public class NewObjectiveDialogFragment extends DialogFragment
 {
+    private ObjectivePool  mPoolToAddTo;
+    private ObjectiveChain mChainToAddTo;
+
     private ObjectiveSchedulerCache mSchedulerCache;
     private ObjectiveListCache      mListCache;
 
     public NewObjectiveDialogFragment()
     {
+        mPoolToAddTo  = null;
+        mChainToAddTo = null;
     }
 
     public void setSchedulerCache(ObjectiveSchedulerCache schedulerCache)
@@ -35,6 +42,16 @@ public class NewObjectiveDialogFragment extends DialogFragment
     public void setListCache(ObjectiveListCache listCache)
     {
         mListCache = listCache;
+    }
+
+    public void setPoolToAddTo(ObjectivePool pool)
+    {
+        mPoolToAddTo = pool;
+    }
+
+    public void setChainToAddTo(ObjectiveChain chain)
+    {
+        mChainToAddTo = chain;
     }
 
     @Override
@@ -175,7 +192,8 @@ public class NewObjectiveDialogFragment extends DialogFragment
                 transactionDispatcher.setSchedulerCache(mSchedulerCache);
                 transactionDispatcher.setListCache(mListCache);
 
-                transactionDispatcher.addObjectiveTransaction(configFolder, objectiveCreateDate, objectiveScheduleDate.getValue(),
+                transactionDispatcher.addObjectiveTransaction(mPoolToAddTo, mChainToAddTo,
+                                                              configFolder, objectiveCreateDate, objectiveScheduleDate.getValue(),
                                                               objectiveRepeatDuration, objectiveRepeatProbability,
                                                               nameText, descriptionText, new ArrayList<>());
             }

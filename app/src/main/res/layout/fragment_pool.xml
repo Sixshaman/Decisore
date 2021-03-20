@@ -14,4 +14,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"/>
 
+    <include layout="@layout/speed_dial_fab_two_elements"/>
+
 </LinearLayout>
