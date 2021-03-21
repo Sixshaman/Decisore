@@ -30,6 +30,9 @@ public class EditObjectiveDialogFragment extends DialogFragment
     private String mCurrentName;
     private String mCurrentDescription;
 
+    private boolean mEditInScheduler;
+    private boolean mEditInList;
+
     private ObjectiveSchedulerCache mSchedulerCache;
     private ObjectiveListCache      mListCache;
 
@@ -39,6 +42,9 @@ public class EditObjectiveDialogFragment extends DialogFragment
 
         mCurrentName        = objectiveName;
         mCurrentDescription = objectiveDescription;
+
+        mEditInList      = false;
+        mEditInScheduler = false;
     }
 
     public void setSchedulerCache(ObjectiveSchedulerCache schedulerCache)
@@ -49,6 +55,16 @@ public class EditObjectiveDialogFragment extends DialogFragment
     public void setListCache(ObjectiveListCache listCache)
     {
         mListCache = listCache;
+    }
+
+    public void setEditInScheduler(boolean doEdit)
+    {
+        mEditInScheduler = true;
+    }
+
+    public void setEditInList(boolean doEdit)
+    {
+        mEditInList = true;
     }
 
     @Override
@@ -85,7 +101,7 @@ public class EditObjectiveDialogFragment extends DialogFragment
                 transactionDispatcher.setSchedulerCache(mSchedulerCache);
                 transactionDispatcher.setListCache(mListCache);
 
-                transactionDispatcher.editObjectiveTransaction(configFolder, mObjectiveId, nameText, descriptionText);
+                transactionDispatcher.editObjectiveTransaction(configFolder, mObjectiveId, nameText, descriptionText, mEditInScheduler, mEditInList);
             }
         });
 

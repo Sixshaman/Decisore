@@ -56,14 +56,14 @@ public class ObjectivePool implements SchedulerElement
 
         mObjectiveSources = new ArrayList<>();
 
-        setLastProvidedObjectiveId(0);
+        mLastProvidedObjectiveId = -1;
 
         mIsActive = true;
     }
 
-    public void attachToPoolView(RecyclerView recyclerView)
+    public void attachToPoolView(RecyclerView recyclerView, ObjectiveSchedulerCache schedulerCache)
     {
-        mPoolViewHolder = new ObjectivePool.PoolViewHolder();
+        mPoolViewHolder = new ObjectivePool.PoolViewHolder(schedulerCache);
         recyclerView.setAdapter(mPoolViewHolder);
     }
 
@@ -76,6 +76,81 @@ public class ObjectivePool implements SchedulerElement
             mPoolViewHolder.notifyItemInserted(mObjectiveSources.size() - 1);
             mPoolViewHolder.notifyItemRangeChanged(mObjectiveSources.size() - 1, mObjectiveSources.size());
         }
+    }
+
+    public boolean deleteChainById(long chainId)
+    {
+        int plainIndexToDelete = -1;
+
+        for(int i = 0; i < mObjectiveSources.size(); i++)
+        {
+            PoolElement poolElement = mObjectiveSources.get(i);
+            if(poolElement instanceof ObjectiveChain)
+            {
+                ObjectiveChain objectiveChain = (ObjectiveChain)poolElement;
+                if(objectiveChain.getId() == chainId)
+                {
+                    plainIndexToDelete = i;
+                }
+            }
+        }
+
+        if(plainIndexToDelete != -1)
+        {
+            mObjectiveSources.remove(plainIndexToDelete);
+
+            if(mPoolViewHolder != null)
+            {
+                mPoolViewHolder.notifyItemRemoved(plainIndexToDelete);
+                mPoolViewHolder.notifyItemRangeChanged(plainIndexToDelete, mPoolViewHolder.getItemCount());
+            }
+        }
+
+        return (plainIndexToDelete != -1);
+    }
+
+    public boolean deleteObjectiveById(long objectiveId)
+    {
+        boolean complexDeleteSucceeded = false;
+        int     plainIndexToDelete     = -1;
+
+        for(int i = 0; i < mObjectiveSources.size(); i++)
+        {
+            PoolElement poolElement = mObjectiveSources.get(i);
+
+            if(poolElement instanceof ObjectiveChain)
+            {
+                ObjectiveChain objectiveChain = (ObjectiveChain)poolElement;
+                boolean deleteSucceeded = objectiveChain.deleteObjectiveById(objectiveId);
+
+                if(mPoolViewHolder != null && deleteSucceeded)
+                {
+                    mPoolViewHolder.notifyItemChanged(i);
+                    complexDeleteSucceeded = true;
+                }
+            }
+            else if(poolElement instanceof ScheduledObjective)
+            {
+                ScheduledObjective scheduledObjective = (ScheduledObjective)poolElement;
+                if(scheduledObjective.getId() == objectiveId)
+                {
+                    plainIndexToDelete = i;
+                }
+            }
+        }
+
+        if(plainIndexToDelete != -1)
+        {
+            mObjectiveSources.remove(plainIndexToDelete);
+
+            if(mPoolViewHolder != null)
+            {
+                mPoolViewHolder.notifyItemRemoved(plainIndexToDelete);
+                mPoolViewHolder.notifyItemRangeChanged(plainIndexToDelete, mPoolViewHolder.getItemCount());
+            }
+        }
+
+        return (plainIndexToDelete != -1) || complexDeleteSucceeded;
     }
 
     @Override
@@ -170,7 +245,7 @@ public class ObjectivePool implements SchedulerElement
 
         if(resultObjective != null)
         {
-            setLastProvidedObjectiveId(resultObjective.getId());
+            mLastProvidedObjectiveId = resultObjective.getId();
         }
 
         return resultObjective;
@@ -255,6 +330,34 @@ public class ObjectivePool implements SchedulerElement
         return null;
     }
 
+    public ScheduledObjective getObjectiveById(long objectiveId)
+    {
+        for(PoolElement source: mObjectiveSources)
+        {
+            if(source instanceof ObjectiveChain)
+            {
+                ObjectiveChain     chain     = ((ObjectiveChain)source);
+                ScheduledObjective objective = chain.getObjectiveById(objectiveId);
+
+                if(objective != null)
+                {
+                    return objective;
+                }
+            }
+            else if(source instanceof ScheduledObjective)
+            {
+                ScheduledObjective objective = ((ScheduledObjective)source);
+
+                if(objective.getId() == objectiveId)
+                {
+                    return objective;
+                }
+            }
+        }
+
+        return null;
+    }
+
     public PoolElement findSourceForObjective(long objectiveId)
     {
         for(PoolElement source: mObjectiveSources)
@@ -301,6 +404,16 @@ public class ObjectivePool implements SchedulerElement
         return mDescription;
     }
 
+    public void setName(String name)
+    {
+        mName = name;
+    }
+
+    public void setDescription(String description)
+    {
+        mDescription = description;
+    }
+
     //Pauses the pool
     void pause()
     {
@@ -319,9 +432,9 @@ public class ObjectivePool implements SchedulerElement
         return mLastProvidedObjectiveId;
     }
 
-    private void setLastProvidedObjectiveId(long objectiveId)
+    public boolean isEmpty()
     {
-        mLastProvidedObjectiveId = objectiveId;
+        return mObjectiveSources.isEmpty();
     }
 
     @Override
@@ -332,14 +445,17 @@ public class ObjectivePool implements SchedulerElement
 
     private class PoolViewHolder extends RecyclerView.Adapter<PoolElementViewHolder>
     {
-        private Context mContext;
+        private ObjectiveSchedulerCache mSchedulerCache;
+
+        PoolViewHolder(ObjectiveSchedulerCache schedulerCache)
+        {
+            mSchedulerCache = schedulerCache;
+        }
 
         @NonNull
         @Override
         public PoolElementViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i)
         {
-            mContext = viewGroup.getContext();
-
             View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.layout_pool_element_view, viewGroup, false);
             return new PoolElementViewHolder(view);
         }
@@ -377,7 +493,7 @@ public class ObjectivePool implements SchedulerElement
             taskViewHolder.mTextView.setText(viewName);
             taskViewHolder.mIconView.setImageResource(iconId);
 
-            taskViewHolder.setSourceMetadata(poolElement);
+            taskViewHolder.setSourceMetadata(poolElement, mSchedulerCache);
         }
 
         @Override

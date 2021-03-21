@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                                                   xmlns:app="http://schemas.android.com/apk/res-auto"
+                                                   android:layout_width="wrap_content"
+                                                   android:layout_height="wrap_content"
+                                                   app:layout_constraintStart_toStartOf="parent"
+                                                   app:layout_constraintEnd_toEndOf="parent"
+                                                   android:layout_margin="16dp"
+                                                   android:id="@+id/layoutDialogEditChain">
+
+    <EditText
+            android:theme="@style/AdditionalTheme"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:inputType="text"
+            android:ems="10"
+            android:id="@+id/editEditChainName"
+            android:hint="@string/taskName"
+            android:autofillHints=""
+            android:importantForAutofill="no"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"/>
+
+    <EditText
+            android:theme="@style/AdditionalTheme"
+            android:layout_width="wrap_content"
+            android:layout_height="200dp"
+            android:inputType="textMultiLine"
+            android:gravity="start|top"
+            android:ems="10"
+            android:id="@+id/editEditChainDescription"
+            android:layout_marginTop="8dp"
+            app:layout_constraintTop_toBottomOf="@id/editEditChainName"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:autofillHints=""
+            android:hint="@string/taskDescription"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

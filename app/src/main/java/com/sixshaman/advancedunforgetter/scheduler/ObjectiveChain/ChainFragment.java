@@ -1,13 +1,6 @@
 package com.sixshaman.advancedunforgetter.scheduler.ObjectiveChain;
 
-import android.animation.Animator;
-import android.animation.AnimatorSet;
-import android.animation.ObjectAnimator;
-import android.graphics.drawable.Animatable;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.view.ViewTreeObserver;
-import android.widget.ImageButton;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -19,7 +12,6 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.sixshaman.advancedunforgetter.R;
 import com.sixshaman.advancedunforgetter.scheduler.ObjectiveSchedulerCache;
 import com.sixshaman.advancedunforgetter.utils.LockedReadFile;
-import com.sixshaman.advancedunforgetter.utils.NewChainDialogFragment;
 import com.sixshaman.advancedunforgetter.utils.NewObjectiveDialogFragment;
 import com.sixshaman.advancedunforgetter.utils.TransactionDispatcher;
 

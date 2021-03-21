@@ -71,6 +71,34 @@ public class ObjectiveChain implements PoolElement
         }
     }
 
+    public boolean deleteObjectiveById(long objectiveId)
+    {
+        int indexToDelete = -1;
+        for(int i = 0; i < mObjectives.size(); i++)
+        {
+            if(mObjectives.get(i).getId() == objectiveId)
+            {
+                indexToDelete = i;
+                break;
+            }
+        }
+
+        if(indexToDelete != -1)
+        {
+            mObjectives.remove(indexToDelete);
+
+            if(mChainViewHolder != null)
+            {
+                mChainViewHolder.notifyItemRemoved(indexToDelete);
+                mChainViewHolder.notifyItemRangeChanged(indexToDelete, mChainViewHolder.getItemCount());
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
     @Override
     public String getName()
     {
@@ -81,6 +109,16 @@ public class ObjectiveChain implements PoolElement
     public String getDescription()
     {
         return mDescription;
+    }
+
+    public void setName(String chainName)
+    {
+        mName = chainName;
+    }
+
+    public void setDescription(String chainDescription)
+    {
+        mDescription = chainDescription;
     }
 
     @Override
@@ -170,6 +208,19 @@ public class ObjectiveChain implements PoolElement
         return false;
     }
 
+    public ScheduledObjective getObjectiveById(long objectiveId)
+    {
+        for(ScheduledObjective objective: mObjectives)
+        {
+            if(objective.getId() == objectiveId)
+            {
+                return objective;
+            }
+        }
+
+        return null;
+    }
+
     public boolean putBack(ScheduledObjective objective)
     {
         if(mObjectives != null && !mObjectives.isEmpty())
@@ -208,6 +259,11 @@ public class ObjectiveChain implements PoolElement
         {
             return null;
         }
+    }
+
+    public boolean isEmpty()
+    {
+        return mObjectives.isEmpty();
     }
 
     public long getId()
@@ -263,8 +319,6 @@ public class ObjectiveChain implements PoolElement
         @Override
         public void onBindViewHolder(@NonNull ChainElementViewHolder elementViewHolder, int position)
         {
-            String viewName = "";
-
             ScheduledObjective objective = mObjectives.get(position);
 
             elementViewHolder.mTextView.setText(objective.getName());

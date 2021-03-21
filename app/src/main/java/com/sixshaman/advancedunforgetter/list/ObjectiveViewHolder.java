@@ -81,9 +81,6 @@ class ObjectiveViewHolder extends RecyclerView.ViewHolder implements View.OnCrea
 
         scheduleTomorrowItem.setOnMenuItemClickListener(menuItem ->
         {
-            assert mObjectiveListCache != null;
-            assert mObjectiveId        != -1;
-
             LocalDateTime enlistDateTime = LocalDateTime.now().minusHours(6); //Day starts at 6AM!
             enlistDateTime = enlistDateTime.plusDays(1).truncatedTo(ChronoUnit.DAYS);
             enlistDateTime = enlistDateTime.plusHours(6); //Day starts at 6AM
@@ -92,16 +89,13 @@ class ObjectiveViewHolder extends RecyclerView.ViewHolder implements View.OnCrea
             transactionDispatcher.setListCache(mObjectiveListCache);
 
             String configFolder = Objects.requireNonNull(view.getContext().getExternalFilesDir("/app")).getAbsolutePath();
-            transactionDispatcher.recheduleObjectiveTransaction(configFolder, mObjectiveListCache.getObjective(mObjectiveId), enlistDateTime);
+            transactionDispatcher.recheduleEnlistedObjectiveTransaction(configFolder, mObjectiveListCache.getObjective(mObjectiveId), enlistDateTime);
 
             return true;
         });
 
         scheduleItem.setOnMenuItemClickListener(menuItem ->
         {
-            assert mObjectiveListCache != null;
-            assert mObjectiveId        != -1;
-
             DatePickerDialog datePickerDialog = new DatePickerDialog(view.getContext());
             datePickerDialog.setOnDateSetListener((datePicker, year, month, day) ->
             {
@@ -113,7 +107,7 @@ class ObjectiveViewHolder extends RecyclerView.ViewHolder implements View.OnCrea
                 transactionDispatcher.setListCache(mObjectiveListCache);
 
                 String configFolder = Objects.requireNonNull(view.getContext().getExternalFilesDir("/app")).getAbsolutePath();
-                transactionDispatcher.recheduleObjectiveTransaction(configFolder, mObjectiveListCache.getObjective(mObjectiveId), dateTime);
+                transactionDispatcher.recheduleEnlistedObjectiveTransaction(configFolder, mObjectiveListCache.getObjective(mObjectiveId), dateTime);
             });
 
             datePickerDialog.show();
@@ -122,13 +116,11 @@ class ObjectiveViewHolder extends RecyclerView.ViewHolder implements View.OnCrea
 
         editItem.setOnMenuItemClickListener(menuItem ->
         {
-            assert mObjectiveListCache != null;
-            assert mObjectiveId        != -1;
-
             EnlistedObjective objective = mObjectiveListCache.getObjective(mObjectiveId);
 
             EditObjectiveDialogFragment editObjectiveDialogFragment = new EditObjectiveDialogFragment(mObjectiveId, objective.getName(), objective.getDescription());
             editObjectiveDialogFragment.setListCache(mObjectiveListCache);
+            editObjectiveDialogFragment.setEditInList(true);
 
             FragmentActivity activity = (FragmentActivity)(view.getContext());
             editObjectiveDialogFragment.show(activity.getSupportFragmentManager(), activity.getString(R.string.newTaskDialogName));
@@ -138,9 +130,6 @@ class ObjectiveViewHolder extends RecyclerView.ViewHolder implements View.OnCrea
 
         deleteItem.setOnMenuItemClickListener(menuItem ->
         {
-            assert mObjectiveListCache != null;
-            assert mObjectiveId        != -1;
-
             EnlistedObjective objective = mObjectiveListCache.getObjective(mObjectiveId);
 
             AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(view.getContext());
@@ -151,7 +140,7 @@ class ObjectiveViewHolder extends RecyclerView.ViewHolder implements View.OnCrea
                 transactionDispatcher.setListCache(mObjectiveListCache);
 
                 String configFolder = Objects.requireNonNull(view.getContext().getExternalFilesDir("/app")).getAbsolutePath();
-                transactionDispatcher.deleteObjectiveTransaction(configFolder, objective);
+                transactionDispatcher.deleteObjectiveFromListTransaction(configFolder, objective);
             });
             alertDialogBuilder.setNegativeButton("No", (dialogInterface, i) ->
             {

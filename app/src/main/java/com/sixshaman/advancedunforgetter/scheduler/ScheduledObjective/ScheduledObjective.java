@@ -221,6 +221,16 @@ public class ScheduledObjective implements PoolElement
         return mDescription;
     }
 
+    public void setName(String name)
+    {
+        mName = name;
+    }
+
+    public void setDescription(String description)
+    {
+        mDescription = description;
+    }
+
     //Pauses the task so it's not repeated anymore
     void pause()
     {
