@@ -6,8 +6,10 @@
     <string name="taskName">Name</string>
     <string name="taskDescription">Description</string>
     <string name="newTaskDialogName">New objective</string>
-    <string name="newChainDialogName">New chain</string>
+    <string name="newChainDialogName">Edit chain</string>
+    <string name="editChainDialogName">New chain</string>
     <string name="newPoolDialogName">New pool</string>
+    <string name="editPoolDialogName">Edit pool</string>
     <string name="editObjectiveDialogName">Edit objective</string>
     <string name="deleteObjectiveAreYouSure">Are you sure you want to delete</string>
     <string name="objectiveSchedule">Schedule for:</string>
@@ -19,11 +21,15 @@
     <string name="createCancel">Cancel</string>
 
     <string name="menu_schedule_for_tomorrow">Schedule for tomorrow</string>
-    <string name="menu_schedule_for_arbitrary">Schedule for...</string>
-    <string name="menu_add_objective_before">Add objective before...</string>
-    <string name="menu_add_objective_after">Add objective after...</string>
-    <string name="menu_edit_objective">Edit objective...</string>
+    <string name="menu_schedule_for_arbitrary" tools:ignore="TypographyEllipsis">Schedule for...</string>
+    <string name="menu_add_objective_before" tools:ignore="TypographyEllipsis">Add objective before...</string>
+    <string name="menu_add_objective_after" tools:ignore="TypographyEllipsis">Add objective after...</string>
+    <string name="menu_edit_objective" tools:ignore="TypographyEllipsis">Edit objective...</string>
     <string name="menu_delete_objective">Delete objective</string>
+    <string name="menu_edit_chain" tools:ignore="TypographyEllipsis">Edit chain...</string>
+    <string name="menu_delete_chain">Delete chain</string>
+    <string name="menu_edit_pool" tools:ignore="TypographyEllipsis" >Edit pool...</string>
+    <string name="menu_delete_pool">Delete pool</string>
 
     <string name="invalidTaskName">Invalid task name</string>
     <string name="invalidChainName">Invalid chain name</string>

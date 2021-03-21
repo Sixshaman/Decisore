@@ -40,6 +40,8 @@ import org.json.JSONObject;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Vector;
 
 //The class to schedule all deferred tasks. The model for the scheduler UI
 public class ObjectiveSchedulerCache
@@ -524,6 +526,298 @@ public class ObjectiveSchedulerCache
         }
 
         return null;
+    }
+
+    public boolean editObjectiveName(long objectiveId, String objectiveName, String objectiveDescription)
+    {
+        ScheduledObjective objectiveToEdit = null;
+        int                indexToEdit     = -1;
+
+        for(int i = 0; i < mSchedulerElements.size(); i++)
+        {
+            SchedulerElement schedulerElement = mSchedulerElements.get(i);
+
+            if(schedulerElement instanceof ObjectivePool)
+            {
+                ObjectivePool      objectivePool      = (ObjectivePool)schedulerElement;
+                ScheduledObjective scheduledObjective = objectivePool.getObjectiveById(objectiveId);
+
+                if(scheduledObjective != null)
+                {
+                    objectiveToEdit = scheduledObjective;
+                    indexToEdit     = i;
+
+                    break;
+                }
+            }
+            else if(schedulerElement instanceof ObjectiveChain)
+            {
+                ObjectiveChain     objectiveChain     = (ObjectiveChain)schedulerElement;
+                ScheduledObjective scheduledObjective = objectiveChain.getObjectiveById(objectiveId);
+
+                if(scheduledObjective != null)
+                {
+                    objectiveToEdit = scheduledObjective;
+                    indexToEdit     = i;
+
+                    break;
+                }
+            }
+            else if(schedulerElement instanceof ScheduledObjective)
+            {
+                ScheduledObjective scheduledObjective = (ScheduledObjective)schedulerElement;
+
+                if(scheduledObjective.getId() == objectiveId)
+                {
+                    objectiveToEdit = scheduledObjective;
+                    indexToEdit     = i;
+                }
+            }
+        }
+
+        if(indexToEdit != -1)
+        {
+            objectiveToEdit.setName(objectiveName);
+            objectiveToEdit.setDescription(objectiveDescription);
+        }
+        else
+        {
+            return false;
+        }
+
+        if(mSchedulerViewHolder != null)
+        {
+            mSchedulerViewHolder.notifyItemChanged(indexToEdit);
+        }
+
+        return true;
+    }
+
+    public boolean editChain(long chainId, String chainName, String chainDescription)
+    {
+        ObjectiveChain chainToEdit = null;
+        int            indexToEdit = -1;
+
+        for(int i = 0; i < mSchedulerElements.size(); i++)
+        {
+            SchedulerElement schedulerElement = mSchedulerElements.get(i);
+
+            if(schedulerElement instanceof ObjectivePool)
+            {
+                ObjectivePool  objectivePool  = (ObjectivePool)schedulerElement;
+                ObjectiveChain objectiveChain = objectivePool.getChainById(chainId);
+
+                if(objectiveChain != null)
+                {
+                   chainToEdit = objectiveChain;
+                   indexToEdit = i;
+
+                   break;
+                }
+            }
+            else if(schedulerElement instanceof ObjectiveChain)
+            {
+                ObjectiveChain objectiveChain = (ObjectiveChain)schedulerElement;
+                if(objectiveChain.getId() == chainId)
+                {
+                    chainToEdit = objectiveChain;
+                    indexToEdit = i;
+
+                    break;
+                }
+            }
+        }
+
+        if(indexToEdit != -1)
+        {
+            chainToEdit.setName(chainName);
+            chainToEdit.setDescription(chainDescription);
+        }
+        else
+        {
+            return false;
+        }
+
+        if(mSchedulerViewHolder != null)
+        {
+            mSchedulerViewHolder.notifyItemChanged(indexToEdit);
+        }
+
+        return true;
+    }
+
+    public boolean editPool(long poolId, String poolName, String poolDescription)
+    {
+        ObjectivePool poolToEdit  = null;
+        int           indexToEdit = -1;
+
+        for(int i = 0; i < mSchedulerElements.size(); i++)
+        {
+            SchedulerElement schedulerElement = mSchedulerElements.get(i);
+
+            if(schedulerElement instanceof ObjectivePool)
+            {
+                ObjectivePool objectivePool = (ObjectivePool)schedulerElement;
+                if(objectivePool.getId() == poolId)
+                {
+                    poolToEdit  = objectivePool;
+                    indexToEdit = i;
+
+                    break;
+                }
+            }
+        }
+
+        if(indexToEdit != -1)
+        {
+            poolToEdit.setName(poolName);
+            poolToEdit.setDescription(poolDescription);
+        }
+        else
+        {
+            return false;
+        }
+
+        if(mSchedulerViewHolder != null)
+        {
+            mSchedulerViewHolder.notifyItemChanged(indexToEdit);
+        }
+
+        return true;
+    }
+
+    public boolean removePool(long poolId)
+    {
+        int plainIndexToDelete = -1;
+
+        for(int i = 0; i < mSchedulerElements.size(); i++)
+        {
+            SchedulerElement schedulerElement = mSchedulerElements.get(i);
+            if(schedulerElement instanceof ObjectivePool)
+            {
+                ObjectivePool objectivePool = (ObjectivePool)schedulerElement;
+                if(objectivePool.getId() == poolId)
+                {
+                    plainIndexToDelete = i;
+                }
+            }
+        }
+
+        if(plainIndexToDelete != -1)
+        {
+            mSchedulerElements.remove(plainIndexToDelete);
+
+            if(mSchedulerViewHolder != null)
+            {
+                mSchedulerViewHolder.notifyItemRemoved(plainIndexToDelete);
+                mSchedulerViewHolder.notifyItemRangeChanged(plainIndexToDelete, mSchedulerViewHolder.getItemCount());
+            }
+        }
+
+        return (plainIndexToDelete != -1);
+    }
+
+    public boolean removeChain(long chainId)
+    {
+        boolean complexDeleteSucceeded = false;
+        int     plainIndexToDelete     = -1;
+
+        for(int i = 0; i < mSchedulerElements.size(); i++)
+        {
+            SchedulerElement schedulerElement = mSchedulerElements.get(i);
+
+            if(schedulerElement instanceof ObjectivePool)
+            {
+                ObjectivePool objectivePool = (ObjectivePool)schedulerElement;
+                boolean deleteSucceeded = objectivePool.deleteChainById(chainId);
+
+                if(mSchedulerViewHolder != null && deleteSucceeded)
+                {
+                    mSchedulerViewHolder.notifyItemChanged(i);
+
+                    complexDeleteSucceeded = true;
+                }
+            }
+            else if(schedulerElement instanceof ObjectiveChain)
+            {
+                ObjectiveChain objectiveChain = (ObjectiveChain)schedulerElement;
+
+                if(objectiveChain.getId() == chainId)
+                {
+                    plainIndexToDelete = i;
+                }
+            }
+        }
+
+        if(plainIndexToDelete != -1)
+        {
+            mSchedulerElements.remove(plainIndexToDelete);
+
+            if(mSchedulerViewHolder != null)
+            {
+                mSchedulerViewHolder.notifyItemRemoved(plainIndexToDelete);
+                mSchedulerViewHolder.notifyItemRangeChanged(plainIndexToDelete, mSchedulerViewHolder.getItemCount());
+            }
+        }
+
+        return (plainIndexToDelete != -1) || complexDeleteSucceeded;
+    }
+
+    public boolean removeObjective(long objectiveId)
+    {
+        boolean complexDeleteSucceeded = false;
+        int     plainIndexToDelete     = -1;
+
+        for(int i = 0; i < mSchedulerElements.size(); i++)
+        {
+            SchedulerElement schedulerElement = mSchedulerElements.get(i);
+
+            if(schedulerElement instanceof ObjectivePool)
+            {
+                ObjectivePool objectivePool = (ObjectivePool)schedulerElement;
+                boolean deleteSucceeded = objectivePool.deleteObjectiveById(objectiveId);
+
+                if(mSchedulerViewHolder != null && deleteSucceeded)
+                {
+                    mSchedulerViewHolder.notifyItemChanged(i);
+
+                    complexDeleteSucceeded = true;
+                }
+            }
+            else if(schedulerElement instanceof ObjectiveChain)
+            {
+                ObjectiveChain objectiveChain = (ObjectiveChain)schedulerElement;
+                boolean deleteSucceeded = objectiveChain.deleteObjectiveById(objectiveId);
+
+                if(mSchedulerViewHolder != null && deleteSucceeded)
+                {
+                    mSchedulerViewHolder.notifyItemChanged(i);
+
+                    complexDeleteSucceeded = true;
+                }
+            }
+            else if(schedulerElement instanceof ScheduledObjective)
+            {
+                ScheduledObjective scheduledObjective = (ScheduledObjective)schedulerElement;
+                if(scheduledObjective.getId() == objectiveId)
+                {
+                    plainIndexToDelete = i;
+                }
+            }
+        }
+
+        if(plainIndexToDelete != -1)
+        {
+            mSchedulerElements.remove(plainIndexToDelete);
+
+            if(mSchedulerViewHolder != null)
+            {
+                mSchedulerViewHolder.notifyItemRemoved(plainIndexToDelete);
+                mSchedulerViewHolder.notifyItemRangeChanged(plainIndexToDelete, mSchedulerViewHolder.getItemCount());
+            }
+        }
+
+        return (plainIndexToDelete != -1) || complexDeleteSucceeded;
     }
 
     private class SchedulerCacheViewHolder extends RecyclerView.Adapter<SchedulerElementViewHolder>

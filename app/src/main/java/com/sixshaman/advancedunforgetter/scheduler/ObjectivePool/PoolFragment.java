@@ -18,7 +18,7 @@ import android.view.ViewGroup;
 import com.sixshaman.advancedunforgetter.R;
 import com.sixshaman.advancedunforgetter.scheduler.ObjectiveSchedulerCache;
 import com.sixshaman.advancedunforgetter.utils.LockedReadFile;
-import com.sixshaman.advancedunforgetter.utils.NewChainDialogFragment;
+import com.sixshaman.advancedunforgetter.scheduler.ObjectiveChain.NewChainDialogFragment;
 import com.sixshaman.advancedunforgetter.utils.NewObjectiveDialogFragment;
 import com.sixshaman.advancedunforgetter.utils.TransactionDispatcher;
 
@@ -69,7 +69,7 @@ public class PoolFragment extends Fragment
         mObjectivePool = mSchedulerCache.getPoolById(mObjectivePoolId);
 
         RecyclerView recyclerView = mFragmentView.findViewById(R.id.objectiveSchedulerView);
-        mObjectivePool.attachToPoolView(recyclerView);
+        mObjectivePool.attachToPoolView(recyclerView, mSchedulerCache);
         recyclerView.setLayoutManager(new LinearLayoutManager(mFragmentView.getContext()));
 
         try
