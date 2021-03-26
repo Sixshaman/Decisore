@@ -4,10 +4,14 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
+import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.*;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 import com.sixshaman.advancedunforgetter.R;
 import com.sixshaman.advancedunforgetter.list.ObjectiveListCache;
@@ -15,10 +19,13 @@ import com.sixshaman.advancedunforgetter.scheduler.ObjectiveChain.ObjectiveChain
 import com.sixshaman.advancedunforgetter.scheduler.ObjectivePool.ObjectivePool;
 import com.sixshaman.advancedunforgetter.scheduler.ObjectiveSchedulerCache;
 
+import java.sql.Array;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Objects;
 
 public class NewObjectiveDialogFragment extends DialogFragment
@@ -203,6 +210,9 @@ public class NewObjectiveDialogFragment extends DialogFragment
         {
             final Spinner scheduleSpinner = resultDialog.getValue().findViewById(R.id.spinnerObjectiveSchedule);
 
+            DateSpinnerCustomTextAdapter customTextAdapter = new DateSpinnerCustomTextAdapter(scheduleSpinner.getContext());
+            scheduleSpinner.setAdapter(customTextAdapter);
+
             scheduleSpinner.setOnItemClickListener((adapterView, view, index, l) ->
             {
                 if(index == 3) //Custom date
@@ -214,6 +224,8 @@ public class NewObjectiveDialogFragment extends DialogFragment
                         //Also Java numerates months from 0, not from 1
                         LocalDateTime dateTime = LocalDateTime.of(year, month + 1, day, 6, 0, 0);
                         objectiveScheduleDate.setValue(dateTime);
+
+                        customTextAdapter.setCustomText(dateTime.toString());
                     });
 
                     datePickerDialog.show();
@@ -222,5 +234,37 @@ public class NewObjectiveDialogFragment extends DialogFragment
         });
 
         return resultDialog.getValue();
+    }
+
+    private class DateSpinnerCustomTextAdapter extends ArrayAdapter<String>
+    {
+        //https://stackoverflow.com/a/25234785/2857541
+
+        private String mCustomText = "";
+
+        DateSpinnerCustomTextAdapter(Context context)
+        {
+            super(context, R.layout.layout_spinner_item, context.getResources().getStringArray(R.array.objectiveScheduleTypes));
+        }
+
+        void setCustomText(String text)
+        {
+            mCustomText = text;
+            notifyDataSetChanged();
+        }
+
+        @NonNull
+        @Override
+        public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent)
+        {
+            View view = super.getView(position, convertView, parent);
+            if(position == 3) //Custom
+            {
+                TextView textView = view.findViewById(R.id.spinnerTextView);
+                textView.setText(mCustomText);
+            }
+
+            return view;
+        }
     }
 }
