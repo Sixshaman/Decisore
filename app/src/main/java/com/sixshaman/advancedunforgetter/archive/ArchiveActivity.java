@@ -8,7 +8,6 @@ import androidx.appcompat.widget.Toolbar;
 import com.sixshaman.advancedunforgetter.R;
 import com.sixshaman.advancedunforgetter.utils.LockedReadFile;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Objects;
 
@@ -22,10 +21,10 @@ public class ArchiveActivity extends AppCompatActivity
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_archive);
-        Toolbar toolbar = findViewById(R.id.toolbarTaskArchive);
+        Toolbar toolbar = findViewById(R.id.toolbarObjectiveArchive);
         setSupportActionBar(toolbar);
 
-        setTitle(R.string.title_activity_task_archive);
+        setTitle(R.string.title_activity_objective_archive);
     }
 
     @Override
@@ -37,7 +36,7 @@ public class ArchiveActivity extends AppCompatActivity
 
         String configFolder = Objects.requireNonNull(getExternalFilesDir("/app")).getAbsolutePath();
 
-        RecyclerView recyclerView = findViewById(R.id.taskArchiveView);
+        RecyclerView recyclerView = findViewById(R.id.objectiveArchiveView);
         mArchiveCache.attachToView(recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 

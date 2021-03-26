@@ -155,7 +155,7 @@ public class PoolFragment extends Fragment
         newObjectiveDialogFragment.setSchedulerCache(mSchedulerCache);
         newObjectiveDialogFragment.setPoolToAddTo(mObjectivePool);
 
-        newObjectiveDialogFragment.show(getParentFragmentManager(), getString(R.string.newTaskDialogName));
+        newObjectiveDialogFragment.show(getParentFragmentManager(), getString(R.string.newObjectiveDialogName));
     }
 
     private void collapseFab(final ImageButton fab, final View fabAddChain, final View fabAddObjective)

@@ -1,30 +1,22 @@
 package com.sixshaman.advancedunforgetter.list;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
-import android.app.Dialog;
-import android.os.Bundle;
 import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.CheckBox;
-import android.widget.DatePicker;
 import android.widget.TextView;
 import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.RecyclerView;
-import com.sixshaman.advancedunforgetter.BuildConfig;
 import com.sixshaman.advancedunforgetter.R;
 import com.sixshaman.advancedunforgetter.utils.EditObjectiveDialogFragment;
 import com.sixshaman.advancedunforgetter.utils.TransactionDispatcher;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
-import java.util.Calendar;
 import java.util.Objects;
 
 class ObjectiveViewHolder extends RecyclerView.ViewHolder implements View.OnCreateContextMenuListener
@@ -49,10 +41,10 @@ class ObjectiveViewHolder extends RecyclerView.ViewHolder implements View.OnCrea
     {
         super(itemView);
 
-        mTextView = itemView.findViewById(R.id.textTaskName);
-        mCheckbox = itemView.findViewById(R.id.checkBoxTaskDone);
+        mTextView = itemView.findViewById(R.id.textObjectiveName);
+        mCheckbox = itemView.findViewById(R.id.checkBoxObjectiveDone);
 
-        mParentLayout = itemView.findViewById(R.id.layoutTaskView);
+        mParentLayout = itemView.findViewById(R.id.layoutObjectiveView);
 
         mParentLayout.setOnCreateContextMenuListener(this);
 
@@ -123,7 +115,7 @@ class ObjectiveViewHolder extends RecyclerView.ViewHolder implements View.OnCrea
             editObjectiveDialogFragment.setEditInList(true);
 
             FragmentActivity activity = (FragmentActivity)(view.getContext());
-            editObjectiveDialogFragment.show(activity.getSupportFragmentManager(), activity.getString(R.string.newTaskDialogName));
+            editObjectiveDialogFragment.show(activity.getSupportFragmentManager(), activity.getString(R.string.newObjectiveDialogName));
 
             return true;
         });

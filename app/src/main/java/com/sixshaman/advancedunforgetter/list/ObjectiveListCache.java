@@ -23,13 +23,13 @@ public class ObjectiveListCache
 {
     public static final String LIST_FILENAME = "TaskList.json";
 
-    //All tasks to be done for today, sorted by ids. Or tomorrow. Or within a year. It's up to the user to decide
+    //All objectives to be done for today, sorted by ids. Or tomorrow. Or within a year. It's up to the user to decide
     private ArrayList<EnlistedObjective> mEnlistedObjectives;
 
     //The view holder of the cached data
     private ObjectiveListCache.ListCacheViewHolder mListViewHolder;
 
-    //Constructs a new task list
+    //Constructs a new objective list
     public ObjectiveListCache()
     {
         mEnlistedObjectives = new ArrayList<>();
@@ -80,9 +80,8 @@ public class ObjectiveListCache
             }
             else
             {
-                //OH NO! THE TASK ALREADY EXISTS! WE CAN LOSE THIS TASK! STOP EVERYTHING, DON'T LET IT SAVE
-                //Or not, lol
-                //throw new RuntimeException("Task already exists");
+                //OH NO! THE OBJECTIVE ALREADY EXISTS! WE CAN LOSE THIS OBJECTIVE! STOP EVERYTHING, DON'T LET IT SAVE
+                //Or not, lol. It's oki, the cache will be invalidated back and nothing is gonna be lost
                 return false;
             }
         }
@@ -177,13 +176,13 @@ public class ObjectiveListCache
             String fileContents = listReadFile.read();
             JSONObject jsonObject = new JSONObject(fileContents);
 
-            JSONArray tasksJsonArray = jsonObject.getJSONArray("TASKS");
-            for(int i = 0; i < tasksJsonArray.length(); i++)
+            JSONArray objectivesJsonArray = jsonObject.getJSONArray("TASKS");
+            for(int i = 0; i < objectivesJsonArray.length(); i++)
             {
-                JSONObject taskObject = tasksJsonArray.optJSONObject(i);
-                if(taskObject != null)
+                JSONObject objectiveObject = objectivesJsonArray.optJSONObject(i);
+                if(objectiveObject != null)
                 {
-                    EnlistedObjective objective = EnlistedObjective.fromJSON(taskObject);
+                    EnlistedObjective objective = EnlistedObjective.fromJSON(objectiveObject);
                     if(objective != null)
                     {
                         enlistedObjectives.add(objective);
@@ -214,15 +213,15 @@ public class ObjectiveListCache
     {
         try
         {
-            JSONObject jsonObject    = new JSONObject();
-            JSONArray tasksJsonArray = new JSONArray();
+            JSONObject jsonObject          = new JSONObject();
+            JSONArray  objectivesJsonArray = new JSONArray();
 
             for(EnlistedObjective objective: mEnlistedObjectives)
             {
-                tasksJsonArray.put(objective.toJSON());
+                objectivesJsonArray.put(objective.toJSON());
             }
 
-            jsonObject.put("TASKS", tasksJsonArray);
+            jsonObject.put("TASKS", objectivesJsonArray);
 
             listWriteFile.write(jsonObject.toString());
         }
@@ -259,16 +258,16 @@ public class ObjectiveListCache
         {
             mContext = viewGroup.getContext();
 
-            View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.layout_task_view, viewGroup, false);
+            View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.layout_objectives_view, viewGroup, false);
             return new ObjectiveViewHolder(view);
         }
 
         @Override
-        public void onBindViewHolder(@NonNull ObjectiveViewHolder taskViewHolder, int position)
+        public void onBindViewHolder(@NonNull ObjectiveViewHolder objectiveViewHolder, int position)
         {
-            taskViewHolder.mTextView.setText(mEnlistedObjectives.get(position).getName());
+            objectiveViewHolder.mTextView.setText(mEnlistedObjectives.get(position).getName());
 
-            taskViewHolder.mCheckbox.setOnClickListener(view ->
+            objectiveViewHolder.mCheckbox.setOnClickListener(view ->
             {
                 String configFolder = Objects.requireNonNull(mContext.getExternalFilesDir("/app")).getAbsolutePath();
 
@@ -280,11 +279,11 @@ public class ObjectiveListCache
                 transactionDispatcher.finishObjectiveTransaction(configFolder, objectiveToRemove, LocalDateTime.now());
             });
 
-            taskViewHolder.mParentLayout.setOnClickListener(view -> Toast.makeText(mContext, mEnlistedObjectives.get(position).getDescription(), Toast.LENGTH_LONG).show());
+            objectiveViewHolder.mParentLayout.setOnClickListener(view -> Toast.makeText(mContext, mEnlistedObjectives.get(position).getDescription(), Toast.LENGTH_LONG).show());
 
-            taskViewHolder.mCheckbox.setChecked(false);
+            objectiveViewHolder.mCheckbox.setChecked(false);
 
-            taskViewHolder.setObjectiveMetadata(ObjectiveListCache.this, ObjectiveListCache.this.mEnlistedObjectives.get(position).getId());
+            objectiveViewHolder.setObjectiveMetadata(ObjectiveListCache.this, ObjectiveListCache.this.mEnlistedObjectives.get(position).getId());
         }
 
         @Override

@@ -6,12 +6,12 @@ Scheduler update happens:
 - After opening the application
 - Every hour on schedule. The user can't change the period.
 
-If during the update the scheduler finds a task that has list add date greater or equal the current date, it adds it to the main list and removes it from the scheduler.
+If during the update the scheduler finds an objective that has list add date greater or equal the current date, it adds it to the main list and removes it from the scheduler.
 
-After removing the task from the scheduler:
-- If it's a one-time task (repeat probability is 0), nothing else is needed.
-- If it's a strictly periodic task (repeat probability is 1), the new task is added to the scheduler. It has the same creation date, but the list add date is the current one + period.
-- If it's not a strictly periodic task (0 < repeat probability < 1), then ULTRARANDOM ALGORITHM decides the next list add date and a new task with it is added to the scheduler.
+After removing the objective from the scheduler:
+- If it's a one-time objective (repeat probability is 0), nothing else is needed.
+- If it's a strictly periodic objective (repeat probability is 1), the new objective is added to the scheduler. It has the same creation date, but the list add date is the current one + period.
+- If it's not a strictly periodic objective (0 < repeat probability < 1), then ULTRARANDOM ALGORITHM decides the next list add date and a new objective with it is added to the scheduler.
 
 */
 
@@ -40,10 +40,8 @@ import org.json.JSONObject;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Vector;
 
-//The class to schedule all deferred tasks. The model for the scheduler UI
+//The class to schedule all deferred objectives. The model for the scheduler UI
 public class ObjectiveSchedulerCache
 {
     public static final String SCHEDULER_FILENAME = "TaskScheduler.json";
@@ -59,7 +57,7 @@ public class ObjectiveSchedulerCache
     //The view holder of the cached data
     private SchedulerCacheViewHolder mSchedulerViewHolder;
 
-    //Creates a new task scheduler that is bound to mainList
+    //Creates a new objective scheduler
     public ObjectiveSchedulerCache()
     {
         mSchedulerElements = new ArrayList<>();
@@ -71,12 +69,12 @@ public class ObjectiveSchedulerCache
         recyclerView.setAdapter(mSchedulerViewHolder);
     }
 
-    //Updates the task scheduler. Returns the list of objectives ready to-do
+    //Updates the objective scheduler. Returns the list of objectives ready to-do
     public ArrayList<EnlistedObjective> dumpReadyObjectives(final ObjectiveListCache listCache, LocalDateTime enlistDateTime)
     {
         ArrayList<EnlistedObjective> result = new ArrayList<>();
 
-        ArrayList<SchedulerElement> changedElements = new ArrayList<>(); //Rebuild task pool list after each update event
+        ArrayList<SchedulerElement> changedElements = new ArrayList<>(); //Rebuild objective source list after each update event
         for(SchedulerElement element: mSchedulerElements)
         {
             if(element instanceof ScheduledObjective)
@@ -131,7 +129,7 @@ public class ObjectiveSchedulerCache
         return result;
     }
 
-    //Loads tasks from JSON config file
+    //Loads objectives from JSON config file
     public boolean invalidate(LockedReadFile schedulerReadFile)
     {
         mSchedulerElements.clear();
@@ -195,7 +193,7 @@ public class ObjectiveSchedulerCache
         return true;
     }
 
-    //Saves scheduled tasks in JSON config file
+    //Saves scheduled objectives in JSON config file
     public boolean flush(LockedWriteFile schedulerWriteFile)
     {
         try
@@ -203,7 +201,7 @@ public class ObjectiveSchedulerCache
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("VERSION", SCHEDULER_VERSION_CURRENT);
 
-            JSONArray tasksJsonArray = new JSONArray();
+            JSONArray objectivesJsonArray = new JSONArray();
 
             for(SchedulerElement element: mSchedulerElements)
             {
@@ -212,10 +210,10 @@ public class ObjectiveSchedulerCache
                 elementObject.put("Type", element.getElementName());
                 elementObject.put("Data", element.toJSON());
 
-                tasksJsonArray.put(element.toJSON());
+                objectivesJsonArray.put(element.toJSON());
             }
 
-            jsonObject.put("ELEMENTS", tasksJsonArray);
+            jsonObject.put("ELEMENTS", objectivesJsonArray);
 
             schedulerWriteFile.write(jsonObject.toString());
         }
@@ -228,7 +226,7 @@ public class ObjectiveSchedulerCache
         return true;
     }
 
-    //Creates a new explicit task chain
+    //Creates a new objective chain
     public boolean addObjectiveChain(ObjectivePool pool, String name, String description)
     {
         long chainId = getMaxChainId() + 1;
@@ -256,7 +254,7 @@ public class ObjectiveSchedulerCache
         return true;
     }
 
-    //Creates a new explicit task pool
+    //Creates a new objective pool
     public boolean addObjectivePool(String name, String description)
     {
         long poolId = getMaxPoolId() + 1;
@@ -292,7 +290,7 @@ public class ObjectiveSchedulerCache
         else if(pool == null)
         {
             //Chain is provided, add the objective there
-            chain.addTaskToChain(scheduledObjective);
+            chain.addObjectiveToChain(scheduledObjective);
 
             if(mSchedulerViewHolder != null)
             {
@@ -835,7 +833,7 @@ public class ObjectiveSchedulerCache
         }
 
         @Override
-        public void onBindViewHolder(@NonNull SchedulerElementViewHolder taskViewHolder, int position)
+        public void onBindViewHolder(@NonNull SchedulerElementViewHolder objectiveViewHolder, int position)
         {
             String viewName = "";
             final ValueHolder<String> viewDescription = new ValueHolder<>("");
@@ -875,10 +873,10 @@ public class ObjectiveSchedulerCache
                 iconId = R.drawable.ic_scheduler_objective;
             }
 
-            taskViewHolder.mTextView.setText(viewName);
-            taskViewHolder.mIconView.setImageResource(iconId);
+            objectiveViewHolder.mTextView.setText(viewName);
+            objectiveViewHolder.mIconView.setImageResource(iconId);
 
-            taskViewHolder.setSourceMetadata(ObjectiveSchedulerCache.this, schedulerElement);
+            objectiveViewHolder.setSourceMetadata(ObjectiveSchedulerCache.this, schedulerElement);
         }
 
         @Override

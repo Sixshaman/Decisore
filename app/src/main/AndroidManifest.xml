@@ -12,7 +12,7 @@
             android:theme="@style/AppTheme">
         <activity
                 android:name=".scheduler.SchedulerActivity"
-                android:label="@string/title_activity_task_scheduler"
+                android:label="@string/title_activity_objective_scheduler"
                 android:theme="@style/AppTheme.NoActionBar">
         </activity>
         <activity android:name=".archive.ArchiveActivity">

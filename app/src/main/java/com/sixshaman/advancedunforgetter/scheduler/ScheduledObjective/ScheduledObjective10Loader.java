@@ -30,7 +30,7 @@ public class ScheduledObjective10Loader implements ScheduledObjectiveLoader
         String repeatDurationString    = jsonObject.optString("RepeatDuration");
         String repeatProbabilityString = jsonObject.optString("RepeatProbability");
 
-        ArrayList<String> taskTags = new ArrayList<>();
+        ArrayList<String> objectiveTags = new ArrayList<>();
         JSONArray tagsJSONArray = jsonObject.optJSONArray("Tags");
         if(tagsJSONArray != null)
         {
@@ -39,7 +39,7 @@ public class ScheduledObjective10Loader implements ScheduledObjectiveLoader
                 String tagStr = (String)tagsJSONArray.opt(i);
                 if(!tagStr.isEmpty())
                 {
-                    taskTags.add(tagStr);
+                    objectiveTags.add(tagStr);
                 }
             }
         }
@@ -108,7 +108,7 @@ public class ScheduledObjective10Loader implements ScheduledObjectiveLoader
         if(id != -1 && !name.isEmpty() && createdDate != null && scheduledDate != null && repeatDurationMinutes != null && repeatProbability != null)
         {
             Duration repeatDuration = Duration.ofMinutes(repeatDurationMinutes);
-            objective = new ScheduledObjective(id, name, description, createdDate, scheduledDate, taskTags, repeatDuration, repeatProbability);
+            objective = new ScheduledObjective(id, name, description, createdDate, scheduledDate, objectiveTags, repeatDuration, repeatProbability);
 
             if(regularScheduleDate != null)
             {

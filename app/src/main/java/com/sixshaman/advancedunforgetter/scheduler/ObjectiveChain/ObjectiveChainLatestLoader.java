@@ -20,20 +20,20 @@ public class ObjectiveChainLatestLoader implements ObjectiveChainLoader
 
             ObjectiveChain objectiveChain = new ObjectiveChain(id, name, description);
 
-            JSONArray tasksJsonArray = jsonObject.getJSONArray("Objectives");
-            if(tasksJsonArray != null)
+            JSONArray objectivesJsonArray = jsonObject.getJSONArray("Objectives");
+            if(objectivesJsonArray != null)
             {
-                for(int i = 0; i < tasksJsonArray.length(); i++)
+                for(int i = 0; i < objectivesJsonArray.length(); i++)
                 {
-                    JSONObject taskObject = tasksJsonArray.optJSONObject(i);
-                    if(taskObject != null)
+                    JSONObject objectiveObject = objectivesJsonArray.optJSONObject(i);
+                    if(objectiveObject != null)
                     {
                         ScheduledObjectiveLatestLoader objectiveLatestLoader = new ScheduledObjectiveLatestLoader();
 
-                        ScheduledObjective objective = objectiveLatestLoader.fromJSON(taskObject);
+                        ScheduledObjective objective = objectiveLatestLoader.fromJSON(objectiveObject);
                         if(objective != null)
                         {
-                            objectiveChain.addTaskToChain(objective);
+                            objectiveChain.addObjectiveToChain(objective);
                         }
                     }
                 }

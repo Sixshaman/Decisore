@@ -160,7 +160,7 @@ public class SchedulerFragment extends Fragment
         NewObjectiveDialogFragment newObjectiveDialogFragment = new NewObjectiveDialogFragment();
         newObjectiveDialogFragment.setSchedulerCache(mSchedulerCache);
 
-        newObjectiveDialogFragment.show(getParentFragmentManager(), getString(R.string.newTaskDialogName));
+        newObjectiveDialogFragment.show(getParentFragmentManager(), getString(R.string.newObjectiveDialogName));
     }
 
     private void collapseFab(final ImageButton fab, final View fabAddPool, final View fabAddChain, final View fabAddObjective)

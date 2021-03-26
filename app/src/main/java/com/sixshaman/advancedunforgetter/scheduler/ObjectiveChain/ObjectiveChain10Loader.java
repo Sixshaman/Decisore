@@ -3,7 +3,6 @@ package com.sixshaman.advancedunforgetter.scheduler.ObjectiveChain;
 import com.sixshaman.advancedunforgetter.scheduler.ObjectiveSchedulerCache;
 import com.sixshaman.advancedunforgetter.scheduler.ScheduledObjective.ScheduledObjective;
 import com.sixshaman.advancedunforgetter.scheduler.ScheduledObjective.ScheduledObjective10Loader;
-import com.sixshaman.advancedunforgetter.scheduler.ScheduledObjective.ScheduledObjectiveLatestLoader;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -28,20 +27,20 @@ public class ObjectiveChain10Loader implements ObjectiveChainLoader
             long chainId = mSchedulerCache.getMaxChainId() + 1;
             ObjectiveChain objectiveChain = new ObjectiveChain(chainId, name, description);
 
-            JSONArray tasksJsonArray = jsonObject.getJSONArray("Tasks");
-            if(tasksJsonArray != null)
+            JSONArray objectivesJsonArray = jsonObject.getJSONArray("Tasks");
+            if(objectivesJsonArray != null)
             {
                 ScheduledObjective10Loader objective10Loader = new ScheduledObjective10Loader();
 
-                for(int i = 0; i < tasksJsonArray.length(); i++)
+                for(int i = 0; i < objectivesJsonArray.length(); i++)
                 {
-                    JSONObject taskObject = tasksJsonArray.optJSONObject(i);
-                    if(taskObject != null)
+                    JSONObject objectiveObject = objectivesJsonArray.optJSONObject(i);
+                    if(objectiveObject != null)
                     {
-                        ScheduledObjective task = objective10Loader.fromJSON(taskObject);
-                        if(task != null)
+                        ScheduledObjective objective = objective10Loader.fromJSON(objectiveObject);
+                        if(objective != null)
                         {
-                            objectiveChain.addTaskToChain(task);
+                            objectiveChain.addObjectiveToChain(objective);
                         }
                     }
                 }

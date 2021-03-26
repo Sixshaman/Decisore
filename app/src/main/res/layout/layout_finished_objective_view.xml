@@ -4,9 +4,9 @@
                                                    android:layout_width="match_parent"
                                                    android:layout_height="wrap_content"
                                                    android:padding="10dp"
-                                                   android:id="@+id/layoutFinishedTaskView">
+                                                   android:id="@+id/layoutFinishedObjectiveView">
 
-    <TextView android:id="@+id/textFinishedTaskName"
+    <TextView android:id="@+id/textFinishedObjectiveName"
               android:text="@string/placeholderTask"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"

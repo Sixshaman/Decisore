@@ -18,7 +18,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-//The task archive that contains all the finished tasks
+//The objective archive that contains all the finished objectives
 public class ObjectiveArchiveCache
 {
     public static final String ARCHIVE_FILENAME = "TaskArchive.json";
@@ -29,7 +29,7 @@ public class ObjectiveArchiveCache
     //The view holder of the cached data
     private ArchiveCacheViewHolder mArchiveViewHolder;
 
-    //Creates a new task archive
+    //Creates a new objective archive
     public ObjectiveArchiveCache()
     {
         mFinishedObjectives = new ArrayList<>();
@@ -67,13 +67,13 @@ public class ObjectiveArchiveCache
             String fileContents = archiveReadFile.read();
             JSONObject jsonObject = new JSONObject(fileContents);
 
-            JSONArray tasksJsonArray = jsonObject.getJSONArray("FINISHED_TASKS");
-            for(int i = 0; i < tasksJsonArray.length(); i++)
+            JSONArray objectiveJsonArray = jsonObject.getJSONArray("FINISHED_TASKS");
+            for(int i = 0; i < objectiveJsonArray.length(); i++)
             {
-                JSONObject taskObject = tasksJsonArray.optJSONObject(i);
-                if(taskObject != null)
+                JSONObject objectiveObject = objectiveJsonArray.optJSONObject(i);
+                if(objectiveObject != null)
                 {
-                    ArchivedObjective objective = ArchivedObjective.fromJSON(taskObject);
+                    ArchivedObjective objective = ArchivedObjective.fromJSON(objectiveObject);
                     if(objective != null)
                     {
                         finishedObjectives.add(objective);
@@ -101,15 +101,15 @@ public class ObjectiveArchiveCache
     {
         try
         {
-            JSONObject jsonObject    = new JSONObject();
-            JSONArray tasksJsonArray = new JSONArray();
+            JSONObject jsonObject        = new JSONObject();
+            JSONArray objectiveJsonArray = new JSONArray();
 
-            for(ArchivedObjective task: mFinishedObjectives)
+            for(ArchivedObjective objective: mFinishedObjectives)
             {
-                tasksJsonArray.put(task.toJSON());
+                objectiveJsonArray.put(objective.toJSON());
             }
 
-            jsonObject.put("FINISHED_TASKS", tasksJsonArray);
+            jsonObject.put("FINISHED_TASKS", objectiveJsonArray);
 
             archiveWriteFile.write(jsonObject.toString());
         }
@@ -133,16 +133,16 @@ public class ObjectiveArchiveCache
         {
             mContext = viewGroup.getContext();
 
-            View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.layout_finished_task_view, viewGroup, false);
+            View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.layout_finished_objective_view, viewGroup, false);
             return new ObjectiveArchiveCache.FinishedObjectiveViewHolder(view);
         }
 
         @Override
-        public void onBindViewHolder(@NonNull ObjectiveArchiveCache.FinishedObjectiveViewHolder taskViewHolder, int position)
+        public void onBindViewHolder(@NonNull ObjectiveArchiveCache.FinishedObjectiveViewHolder objectiveViewHolder, int position)
         {
-            taskViewHolder.mTextView.setText(mFinishedObjectives.get(position).getName());
+            objectiveViewHolder.mTextView.setText(mFinishedObjectives.get(position).getName());
 
-            taskViewHolder.mParentLayout.setOnClickListener(view -> Toast.makeText(mContext, mFinishedObjectives.get(position).getDescription(), Toast.LENGTH_LONG).show());
+            objectiveViewHolder.mParentLayout.setOnClickListener(view -> Toast.makeText(mContext, mFinishedObjectives.get(position).getDescription(), Toast.LENGTH_LONG).show());
         }
 
         @Override
@@ -161,9 +161,9 @@ public class ObjectiveArchiveCache
         {
             super(itemView);
 
-            mTextView = itemView.findViewById(R.id.textFinishedTaskName);
+            mTextView = itemView.findViewById(R.id.textFinishedObjectiveName);
 
-            mParentLayout = itemView.findViewById(R.id.layoutFinishedTaskView);
+            mParentLayout = itemView.findViewById(R.id.layoutFinishedObjectiveView);
         }
     }
 }

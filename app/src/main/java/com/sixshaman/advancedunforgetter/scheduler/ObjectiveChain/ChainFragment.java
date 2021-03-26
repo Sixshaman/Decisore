@@ -86,7 +86,7 @@ public class ChainFragment extends Fragment
     {
         mObjectiveChainId = savedInstanceState.getLong("EyyDee");
 
-        FloatingActionButton buttonNewObjective = mFragmentView.findViewById(R.id.addNewTaskToChain);
+        FloatingActionButton buttonNewObjective = mFragmentView.findViewById(R.id.addNewObjectiveToChain);
         buttonNewObjective.setOnClickListener(this::addObjective);
     }
 
@@ -96,6 +96,6 @@ public class ChainFragment extends Fragment
         newObjectiveDialogFragment.setSchedulerCache(mSchedulerCache);
         newObjectiveDialogFragment.setChainToAddTo(mObjectiveChain);
 
-        newObjectiveDialogFragment.show(getParentFragmentManager(), getString(R.string.newTaskDialogName));
+        newObjectiveDialogFragment.show(getParentFragmentManager(), getString(R.string.newObjectiveDialogName));
     }
 }

@@ -65,12 +65,12 @@ public class NewObjectiveDialogFragment extends DialogFragment
         LayoutInflater inflater = activity.getLayoutInflater();
 
         builder.setView(inflater.inflate(R.layout.layout_dialog_new_objective, null));
-        builder.setTitle(R.string.newTaskDialogName);
+        builder.setTitle(R.string.newObjectiveDialogName);
 
-        builder.setPositiveButton(R.string.createTask, (dialog, id) ->
+        builder.setPositiveButton(R.string.createObjective, (dialog, id) ->
         {
-            final EditText editTextName         = resultDialog.getValue().findViewById(R.id.editTaskName);
-            final EditText editTextNDescription = resultDialog.getValue().findViewById(R.id.editTaskDescription);
+            final EditText editTextName         = resultDialog.getValue().findViewById(R.id.editObjectiveName);
+            final EditText editTextNDescription = resultDialog.getValue().findViewById(R.id.editObjectiveDescription);
 
             final Spinner  scheduleSpinner    = resultDialog.getValue().findViewById(R.id.spinnerObjectiveSchedule);
             final Spinner  repeatSpinner      = resultDialog.getValue().findViewById(R.id.spinnerObjectiveRepeats);
@@ -80,7 +80,7 @@ public class NewObjectiveDialogFragment extends DialogFragment
             String nameText = editTextName.getEditableText().toString();
             if(nameText.isEmpty())
             {
-                Toast toast = Toast.makeText(activity, R.string.invalidTaskName, Toast.LENGTH_SHORT);
+                Toast toast = Toast.makeText(activity, R.string.invalidObjectiveName, Toast.LENGTH_SHORT);
                 toast.show();
             }
             else
