@@ -1,7 +1,8 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Decisore</string>
-    <string name="title_activity_objective_list">Today objectives</string>\
+    <string name="title_activity_objective_list">Today objectives</string>
     <string name="title_activity_objective_archive">Finished objectives</string>
+    <string name="title_activity_objective_list_append"> today objectives</string>
     <string name="placeholderTask">Objective</string>
     <string name="taskName">Name</string>
     <string name="taskDescription">Description</string>
