@@ -6,6 +6,7 @@ import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.*;
 import androidx.fragment.app.DialogFragment;
 import com.sixshaman.advancedunforgetter.R;
@@ -67,6 +68,11 @@ public class NewObjectiveDialogFragment extends DialogFragment
         builder.setView(inflater.inflate(R.layout.layout_dialog_new_objective, null));
         builder.setTitle(R.string.newObjectiveDialogName);
 
+        LocalDateTime objectiveCreateDate = LocalDateTime.now();
+
+        //I blamed Java for necessity to make hacks like ValueHolder... Then I learned about RefCell in Rust. Lol. Apparently good languages have this too
+        final ValueHolder<LocalDateTime> objectiveScheduleDate = new ValueHolder<>(objectiveCreateDate);
+
         builder.setPositiveButton(R.string.createObjective, (dialog, id) ->
         {
             final EditText editTextName         = resultDialog.getValue().findViewById(R.id.editObjectiveName);
@@ -86,9 +92,6 @@ public class NewObjectiveDialogFragment extends DialogFragment
             else
             {
                 String descriptionText = editTextNDescription.getEditableText().toString();
-
-                LocalDateTime objectiveCreateDate                      = LocalDateTime.now();
-                final ValueHolder<LocalDateTime> objectiveScheduleDate = new ValueHolder<>(objectiveCreateDate);
 
                 Duration objectiveRepeatDuration = Duration.ZERO;
                 float objectiveRepeatProbability = 0.0f;
@@ -115,16 +118,7 @@ public class NewObjectiveDialogFragment extends DialogFragment
                     }
                     case 3: //Custom
                     {
-                        DatePickerDialog datePickerDialog = new DatePickerDialog(activity);
-                        datePickerDialog.setOnDateSetListener((datePicker, year, month, day) ->
-                        {
-                            //Day starts at 6 AM
-                            //Also Java numerates months from 0, not from 1
-                            LocalDateTime dateTime = LocalDateTime.of(year, month + 1, day, 6, 0, 0);
-                            objectiveScheduleDate.setValue(dateTime);
-                        });
-
-                        datePickerDialog.show();
+                        //Set in setOnItemClickListener
                         break;
                     }
                     default:
@@ -205,6 +199,28 @@ public class NewObjectiveDialogFragment extends DialogFragment
         });
 
         resultDialog.setValue(builder.create());
+        resultDialog.getValue().setOnShowListener(dialogInterface ->
+        {
+            final Spinner scheduleSpinner = resultDialog.getValue().findViewById(R.id.spinnerObjectiveSchedule);
+
+            scheduleSpinner.setOnItemClickListener((adapterView, view, index, l) ->
+            {
+                if(index == 3) //Custom date
+                {
+                    DatePickerDialog datePickerDialog = new DatePickerDialog(activity);
+                    datePickerDialog.setOnDateSetListener((datePicker, year, month, day) ->
+                    {
+                        //Day starts at 6 AM
+                        //Also Java numerates months from 0, not from 1
+                        LocalDateTime dateTime = LocalDateTime.of(year, month + 1, day, 6, 0, 0);
+                        objectiveScheduleDate.setValue(dateTime);
+                    });
+
+                    datePickerDialog.show();
+                }
+            });
+        });
+
         return resultDialog.getValue();
     }
 }
