@@ -19,7 +19,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
-public class ListActivity extends AppCompatActivity
+public class ListActivity extends AppCompatActivity implements ListObjectiveCountListener
 {
     //Objective list
     private ObjectiveListCache mListCache;
@@ -32,11 +32,10 @@ public class ListActivity extends AppCompatActivity
         Toolbar toolbar = findViewById(R.id.toolbarObjectiveList);
         setSupportActionBar(toolbar);
 
-        //The only way to get the name for the application right
-        setTitle(R.string.title_activity_objective_list);
-
         FloatingActionButton buttonNewObjective = findViewById(R.id.addNewObjective);
         buttonNewObjective.setOnClickListener(view -> openAddObjectiveDialog());
+
+        setTitle(R.string.title_activity_objective_list);
     }
 
     @Override
@@ -45,6 +44,8 @@ public class ListActivity extends AppCompatActivity
         super.onResume();
 
         mListCache = new ObjectiveListCache();
+
+        mListCache.setObjectiveCountListener(this);
 
         String configFolder = Objects.requireNonNull(getExternalFilesDir("/app")).getAbsolutePath();
 
@@ -98,5 +99,11 @@ public class ListActivity extends AppCompatActivity
         newObjectiveDialogFragment.setListCache(mListCache);
 
         newObjectiveDialogFragment.show(getSupportFragmentManager(), getString(R.string.newObjectiveDialogName));
+    }
+
+    @Override
+    public void onListObjectiveCountChanged(int newObjectiveCount)
+    {
+        setTitle(newObjectiveCount + getString(R.string.title_activity_objective_list_append));
     }
 }

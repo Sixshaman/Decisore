@@ -29,16 +29,27 @@ public class ObjectiveListCache
     //The view holder of the cached data
     private ObjectiveListCache.ListCacheViewHolder mListViewHolder;
 
+    //The listener for objective count changes
+    private ListObjectiveCountListener mObjectiveCountListener;
+
     //Constructs a new objective list
     public ObjectiveListCache()
     {
         mEnlistedObjectives = new ArrayList<>();
+
+        mListViewHolder         = null;
+        mObjectiveCountListener = null;
     }
 
     public void attachToView(RecyclerView recyclerView)
     {
         mListViewHolder = new ObjectiveListCache.ListCacheViewHolder();
         recyclerView.setAdapter(mListViewHolder);
+    }
+
+    public void setObjectiveCountListener(ListObjectiveCountListener listener)
+    {
+        mObjectiveCountListener = listener;
     }
 
     //Adds an objective to the list
@@ -97,6 +108,11 @@ public class ObjectiveListCache
             mListViewHolder.notifyItemRangeChanged(addPosition, mListViewHolder.getItemCount());
         }
 
+        if(mObjectiveCountListener != null)
+        {
+            mObjectiveCountListener.onListObjectiveCountChanged(mEnlistedObjectives.size());
+        }
+
         return true;
     }
 
@@ -116,6 +132,11 @@ public class ObjectiveListCache
         {
             mListViewHolder.notifyItemRemoved(index);
             mListViewHolder.notifyItemRangeChanged(index, mListViewHolder.getItemCount());
+        }
+
+        if(mObjectiveCountListener != null)
+        {
+            mObjectiveCountListener.onListObjectiveCountChanged(mEnlistedObjectives.size());
         }
 
         return true;
@@ -203,6 +224,11 @@ public class ObjectiveListCache
         if(mListViewHolder != null)
         {
             mListViewHolder.notifyDataSetChanged();
+        }
+
+        if(mObjectiveCountListener != null)
+        {
+            mObjectiveCountListener.onListObjectiveCountChanged(mEnlistedObjectives.size());
         }
 
         return true;
