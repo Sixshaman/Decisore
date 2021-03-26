@@ -50,8 +50,8 @@ public class ObjectiveArchiveCache
         mFinishedObjectives.add(objective);
         if(mArchiveViewHolder != null)
         {
-            mArchiveViewHolder.notifyItemInserted(mFinishedObjectives.size() - 1);
-            mArchiveViewHolder.notifyItemRangeChanged(mFinishedObjectives.size() - 1, mArchiveViewHolder.getItemCount());
+            mArchiveViewHolder.notifyItemInserted(0);
+            mArchiveViewHolder.notifyItemRangeChanged(0, mArchiveViewHolder.getItemCount());
         }
 
         return true;
@@ -142,7 +142,8 @@ public class ObjectiveArchiveCache
         {
             objectiveViewHolder.mTextView.setText(mFinishedObjectives.get(position).getName());
 
-            objectiveViewHolder.mParentLayout.setOnClickListener(view -> Toast.makeText(mContext, mFinishedObjectives.get(position).getDescription(), Toast.LENGTH_LONG).show());
+            ArchivedObjective objective = mFinishedObjectives.get(mFinishedObjectives.size() - position - 1); //Archive is sorted from latest to oldest
+            objectiveViewHolder.mParentLayout.setOnClickListener(view -> Toast.makeText(mContext, objective.getDescription(), Toast.LENGTH_LONG).show());
         }
 
         @Override
