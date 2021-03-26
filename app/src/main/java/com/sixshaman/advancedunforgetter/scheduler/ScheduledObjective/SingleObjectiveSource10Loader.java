@@ -7,8 +7,8 @@ public class SingleObjectiveSource10Loader implements ScheduledObjectiveLoader
 {
     public ScheduledObjective fromJSON(JSONObject jsonObject)
     {
-        JSONObject taskJsonObject = jsonObject.optJSONObject("Task");
-        if(taskJsonObject == null)
+        JSONObject objectiveJsonObject = jsonObject.optJSONObject("Task");
+        if(objectiveJsonObject == null)
         {
             return null;
         }

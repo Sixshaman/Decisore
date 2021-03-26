@@ -88,10 +88,10 @@ public class ObjectivePool10Loader implements ObjectivePoolLoader
                             {
                                 ObjectiveChain10Loader chain10Loader = new ObjectiveChain10Loader(mSchedulerCache);
 
-                                ObjectiveChain taskChain = chain10Loader.fromJSON(sourceData);
-                                if(taskChain != null)
+                                ObjectiveChain objectiveChain = chain10Loader.fromJSON(sourceData);
+                                if(objectiveChain != null)
                                 {
-                                    objectivePool.addObjectiveSource(taskChain);
+                                    objectivePool.addObjectiveSource(objectiveChain);
                                 }
                             }
                         }

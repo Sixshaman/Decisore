@@ -40,7 +40,7 @@ public class ObjectiveChain implements PoolElement
     //The list of ids of all objectives once provided by the chain
     HashSet<Long> mObjectiveIdHistory;
 
-    //Creates a new task chain
+    //Creates a new objective chain
     public ObjectiveChain(long id, String name, String description)
     {
         mId = id;
@@ -58,8 +58,8 @@ public class ObjectiveChain implements PoolElement
         recyclerView.setAdapter(mChainViewHolder);
     }
 
-    //Adds a task to the chain
-    public void addTaskToChain(ScheduledObjective objective)
+    //Adds an objective to the chain
+    public void addObjectiveToChain(ScheduledObjective objective)
     {
         mObjectives.addLast(objective);
         mObjectiveIdHistory.add(objective.getId());
@@ -124,45 +124,37 @@ public class ObjectiveChain implements PoolElement
     @Override
     public JSONObject toJSON()
     {
-        //Never save finished task sources
-        if(mObjectives == null)
+        JSONObject result = new JSONObject();
+
+        try
         {
-            return null;
-        }
-        else
-        {
-            JSONObject result = new JSONObject();
+            result.put("Id", mId);
 
-            try
+            result.put("Name",        mName);
+            result.put("Description", mDescription);
+
+            JSONArray objectivesArray = new JSONArray();
+            for(ScheduledObjective objective: mObjectives)
             {
-                result.put("Id", mId);
-
-                result.put("Name",        mName);
-                result.put("Description", mDescription);
-
-                JSONArray objectivesArray = new JSONArray();
-                for(ScheduledObjective objective: mObjectives)
-                {
-                    objectivesArray.put(objective.toJSON());
-                }
-
-                result.put("Objectives", objectivesArray);
-
-                JSONArray idHistoryArray = new JSONArray();
-                for(Long objectiveId: mObjectiveIdHistory)
-                {
-                    idHistoryArray.put(objectiveId.longValue());
-                }
-
-                result.put("ObjectiveHistory", idHistoryArray);
-            }
-            catch (JSONException e)
-            {
-                e.printStackTrace();
+                objectivesArray.put(objective.toJSON());
             }
 
-            return result;
+            result.put("Objectives", objectivesArray);
+
+            JSONArray idHistoryArray = new JSONArray();
+            for(Long objectiveId: mObjectiveIdHistory)
+            {
+                idHistoryArray.put(objectiveId.longValue());
+            }
+
+            result.put("ObjectiveHistory", idHistoryArray);
         }
+        catch (JSONException e)
+        {
+            e.printStackTrace();
+        }
+
+        return result;
     }
 
     public int getObjectiveCount()

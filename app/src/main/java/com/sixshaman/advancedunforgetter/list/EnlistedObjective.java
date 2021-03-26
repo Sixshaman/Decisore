@@ -15,38 +15,38 @@ import java.util.ArrayList;
 
 public class EnlistedObjective implements Comparable<Long>
 {
-    private static final String TAG = "EnlistedTask";
+    private static final String TAG = "EnlistedObjective";
 
-    private static final String JSON_TASK_ID          = "Id";
-    private static final String JSON_TASK_NAME        = "Name";
-    private static final String JSON_TASK_DESCRIPTION = "Description";
-    private static final String JSON_TASK_TAGS        = "Tags";
-    private static final String JSON_TASK_CREATE_DATE = "DateCreated";
-    private static final String JSON_TASK_ADD_DATE    = "DateAdded";
-    private static final String JSON_TASK_CHARM       = "Charm";
+    private static final String JSON_OBJECTIVE_ID = "Id";
+    private static final String JSON_OBJECTIVE_NAME = "Name";
+    private static final String JSON_OBJECTIVE_DESCRIPTION = "Description";
+    private static final String JSON_OBJECTIVE_TAGS = "Tags";
+    private static final String JSON_OBJECTIVE_CREATE_DATE = "DateCreated";
+    private static final String JSON_OBJECTIVE_ADD_DATE = "DateAdded";
+    private static final String JSON_OBJECTIVE_CHARM = "Charm";
 
-    //The task ID
+    //The objective ID
     private long mId;
 
-    //The date when the task was created and added to the task scheduler
+    //The date when the objective was created and added to the objective scheduler
     private LocalDateTime mDateCreated;
 
-    //The date when the task was added to the main task list
+    //The date when the objective was added to the main objective list
     private LocalDateTime mDateEnlisted;
 
-    //The task name
+    //The objective name
     private String mName;
 
-    //The task description
+    //The objective description
     private String mDescription;
 
-    //Task tags (why not?)
+    //Objective tags (why not?)
     private ArrayList<String> mTags;
 
-    //The task rating / how much the user likes the task. Only for sorting purposes
+    //The objective rating / how much the user likes the objective. Only for sorting purposes
     private float mCharm;
 
-    //Creates a new unfinished, not added to the list task
+    //Creates a new unfinished, not added to the list objective
     public EnlistedObjective(long id, LocalDateTime creationDate, LocalDateTime addedDate, String name, String description, ArrayList<String> tags)
     {
         mId = id;
@@ -69,36 +69,36 @@ public class EnlistedObjective implements Comparable<Long>
         mCharm = 0.5f;
     }
 
-    //Serializes the task into its JSON representation
+    //Serializes the objective into its JSON representation
     public JSONObject toJSON()
     {
         JSONObject result = new JSONObject();
 
         try
         {
-            result.put(JSON_TASK_ID, Long.toString(mId));
+            result.put(JSON_OBJECTIVE_ID, Long.toString(mId));
 
-            result.put(JSON_TASK_NAME,        mName);
-            result.put(JSON_TASK_DESCRIPTION, mDescription);
+            result.put(JSON_OBJECTIVE_NAME,        mName);
+            result.put(JSON_OBJECTIVE_DESCRIPTION, mDescription);
 
             JSONArray jsonTagArray = new JSONArray(mTags);
-            result.put(JSON_TASK_TAGS, jsonTagArray);
+            result.put(JSON_OBJECTIVE_TAGS, jsonTagArray);
 
             DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss:nnnnnnnnn");
 
             if(mDateCreated != null)
             {
                 String createdDateString = dateTimeFormatter.format(mDateCreated);
-                result.put(JSON_TASK_CREATE_DATE, createdDateString);
+                result.put(JSON_OBJECTIVE_CREATE_DATE, createdDateString);
             }
 
             if(mDateEnlisted != null)
             {
                 String addedDateString = dateTimeFormatter.format(mDateEnlisted);
-                result.put(JSON_TASK_ADD_DATE, addedDateString);
+                result.put(JSON_OBJECTIVE_ADD_DATE, addedDateString);
             }
 
-            result.put(JSON_TASK_CHARM, Float.toString(mCharm));
+            result.put(JSON_OBJECTIVE_CHARM, Float.toString(mCharm));
         }
         catch (JSONException e)
         {
@@ -108,23 +108,23 @@ public class EnlistedObjective implements Comparable<Long>
         return result;
     }
 
-    //Creates a task from its JSON representation
+    //Creates an objective from its JSON representation
     public static EnlistedObjective fromJSON(JSONObject jsonObject)
     {
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss:nnnnnnnnn");
 
-        long id = jsonObject.optLong(JSON_TASK_ID, -1);
+        long id = jsonObject.optLong(JSON_OBJECTIVE_ID, -1);
 
-        String name        = jsonObject.optString(JSON_TASK_NAME);
-        String description = jsonObject.optString(JSON_TASK_DESCRIPTION);
+        String name        = jsonObject.optString(JSON_OBJECTIVE_NAME);
+        String description = jsonObject.optString(JSON_OBJECTIVE_DESCRIPTION);
 
-        String createdDateString = jsonObject.optString(JSON_TASK_CREATE_DATE);
-        String addedDateString   = jsonObject.optString(JSON_TASK_ADD_DATE);
+        String createdDateString = jsonObject.optString(JSON_OBJECTIVE_CREATE_DATE);
+        String addedDateString   = jsonObject.optString(JSON_OBJECTIVE_ADD_DATE);
 
-        float charm = (float)jsonObject.optDouble(JSON_TASK_CHARM, 0.5);
+        float charm = (float)jsonObject.optDouble(JSON_OBJECTIVE_CHARM, 0.5);
 
         ArrayList<String> taskTags = new ArrayList<>();
-        JSONArray tagsJSONArray = jsonObject.optJSONArray(JSON_TASK_TAGS);
+        JSONArray tagsJSONArray = jsonObject.optJSONArray(JSON_OBJECTIVE_TAGS);
         if(tagsJSONArray != null)
         {
             for(int i = 0; i < tagsJSONArray.length(); i++)
@@ -164,7 +164,7 @@ public class EnlistedObjective implements Comparable<Long>
         }
         else
         {
-            return null; //Can't create even a basic task
+            return null; //Can't create even a basic objective
         }
 
         task.setCharm(charm);
@@ -193,37 +193,37 @@ public class EnlistedObjective implements Comparable<Long>
         mCharm = charm;
     }
 
-    //Returns the task id
+    //Returns the objective id
     public long getId()
     {
         return mId;
     }
 
-    //Returns the date when the task was created
+    //Returns the date when the objective was created
     public LocalDateTime getCreatedDate()
     {
         return mDateCreated;
     }
 
-    //Returns the date when the task was added to the list
+    //Returns the date when the objective was added to the list
     public LocalDateTime getEnlistDate()
     {
         return mDateEnlisted;
     }
 
-    //Returns the task name
+    //Returns the objective name
     public String getName()
     {
         return mName;
     }
 
-    //Returns the task description
+    //Returns the objective description
     public String getDescription()
     {
         return mDescription;
     }
 
-    //Returns the task tags
+    //Returns the objective tags
     public ArrayList<String> getTags()
     {
         return mTags;

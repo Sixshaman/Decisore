@@ -22,31 +22,31 @@ public class ScheduledObjective implements PoolElement
     //The date when the objective was created and added to the scheduler
     LocalDateTime mDateCreated;
 
-    //The date when the objective will be added to the main task list next time
+    //The date when the objective will be added to the main list next time
     LocalDateTime mScheduledAddDate;
 
     //The date when the objective is regularly added to the main list
     LocalDateTime mRegularScheduledAddDate;
 
-    //The task name
+    //The objective name
     String mName;
 
-    //The task description
+    //The objective description
     String mDescription;
 
-    //Task tags (why not?)
+    //Objective tags (why not?)
     ArrayList<String> mTags;
 
-    //Is it active or paused? If paused, the scheduler won't add it to the task list even after the mScheduledAddDate
+    //Is it active or paused? If paused, the scheduler won't add it to the objective list even after the mScheduledAddDate
     boolean mIsActive;
 
-    //When to repeat the task
+    //When to repeat the objective
     Duration mRepeatDuration;
 
-    //For the tasks that are added to the list "sometimes"
+    //For the objectives that are added to the list "sometimes"
     float mRepeatProbability;
 
-    //Creates a new active scheduled task ready to be used by the task scheduler
+    //Creates a new active scheduled objective ready to be used by the scheduler
     public ScheduledObjective(long id, String name, String description, LocalDateTime createdDate, LocalDateTime scheduleDate, ArrayList<String> tags, Duration repeatDuration, float repeatProbability)
     {
         mIsActive = true;
@@ -73,7 +73,7 @@ public class ScheduledObjective implements PoolElement
         }
     }
 
-    //Serializes the task into its JSON representation
+    //Serializes the objective into its JSON representation
     public JSONObject toJSON()
     {
         JSONObject result = new JSONObject();
@@ -124,7 +124,7 @@ public class ScheduledObjective implements PoolElement
     //Reschedules the objective to the new enlist date
     public void reschedule(LocalDateTime referenceTime)
     {
-        //Cannot reschedule non-repeated tasks and won't reschedule paused tasks
+        //Cannot reschedule non-repeated objectives and won't reschedule paused objectives
         if(mRepeatProbability < 0.0001f || !mIsActive)
         {
             return;
@@ -135,7 +135,7 @@ public class ScheduledObjective implements PoolElement
         while(mRegularScheduledAddDate.isBefore(referenceTime)) //Simulate the passing of time
         {
             long hoursToAdd = 0;
-            if(mRepeatProbability > 0.9999f) //If it's a strictly repeated task, just add the duration
+            if(mRepeatProbability > 0.9999f) //If it's a strictly repeated objective, just add the duration
             {
                 hoursToAdd = mRepeatDuration.toHours();
             }
@@ -170,7 +170,7 @@ public class ScheduledObjective implements PoolElement
         return mRepeatProbability > 0.0001f;
     }
 
-    //Transforms scheduled task to an enlisted
+    //Transforms scheduled objective to an enlisted
     public EnlistedObjective toEnlisted(LocalDateTime enlistDate)
     {
         return new EnlistedObjective(mId, mDateCreated, enlistDate, mName, mDescription, mTags);
@@ -231,13 +231,13 @@ public class ScheduledObjective implements PoolElement
         mDescription = description;
     }
 
-    //Pauses the task so it's not repeated anymore
+    //Pauses the objective so it's not repeated anymore
     void pause()
     {
         mIsActive = false;
     }
 
-    //Unpauses the task
+    //Unpauses the objective
     void unpause()
     {
         mIsActive = false;

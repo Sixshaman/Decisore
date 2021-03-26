@@ -1,11 +1,11 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Decisore</string>
-    <string name="title_activity_task_list">Today objectives</string>\
-    <string name="title_activity_task_archive">Finished objectives</string>
+    <string name="title_activity_objective_list">Today objectives</string>\
+    <string name="title_activity_objective_archive">Finished objectives</string>
     <string name="placeholderTask">Objective</string>
     <string name="taskName">Name</string>
     <string name="taskDescription">Description</string>
-    <string name="newTaskDialogName">New objective</string>
+    <string name="newObjectiveDialogName">New objective</string>
     <string name="newChainDialogName">Edit chain</string>
     <string name="editChainDialogName">New chain</string>
     <string name="newPoolDialogName">New pool</string>
@@ -15,7 +15,7 @@
     <string name="objectiveSchedule">Schedule for:</string>
     <string name="objectiveRepeats">Repeats:</string>
     <string name="objectiveOccasional">Occasional:</string>
-    <string name="createTask">DO IT, MOTHERFUCKER!</string>
+    <string name="createObjective">DO IT, MOTHERFUCKER!</string>
     <string name="createChain">DO IT, MOTHERFUCKER!</string>
     <string name="createPool">DO IT, MOTHERFUCKER!</string>
     <string name="createCancel">Cancel</string>
@@ -31,7 +31,7 @@
     <string name="menu_edit_pool" tools:ignore="TypographyEllipsis" >Edit pool...</string>
     <string name="menu_delete_pool">Delete pool</string>
 
-    <string name="invalidTaskName">Invalid task name</string>
+    <string name="invalidObjectiveName">Invalid task name</string>
     <string name="invalidChainName">Invalid chain name</string>
     <string name="invalidPoolName">Invalid pool name</string>
     <string name="openArchive">Objective archive</string>
@@ -48,5 +48,5 @@
         <item quantity="one">%1$d day</item>
         <item quantity="other">%1$d days</item>
     </plurals>
-    <string name="title_activity_task_scheduler">Scheduled objectives</string>
+    <string name="title_activity_objective_scheduler">Scheduled objectives</string>
 </resources>

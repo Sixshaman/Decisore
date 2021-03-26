@@ -22,7 +22,7 @@ import org.json.JSONObject;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
-//A pool that can randomly choose from several task sources
+//A pool that can randomly choose from several objective sources
 public class ObjectivePool implements SchedulerElement
 {
     ///The view holder of the pool
@@ -37,16 +37,16 @@ public class ObjectivePool implements SchedulerElement
     //The description of the pool
     private String mDescription;
 
-    //The list of all the task sources the pool can choose from
+    //The list of all the objective sources the pool can choose from
     private ArrayList<PoolElement> mObjectiveSources;
 
-    //The id of the task that was most recently provided by this pool.
+    //The id of the objective that was most recently provided by this pool.
     private long mLastProvidedObjectiveId;
 
     //The flag that shows that the pool is active (i.e. not paused)
     boolean mIsActive;
 
-    //Constructs a new task pool
+    //Constructs a new objective pool
     public ObjectivePool(long id, String name, String description)
     {
         mId = id;
@@ -178,12 +178,12 @@ public class ObjectivePool implements SchedulerElement
                     return null;
                 }
 
-                JSONObject taskSourceObject = new JSONObject();
+                JSONObject objectiveSourceObject = new JSONObject();
 
-                taskSourceObject.put("Type", element.getElementName());
-                taskSourceObject.put("Data", element.toJSON());
+                objectiveSourceObject.put("Type", element.getElementName());
+                objectiveSourceObject.put("Data", element.toJSON());
 
-                sourcesArray.put(taskSourceObject);
+                sourcesArray.put(objectiveSourceObject);
             }
 
             result.put("Sources", sourcesArray);
@@ -196,7 +196,7 @@ public class ObjectivePool implements SchedulerElement
         return result;
     }
 
-    //Gets a task from a random source
+    //Gets an objective from a random source
     public EnlistedObjective getRandomObjective(LocalDateTime referenceTime)
     {
         if(!mIsActive)
@@ -426,7 +426,7 @@ public class ObjectivePool implements SchedulerElement
         mIsActive = true;
     }
 
-    //Gets the last provided task id, to check if it has been finished yet
+    //Gets the last provided objective id, to check if it has been finished yet
     public long getLastProvidedObjectiveId()
     {
         return mLastProvidedObjectiveId;
@@ -461,7 +461,7 @@ public class ObjectivePool implements SchedulerElement
         }
 
         @Override
-        public void onBindViewHolder(@NonNull PoolElementViewHolder taskViewHolder, int position)
+        public void onBindViewHolder(@NonNull PoolElementViewHolder objectiveViewHolder, int position)
         {
             String viewName = "";
             final ValueHolder<String> viewDescription = new ValueHolder<>("");
@@ -490,10 +490,10 @@ public class ObjectivePool implements SchedulerElement
                 iconId = R.drawable.ic_scheduler_objective;
             }
 
-            taskViewHolder.mTextView.setText(viewName);
-            taskViewHolder.mIconView.setImageResource(iconId);
+            objectiveViewHolder.mTextView.setText(viewName);
+            objectiveViewHolder.mIconView.setImageResource(iconId);
 
-            taskViewHolder.setSourceMetadata(poolElement, mSchedulerCache);
+            objectiveViewHolder.setSourceMetadata(poolElement, mSchedulerCache);
         }
 
         @Override

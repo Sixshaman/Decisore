@@ -28,15 +28,15 @@ public class ListActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_task_list);
-        Toolbar toolbar = findViewById(R.id.toolbarTaskList);
+        setContentView(R.layout.activity_objective_list);
+        Toolbar toolbar = findViewById(R.id.toolbarObjectiveList);
         setSupportActionBar(toolbar);
 
         //The only way to get the name for the application right
-        setTitle(R.string.title_activity_task_list);
+        setTitle(R.string.title_activity_objective_list);
 
-        FloatingActionButton buttonNewObjective = findViewById(R.id.addNewTask);
-        buttonNewObjective.setOnClickListener(view -> openAddTaskDialog());
+        FloatingActionButton buttonNewObjective = findViewById(R.id.addNewObjective);
+        buttonNewObjective.setOnClickListener(view -> openAddObjectiveDialog());
     }
 
     @Override
@@ -48,7 +48,7 @@ public class ListActivity extends AppCompatActivity
 
         String configFolder = Objects.requireNonNull(getExternalFilesDir("/app")).getAbsolutePath();
 
-        RecyclerView recyclerView = findViewById(R.id.taskListView);
+        RecyclerView recyclerView = findViewById(R.id.objectiveListView);
         mListCache.attachToView(recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
@@ -73,7 +73,7 @@ public class ListActivity extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu)
     {
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.menu_task_list, menu);
+        inflater.inflate(R.menu.menu_objective_list, menu);
 
         menu.findItem(R.id.menuOpenArchive).setOnMenuItemClickListener(item ->
         {
@@ -92,11 +92,11 @@ public class ListActivity extends AppCompatActivity
         return true;
     }
 
-    private void openAddTaskDialog()
+    private void openAddObjectiveDialog()
     {
         NewObjectiveDialogFragment newObjectiveDialogFragment = new NewObjectiveDialogFragment();
         newObjectiveDialogFragment.setListCache(mListCache);
 
-        newObjectiveDialogFragment.show(getSupportFragmentManager(), getString(R.string.newTaskDialogName));
+        newObjectiveDialogFragment.show(getSupportFragmentManager(), getString(R.string.newObjectiveDialogName));
     }
 }
