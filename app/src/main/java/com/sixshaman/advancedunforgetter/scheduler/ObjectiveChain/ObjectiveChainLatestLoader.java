@@ -47,7 +47,7 @@ public class ObjectiveChainLatestLoader implements ObjectiveChainLoader
                     long objectiveId = idHistoryArray.optLong(i, -1);
                     if(objectiveId != -1)
                     {
-                        objectiveChain.mObjectiveIdHistory.add(objectiveId);
+                        objectiveChain.mBoundObjectives.add(objectiveId);
                     }
                 }
             }

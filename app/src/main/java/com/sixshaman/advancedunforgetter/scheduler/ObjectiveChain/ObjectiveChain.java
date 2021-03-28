@@ -8,11 +8,8 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.sixshaman.advancedunforgetter.R;
 import com.sixshaman.advancedunforgetter.list.EnlistedObjective;
-import com.sixshaman.advancedunforgetter.scheduler.ObjectivePool.ObjectivePool;
 import com.sixshaman.advancedunforgetter.scheduler.ObjectivePool.PoolElement;
-import com.sixshaman.advancedunforgetter.scheduler.ObjectivePool.PoolElementViewHolder;
 import com.sixshaman.advancedunforgetter.scheduler.ScheduledObjective.ScheduledObjective;
-import com.sixshaman.advancedunforgetter.utils.ValueHolder;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -38,7 +35,7 @@ public class ObjectiveChain implements PoolElement
     private LinkedList<ScheduledObjective> mObjectives;
 
     //The list of ids of all objectives once provided by the chain
-    HashSet<Long> mObjectiveIdHistory;
+    HashSet<Long> mBoundObjectives;
 
     //Creates a new objective chain
     public ObjectiveChain(long id, String name, String description)
@@ -49,7 +46,7 @@ public class ObjectiveChain implements PoolElement
         mDescription = description;
 
         mObjectives         = new LinkedList<>();
-        mObjectiveIdHistory = new HashSet<>();
+        mBoundObjectives = new HashSet<>();
     }
 
     public void attachToChainView(RecyclerView recyclerView)
@@ -62,7 +59,7 @@ public class ObjectiveChain implements PoolElement
     public void addObjectiveToChain(ScheduledObjective objective)
     {
         mObjectives.addLast(objective);
-        mObjectiveIdHistory.add(objective.getId());
+        mBoundObjectives.add(objective.getId());
 
         if(mChainViewHolder != null)
         {
@@ -142,7 +139,7 @@ public class ObjectiveChain implements PoolElement
             result.put("Objectives", objectivesArray);
 
             JSONArray idHistoryArray = new JSONArray();
-            for(Long objectiveId: mObjectiveIdHistory)
+            for(Long objectiveId: mBoundObjectives)
             {
                 idHistoryArray.put(objectiveId.longValue());
             }
@@ -189,7 +186,7 @@ public class ObjectiveChain implements PoolElement
 
     public boolean containedObjective(long objectiveId)
     {
-        for(Long historicId: mObjectiveIdHistory)
+        for(Long historicId: mBoundObjectives)
         {
             if(historicId == objectiveId)
             {
@@ -225,13 +222,19 @@ public class ObjectiveChain implements PoolElement
             else
             {
                 mObjectives.addFirst(objective);
-                mObjectiveIdHistory.add(objective.getId()); //Just in case
+                mBoundObjectives.add(objective.getId()); //Just in case
             }
 
             return true;
         }
 
         return false;
+    }
+
+    //Marks the objective such that it belongs to this chain (without adding it to chain)
+    public void bindObjectiveToChain(long objectiveId)
+    {
+        mBoundObjectives.add(objectiveId);
     }
 
     public EnlistedObjective obtainObjective(LocalDateTime referenceTime)
