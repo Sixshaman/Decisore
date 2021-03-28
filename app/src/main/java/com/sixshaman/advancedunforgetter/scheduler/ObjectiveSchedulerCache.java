@@ -227,7 +227,7 @@ public class ObjectiveSchedulerCache
     }
 
     //Creates a new objective chain
-    public boolean addObjectiveChain(ObjectivePool pool, String name, String description)
+    public ObjectiveChain addObjectiveChain(ObjectivePool pool, String name, String description)
     {
         long chainId = getMaxChainId() + 1;
         ObjectiveChain chain = new ObjectiveChain(chainId, name, description);
@@ -251,7 +251,7 @@ public class ObjectiveSchedulerCache
             }
         }
 
-        return true;
+        return chain;
     }
 
     //Creates a new objective pool
@@ -519,6 +519,33 @@ public class ObjectiveSchedulerCache
                 if(objectiveChain.getId() == id)
                 {
                     return objectiveChain;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    //Finds a chain that contained an objective with that name
+    public ObjectiveChain findChainOfObjective(long objectiveId)
+    {
+        for(SchedulerElement schedulerElement: mSchedulerElements)
+        {
+            if(schedulerElement instanceof ObjectiveChain)
+            {
+                ObjectiveChain chain = (ObjectiveChain)schedulerElement;
+                if(chain.containedObjective(objectiveId))
+                {
+                    return chain;
+                }
+            }
+            else if(schedulerElement instanceof ObjectivePool)
+            {
+                ObjectivePool pool        = ((ObjectivePool)schedulerElement);
+                PoolElement   poolElement = pool.findSourceForObjective(objectiveId);
+                if(poolElement instanceof ObjectiveChain)
+                {
+                    return (ObjectiveChain)poolElement;
                 }
             }
         }

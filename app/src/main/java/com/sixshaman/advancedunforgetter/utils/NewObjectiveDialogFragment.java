@@ -18,6 +18,7 @@ import com.sixshaman.advancedunforgetter.list.ObjectiveListCache;
 import com.sixshaman.advancedunforgetter.scheduler.ObjectiveChain.ObjectiveChain;
 import com.sixshaman.advancedunforgetter.scheduler.ObjectivePool.ObjectivePool;
 import com.sixshaman.advancedunforgetter.scheduler.ObjectiveSchedulerCache;
+import com.sixshaman.advancedunforgetter.scheduler.ScheduledObjective.ScheduledObjective;
 
 import java.sql.Array;
 import java.time.Duration;

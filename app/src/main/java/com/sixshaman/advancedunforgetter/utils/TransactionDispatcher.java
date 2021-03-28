@@ -102,7 +102,7 @@ public class TransactionDispatcher
         return false;
     }
 
-    public synchronized boolean addChainTransaction(ObjectivePool poolToAddTo, String configFolder, String chainName, String chainDescription)
+    public synchronized ObjectiveChain addChainTransaction(ObjectivePool poolToAddTo, String configFolder, String chainName, String chainDescription)
     {
         String schedulerFilePath = configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME;
 
@@ -111,12 +111,14 @@ public class TransactionDispatcher
         try
         {
             LockedWriteFile schedulerWriteFile = new LockedWriteFile(schedulerFilePath);
-            if(mSchedulerCache.addObjectiveChain(poolToAddTo, chainName, chainDescription))
+
+            ObjectiveChain newChain = mSchedulerCache.addObjectiveChain(poolToAddTo, chainName, chainDescription);
+            if(newChain != null)
             {
                 if(mSchedulerCache.flush(schedulerWriteFile))
                 {
                     schedulerWriteFile.close();
-                    return true;
+                    return newChain;
                 }
             }
 
@@ -128,7 +130,7 @@ public class TransactionDispatcher
         }
 
         invalidateSchedulerCache(schedulerFilePath);
-        return false;
+        return null;
     }
 
     public synchronized boolean editСhainTransaction(String configFolder, long chainId, String chainName, String chainDescription)
@@ -252,6 +254,11 @@ public class TransactionDispatcher
                 //One-time objective
                 enlistedObjectiveToAdd = new EnlistedObjective(objectiveId, createDateTime, enlistDateTime,
                                                                objectiveName, objectiveDescription, objectiveTags);
+
+                if(chainToAddTo != null)
+                {
+                    chainToAddTo.bindObjectiveToChain(enlistedObjectiveToAdd.getId());
+                }
             }
             else
             {
@@ -671,6 +678,131 @@ public class TransactionDispatcher
         }
 
         return false;
+    }
+
+    public synchronized ObjectiveChain rechainEnlistedObjective(String configFolder, EnlistedObjective enlistedObjective)
+    {
+        String listFilePath      = configFolder + "/" + ObjectiveListCache.LIST_FILENAME;
+        String schedulerFilePath = configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME;
+
+        invalidateSchedulerCache(schedulerFilePath);
+        invalidateListCache(listFilePath);
+
+        ObjectiveChain chain = mSchedulerCache.findChainOfObjective(enlistedObjective.getId());
+        if(chain == null)
+        {
+            String objectiveName = enlistedObjective.getName();
+            chain = addChainTransaction(null, configFolder, objectiveName, "");
+        }
+
+        if(chain == null)
+        {
+            return null;
+        }
+
+        //1. Lock list file
+        LockedWriteFile listWriteFile = null;
+        try
+        {
+            listWriteFile = new LockedWriteFile(listFilePath);
+        }
+        catch(FileNotFoundException e)
+        {
+            e.printStackTrace();
+        }
+
+        if(listWriteFile != null)
+        {
+            //2. Lock scheduler file
+            LockedWriteFile schedulerWriteFile = null;
+            try
+            {
+                schedulerWriteFile = new LockedWriteFile(schedulerFilePath);
+            }
+            catch(FileNotFoundException e)
+            {
+                e.printStackTrace();
+            }
+
+            if(schedulerWriteFile != null)
+            {
+                //3. Remove objective from list
+                if(mListCache.removeObjective(enlistedObjective))
+                {
+                    //4. Add objective to the archive
+                    ScheduledObjective scheduledObjective = enlistedObjective.toScheduled(enlistedObjective.getEnlistDate());
+                    chain.addObjectiveToChain(scheduledObjective);
+
+                    //5. List cache flush
+                    if(mListCache.flush(listWriteFile))
+                    {
+                        //6. Archive cache flush
+                        if(mSchedulerCache.flush(schedulerWriteFile))
+                        {
+                            schedulerWriteFile.close();
+                            listWriteFile.close();
+
+                            return chain;
+                        }
+                    }
+                }
+
+                schedulerWriteFile.close();
+                invalidateSchedulerCache(schedulerFilePath);
+            }
+
+            listWriteFile.close();
+            invalidateListCache(listFilePath);
+        }
+
+        return null;
+    }
+
+    public synchronized ObjectiveChain touchChainWithObjective(String configFolder, EnlistedObjective enlistedObjective)
+    {
+        String schedulerFilePath = configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME;
+
+        invalidateSchedulerCache(schedulerFilePath);
+
+        ObjectiveChain chain = mSchedulerCache.findChainOfObjective(enlistedObjective.getId());
+        if(chain == null)
+        {
+            String objectiveName = enlistedObjective.getName();
+            chain = addChainTransaction(null, configFolder, objectiveName, "");
+        }
+
+        if(chain == null)
+        {
+            return null;
+        }
+
+        //2. Lock scheduler file
+        LockedWriteFile schedulerWriteFile = null;
+        try
+        {
+            schedulerWriteFile = new LockedWriteFile(schedulerFilePath);
+        }
+        catch(FileNotFoundException e)
+        {
+            e.printStackTrace();
+        }
+
+        if(schedulerWriteFile != null)
+        {
+            chain.bindObjectiveToChain(enlistedObjective.getId());
+
+            //6. Archive cache flush
+            if(mSchedulerCache.flush(schedulerWriteFile))
+            {
+                schedulerWriteFile.close();
+                return chain;
+            }
+
+            schedulerWriteFile.close();
+            invalidateSchedulerCache(schedulerFilePath);
+        }
+
+        return null;
     }
 
     public synchronized boolean finishObjectiveTransaction(String configFolder, EnlistedObjective objective, LocalDateTime finishDate)
