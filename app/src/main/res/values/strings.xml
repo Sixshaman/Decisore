@@ -39,7 +39,7 @@
     <string name="openScheduler">Objective scheduler</string>
     <string name="unixStartDate" tools:ignore="TypographyDashes">1970-01-01</string>
     <string name="dateParseErrorISO8601">Error parsing date. Enter the date in ISO 8601 format</string>
-    <string name="frequencyParseError">Please enter the correct frwquency in days</string>
+    <string name="frequencyParseError">Please enter the correct frequency in days</string>
     <string name="repeat_interval">Repeat every:</string>
     <string name="approx_frequency">Approx frequency:</string>
     <string name="placeholder_number_of_days">X days</string>
