@@ -14,10 +14,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Objects;
+import java.util.*;
 
 public class ObjectiveListCache
 {
@@ -272,6 +269,17 @@ public class ObjectiveListCache
         {
             return mEnlistedObjectives.get(mEnlistedObjectives.size() - 1).getId();
         }
+    }
+
+    public HashSet<Long> constructBlockingIds()
+    {
+        HashSet<Long> blockingIds = new HashSet<>();
+        for(EnlistedObjective objective: mEnlistedObjectives)
+        {
+            blockingIds.add(objective.getId());
+        }
+
+        return blockingIds;
     }
 
     private class ListCacheViewHolder extends RecyclerView.Adapter<ObjectiveViewHolder>

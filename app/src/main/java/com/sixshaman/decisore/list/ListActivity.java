@@ -104,6 +104,6 @@ public class ListActivity extends AppCompatActivity implements ListObjectiveCoun
     @Override
     public void onListObjectiveCountChanged(int newObjectiveCount)
     {
-        setTitle(newObjectiveCount + getString(R.string.title_activity_objective_list_append));
+        setTitle(newObjectiveCount + " " + getString(R.string.title_activity_objective_list_append));
     }
 }

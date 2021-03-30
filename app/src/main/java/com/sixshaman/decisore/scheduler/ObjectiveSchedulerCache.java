@@ -39,6 +39,7 @@ import org.json.JSONObject;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 
 //The class to schedule all deferred objectives. The model for the scheduler UI
 public class ObjectiveSchedulerCache
@@ -69,58 +70,22 @@ public class ObjectiveSchedulerCache
     }
 
     //Updates the objective scheduler. Returns the list of objectives ready to-do
-    public ArrayList<EnlistedObjective> dumpReadyObjectives(final ObjectiveListCache listCache, LocalDateTime enlistDateTime)
+    public ArrayList<EnlistedObjective> dumpReadyObjectives(final HashSet<Long> blockingObjectiveIds, LocalDateTime enlistDateTime)
     {
         ArrayList<EnlistedObjective> result = new ArrayList<>();
 
         ArrayList<SchedulerElement> changedElements = new ArrayList<>(); //Rebuild objective source list after each update event
         for(SchedulerElement element: mSchedulerElements)
         {
-            if(element instanceof ScheduledObjective)
+            EnlistedObjective enlistedObjective = element.obtainEnlistedObjective(blockingObjectiveIds, enlistDateTime);
+            if(enlistedObjective != null)
             {
-                ScheduledObjective scheduledObjective = (ScheduledObjective)element;
-                if(listCache.getObjective(scheduledObjective.getId()) == null)
-                {
-                    //The list doesn't contain this objective
-                    EnlistedObjective enlistedObjective = scheduledObjective.toEnlisted(enlistDateTime);
-                    result.add(enlistedObjective);
-
-                    if(scheduledObjective.isRepeatable())
-                    {
-                        changedElements.add(scheduledObjective);
-                    }
-                }
+                result.add(enlistedObjective);
             }
-            else if(element instanceof ObjectiveChain)
+
+            if(element.isValid())
             {
-                ObjectiveChain objectiveChain = (ObjectiveChain)element;
-                if(listCache.getObjective(objectiveChain.getFirstObjective().getId()) == null)
-                {
-                    EnlistedObjective objective = objectiveChain.obtainObjective(enlistDateTime);
-                    if(objective != null)
-                    {
-                        result.add(objective);
-                    }
-
-                    changedElements.add(objectiveChain);
-                }
-            }
-            else if(element instanceof ObjectivePool)
-            {
-                ObjectivePool objectivePool = (ObjectivePool)element;
-
-                //Only add the objective to the list if the previous objective from the pool is finished (i.e. isn't in list)
-                //This is true for all types of objectives
-                if(listCache.getObjective(objectivePool.getLastProvidedObjectiveId()) == null)
-                {
-                    EnlistedObjective objective = objectivePool.getRandomObjective(enlistDateTime);
-                    if(objective != null)
-                    {
-                        result.add(objective);
-                    }
-                }
-
-                changedElements.add(objectivePool);
+                changedElements.add(element);
             }
         }
 
@@ -208,7 +173,7 @@ public class ObjectiveSchedulerCache
                 elementObject.put("Type", element.getElementName());
                 elementObject.put("Data", element.toJSON());
 
-                objectivesJsonArray.put(element.toJSON());
+                objectivesJsonArray.put(elementObject);
             }
 
             jsonObject.put("ELEMENTS", objectivesJsonArray);

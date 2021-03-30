@@ -66,28 +66,28 @@ public class PoolFragment extends Fragment
 
         String configFolder = Objects.requireNonNull(mFragmentView.getContext().getExternalFilesDir("/app")).getAbsolutePath();
 
-        mObjectivePool = mSchedulerCache.getPoolById(mObjectivePoolId);
-        if(mObjectivePool != null)
+        try
         {
-            RecyclerView recyclerView = mFragmentView.findViewById(R.id.objectiveSchedulerView);
-            mObjectivePool.attachToPoolView(recyclerView, mSchedulerCache);
-            recyclerView.setLayoutManager(new LinearLayoutManager(mFragmentView.getContext()));
+            LockedReadFile schedulerFile = new LockedReadFile(configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME);
+            mSchedulerCache.invalidate(schedulerFile);
+            schedulerFile.close();
 
-            try
+            mObjectivePool = mSchedulerCache.getPoolById(mObjectivePoolId);
+            if(mObjectivePool != null)
             {
-                LockedReadFile schedulerFile = new LockedReadFile(configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME);
-                mSchedulerCache.invalidate(schedulerFile);
-                schedulerFile.close();
-
-                TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
-                transactionDispatcher.setSchedulerCache(mSchedulerCache);
-
-                transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now());
+                RecyclerView recyclerView = mFragmentView.findViewById(R.id.objectivePoolView);
+                mObjectivePool.attachToPoolView(recyclerView, mSchedulerCache);
+                recyclerView.setLayoutManager(new LinearLayoutManager(mFragmentView.getContext()));
             }
-            catch(IOException e)
-            {
-                e.printStackTrace();
-            }
+
+            TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
+            transactionDispatcher.setSchedulerCache(mSchedulerCache);
+
+            transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now());
+        }
+        catch(IOException e)
+        {
+            e.printStackTrace();
         }
     }
 
@@ -102,9 +102,10 @@ public class PoolFragment extends Fragment
     {
         mFragmentView = view;
 
-        if(savedInstanceState != null)
+        Bundle args = getArguments();
+        if(args != null)
         {
-            mObjectivePoolId = savedInstanceState.getLong("EyyDee");
+            mObjectivePoolId = args.getLong("EyyDee");
 
             final ViewGroup fabContainer = mFragmentView.findViewById(R.id.pool_fab_container);
 

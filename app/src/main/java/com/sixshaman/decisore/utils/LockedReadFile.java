@@ -77,6 +77,7 @@ public class LockedReadFile
 
         try
         {
+            //Do not call close() on bufferedReader since it automatically releases the lock (which we don't need)
             BufferedReader bufferedReader = new BufferedReader(mInputStreamReader);
 
             String line;
@@ -87,7 +88,6 @@ public class LockedReadFile
                 fileContentsStringBuilder.append(line);
             }
 
-            bufferedReader.close();
             return fileContentsStringBuilder.toString();
         }
         catch (IOException e)

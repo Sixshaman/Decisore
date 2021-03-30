@@ -233,25 +233,6 @@ public class ObjectiveChain implements PoolElement
         mBoundObjectives.add(objectiveId);
     }
 
-    public EnlistedObjective obtainObjective(LocalDateTime referenceTime)
-    {
-        if(!mObjectives.isEmpty())
-        {
-            if(mObjectives.getFirst().isAvailable(referenceTime))
-            {
-                return mObjectives.removeFirst().toEnlisted(referenceTime);
-            }
-            else
-            {
-                return null;
-            }
-        }
-        else
-        {
-            return null;
-        }
-    }
-
     public boolean isNotEmpty()
     {
         return !mObjectives.isEmpty();
@@ -269,21 +250,35 @@ public class ObjectiveChain implements PoolElement
     }
 
     @Override
-    public boolean isAvailable(LocalDateTime referenceTime)
+    public boolean isValid()
+    {
+        return true;
+    }
+
+    @Override
+    public boolean isAvailable(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime)
     {
         if(isPaused())
         {
             return false;
         }
 
+        for(Long boundId: mBoundObjectives)
+        {
+            if(blockingObjectiveIds.contains(boundId))
+            {
+                return false;
+            }
+        }
+
         if(mObjectives.isEmpty())
         {
-            return true;
+            return false;
         }
         else
         {
             ScheduledObjective firstObjective = mObjectives.getFirst();
-            return firstObjective.isAvailable(referenceTime);
+            return firstObjective.isAvailable(blockingObjectiveIds, referenceTime);
         }
     }
 
@@ -291,6 +286,30 @@ public class ObjectiveChain implements PoolElement
     public String getElementName()
     {
         return "ObjectiveChain";
+    }
+
+    @Override
+    public EnlistedObjective obtainEnlistedObjective(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime)
+    {
+        if(!isAvailable(blockingObjectiveIds, referenceTime))
+        {
+            return null;
+        }
+
+        ScheduledObjective firstChainObjective = mObjectives.getFirst();
+
+        EnlistedObjective enlistedObjective = firstChainObjective.obtainEnlistedObjective(blockingObjectiveIds, referenceTime);
+        if(enlistedObjective == null)
+        {
+            return null;
+        }
+
+        if(!firstChainObjective.isValid())
+        {
+            mObjectives.removeFirst();
+        }
+
+        return enlistedObjective;
     }
 
     private class ChainViewHolder extends RecyclerView.Adapter<ChainElementViewHolder>

@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.HashSet;
 
 public class ScheduledObjective implements PoolElement
 {
@@ -39,6 +40,9 @@ public class ScheduledObjective implements PoolElement
     //Is it active or paused? If paused, the scheduler won't add it to the objective list even after the mScheduledAddDate
     boolean mIsActive;
 
+    //Is it valid?
+    boolean mIsValid;
+
     //When to repeat the objective
     final Duration mRepeatDuration;
 
@@ -49,6 +53,7 @@ public class ScheduledObjective implements PoolElement
     public ScheduledObjective(long id, String name, String description, LocalDateTime createdDate, LocalDateTime scheduleDate, ArrayList<String> tags, Duration repeatDuration, float repeatProbability)
     {
         mIsActive = true;
+        mIsValid  = true;
 
         mId = id;
 
@@ -169,16 +174,16 @@ public class ScheduledObjective implements PoolElement
         return mRepeatProbability > 0.0001f;
     }
 
-    //Transforms scheduled objective to an enlisted
-    public EnlistedObjective toEnlisted(LocalDateTime enlistDate)
-    {
-        return new EnlistedObjective(mId, mDateCreated, enlistDate, mName, mDescription, mTags);
-    }
-
     @Override
     public boolean isPaused()
     {
         return !mIsActive;
+    }
+
+    @Override
+    public boolean isValid()
+    {
+        return mIsValid;
     }
 
     @Override
@@ -188,9 +193,30 @@ public class ScheduledObjective implements PoolElement
     }
 
     @Override
-    public boolean isAvailable(LocalDateTime referenceTime)
+    public EnlistedObjective obtainEnlistedObjective(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime)
     {
-        return !isPaused() && referenceTime.isAfter(getScheduledEnlistDate());
+        if(!isAvailable(blockingObjectiveIds, referenceTime))
+        {
+            return null;
+        }
+
+        EnlistedObjective enlistedObjective = new EnlistedObjective(mId, mDateCreated, referenceTime, mName, mDescription, mTags);
+        if(!isRepeatable())
+        {
+            mIsValid = false;
+        }
+        else
+        {
+            reschedule(referenceTime);
+        }
+
+        return enlistedObjective;
+    }
+
+    @Override
+    public boolean isAvailable(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime)
+    {
+        return !isPaused() && referenceTime.isAfter(getScheduledEnlistDate()) && !blockingObjectiveIds.contains(mId);
     }
 
     public long getId()

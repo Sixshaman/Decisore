@@ -218,8 +218,7 @@ public class TransactionDispatcher
                                                                  createDateTime, enlistDateTime, objectiveTags,
                                                                  repeatDuration, repeatProbability);
 
-                enlistedObjectiveToAdd = scheduledObjectiveToAdd.toEnlisted(enlistDateTime);
-                scheduledObjectiveToAdd.reschedule(enlistDateTime);
+                enlistedObjectiveToAdd = scheduledObjectiveToAdd.obtainEnlistedObjective(mListCache.constructBlockingIds(), enlistDateTime);
             }
         }
         else
@@ -407,7 +406,7 @@ public class TransactionDispatcher
         LockedWriteFile listWriteFile      = new LockedWriteFile(listFilePath);
 
         //3. Prepare the list of objectives to add
-        ArrayList<EnlistedObjective> enlistedObjectives = mSchedulerCache.dumpReadyObjectives(mListCache, enlistDateTime);
+        ArrayList<EnlistedObjective> enlistedObjectives = mSchedulerCache.dumpReadyObjectives(mListCache.constructBlockingIds(), enlistDateTime);
         if(enlistedObjectives != null)
         {
             //4. Add objectives

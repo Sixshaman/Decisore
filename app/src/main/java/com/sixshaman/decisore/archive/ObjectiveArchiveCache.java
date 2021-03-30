@@ -137,10 +137,11 @@ public class ObjectiveArchiveCache
         @Override
         public void onBindViewHolder(@NonNull ObjectiveArchiveCache.FinishedObjectiveViewHolder objectiveViewHolder, int position)
         {
-            objectiveViewHolder.mTextView.setText(mFinishedObjectives.get(position).getName());
+            ArchivedObjective archivedObjective = mFinishedObjectives.get(mFinishedObjectives.size() - position - 1); //Archive is sorted from latest to oldest
 
-            ArchivedObjective objective = mFinishedObjectives.get(mFinishedObjectives.size() - position - 1); //Archive is sorted from latest to oldest
-            objectiveViewHolder.mParentLayout.setOnClickListener(view -> Toast.makeText(mContext, objective.getDescription(), Toast.LENGTH_LONG).show());
+            objectiveViewHolder.mTextView.setText(archivedObjective.getName());
+
+            objectiveViewHolder.mParentLayout.setOnClickListener(view -> Toast.makeText(mContext, archivedObjective.getDescription(), Toast.LENGTH_LONG).show());
         }
 
         @Override

@@ -42,6 +42,8 @@ public class ChainElementViewHolder extends RecyclerView.ViewHolder implements V
 
         mParentLayout = itemView.findViewById(R.id.layoutScheduledObjectiveView);
 
+        mParentLayout.setOnCreateContextMenuListener(this);
+
         final String onClickMessage = "Scheduled for " + mScheduledObjective.getScheduledEnlistDate().toString();
         mParentLayout.setOnClickListener(view -> Toast.makeText(view.getContext(), onClickMessage, Toast.LENGTH_SHORT).show());
     }

@@ -7,6 +7,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.sixshaman.decisore.R;
 import com.sixshaman.decisore.list.EnlistedObjective;
+import com.sixshaman.decisore.list.ObjectiveListCache;
 import com.sixshaman.decisore.scheduler.chain.ObjectiveChain;
 import com.sixshaman.decisore.scheduler.ObjectiveSchedulerCache;
 import com.sixshaman.decisore.scheduler.objective.ScheduledObjective;
@@ -19,6 +20,7 @@ import org.json.JSONObject;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 
 //A pool that can randomly choose from several objective sources
 public class ObjectivePool implements SchedulerElement
@@ -195,18 +197,21 @@ public class ObjectivePool implements SchedulerElement
     }
 
     //Gets an objective from a random source
-    public EnlistedObjective getRandomObjective(LocalDateTime referenceTime)
+    @Override
+    public EnlistedObjective obtainEnlistedObjective(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime)
     {
         if(!mIsActive)
         {
             return null;
         }
 
+        //Only add the objective to the list if the previous objective from the pool is finished (i.e. isn't in blockingObjectiveIds)
+
         //Check non-empty sources only
         ArrayList<PoolElement> availableSources = new ArrayList<>();
         for(PoolElement source: mObjectiveSources)
         {
-            if(source.isAvailable(referenceTime))
+            if(source.isAvailable(blockingObjectiveIds, referenceTime))
             {
                 availableSources.add(source);
             }
@@ -220,25 +225,11 @@ public class ObjectivePool implements SchedulerElement
         int  randomSourceIndex  = (int) RandomUtils.getInstance().getRandomUniform(0, availableSources.size() - 1);
         PoolElement randomPoolElement = availableSources.get(randomSourceIndex);
 
-        EnlistedObjective resultObjective = null;
-        if(randomPoolElement instanceof ObjectiveChain)
+        EnlistedObjective resultObjective = randomPoolElement.obtainEnlistedObjective(blockingObjectiveIds, referenceTime);
+        if(!randomPoolElement.isValid())
         {
-            resultObjective = ((ObjectiveChain)randomPoolElement).obtainObjective(referenceTime);
-        }
-        else if(randomPoolElement instanceof ScheduledObjective)
-        {
-            ScheduledObjective scheduledObjective = (ScheduledObjective)randomPoolElement;
-            resultObjective = scheduledObjective.toEnlisted(referenceTime);
-
-            if(scheduledObjective.isRepeatable())
-            {
-                scheduledObjective.reschedule(referenceTime);
-            }
-            else
-            {
-                //Delete finished objectives
-                mObjectiveSources.remove(randomSourceIndex);
-            }
+            //Delete finished objectives
+            mObjectiveSources.remove(randomSourceIndex);
         }
 
         if(resultObjective != null)
@@ -389,6 +380,12 @@ public class ObjectivePool implements SchedulerElement
     public boolean isPaused()
     {
         return !mIsActive;
+    }
+
+    @Override
+    public boolean isValid()
+    {
+        return true;
     }
 
     @Override
