@@ -14,6 +14,6 @@ public class SingleObjectiveSource10Loader implements ScheduledObjectiveLoader
         }
 
         ScheduledObjective10Loader objective10Loader = new ScheduledObjective10Loader();
-        return objective10Loader.fromJSON(jsonObject);
+        return objective10Loader.fromJSON(objectiveJsonObject);
     }
 }

@@ -195,6 +195,8 @@ public class NewObjectiveDialogFragment extends DialogFragment
                                                               configFolder, objectiveCreateDate, objectiveScheduleDate.getValue(),
                                                               objectiveRepeatDuration, objectiveRepeatProbability,
                                                               nameText, descriptionText, new ArrayList<>());
+
+                transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now());
             }
         });
 
@@ -211,22 +213,32 @@ public class NewObjectiveDialogFragment extends DialogFragment
             DateSpinnerCustomTextAdapter customTextAdapter = new DateSpinnerCustomTextAdapter(scheduleSpinner.getContext());
             scheduleSpinner.setAdapter(customTextAdapter);
 
-            scheduleSpinner.setOnItemClickListener((adapterView, view, index, l) ->
+            scheduleSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener()
             {
-                if(index == 3) //Custom date
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
                 {
-                    DatePickerDialog datePickerDialog = new DatePickerDialog(activity);
-                    datePickerDialog.setOnDateSetListener((datePicker, year, month, day) ->
+                    if(position == 3) //Custom date
                     {
-                        //Day starts at 6 AM
-                        //Also Java numerates months from 0, not from 1
-                        LocalDateTime dateTime = LocalDateTime.of(year, month + 1, day, 6, 0, 0);
-                        objectiveScheduleDate.setValue(dateTime);
+                        DatePickerDialog datePickerDialog = new DatePickerDialog(activity);
+                        datePickerDialog.setOnDateSetListener((datePicker, year, month, day) ->
+                        {
+                            //Day starts at 6 AM
+                            //Also Java numerates months from 0, not from 1
+                            LocalDateTime dateTime = LocalDateTime.of(year, month + 1, day, 6, 0, 0);
+                            objectiveScheduleDate.setValue(dateTime);
 
-                        customTextAdapter.setCustomText(dateTime.toString());
-                    });
+                            customTextAdapter.setCustomText(dateTime.toLocalDate().toString());
+                        });
 
-                    datePickerDialog.show();
+                        datePickerDialog.show();
+                    }
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> parent)
+                {
+
                 }
             });
         });

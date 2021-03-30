@@ -47,6 +47,8 @@ public class PoolElementViewHolder extends RecyclerView.ViewHolder implements Vi
 
         mParentLayout = itemView.findViewById(R.id.layoutPoolElementView);
 
+        mParentLayout.setOnCreateContextMenuListener(this);
+
         mParentLayout.setOnClickListener(view ->
         {
             if(mPoolElement instanceof ObjectiveChain)

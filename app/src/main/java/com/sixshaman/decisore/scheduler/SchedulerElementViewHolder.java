@@ -10,12 +10,14 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.RecyclerView;
 import com.sixshaman.decisore.R;
+import com.sixshaman.decisore.scheduler.chain.ChainFragment;
 import com.sixshaman.decisore.scheduler.chain.EditChainDialogFragment;
 import com.sixshaman.decisore.scheduler.pool.EditPoolDialogFragment;
 import com.sixshaman.decisore.scheduler.chain.ObjectiveChain;
@@ -52,6 +54,8 @@ public class SchedulerElementViewHolder extends RecyclerView.ViewHolder implemen
 
         mParentLayout = itemView.findViewById(R.id.layoutScheduledSourceView);
 
+        mParentLayout.setOnCreateContextMenuListener(this);
+
         mParentLayout.setOnClickListener(view ->
         {
             if(mSchedulerElement instanceof ObjectivePool)
@@ -66,9 +70,30 @@ public class SchedulerElementViewHolder extends RecyclerView.ViewHolder implemen
 
                     FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
                     fragmentTransaction.setReorderingAllowed(true);
-                    fragmentTransaction.replace(R.id.scheduler_fragment_container_view, PoolFragment.class, null);
+                    fragmentTransaction.replace(R.id.scheduler_fragment_container_view, PoolFragment.class, bundle);
                     fragmentTransaction.commit();
                 }
+            }
+            else if(mSchedulerElement instanceof ObjectiveChain)
+            {
+                Context parentContext = view.getContext();
+                if(parentContext instanceof FragmentActivity)
+                {
+                    FragmentManager fragmentManager = (((FragmentActivity) parentContext).getSupportFragmentManager());
+
+                    Bundle bundle = new Bundle();
+                    bundle.putLong("EyyDee", ((ObjectiveChain)mSchedulerElement).getId());
+
+                    FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                    fragmentTransaction.setReorderingAllowed(true);
+                    fragmentTransaction.replace(R.id.scheduler_fragment_container_view, ChainFragment.class, bundle);
+                    fragmentTransaction.commit();
+                }
+            }
+            else if(mSchedulerElement instanceof ScheduledObjective)
+            {
+                final String onClickMessage = "Scheduled for " + ((ScheduledObjective) mSchedulerElement).getScheduledEnlistDate().toString();
+                mParentLayout.setOnClickListener(parentView -> Toast.makeText(parentView.getContext(), onClickMessage, Toast.LENGTH_SHORT).show());
             }
         });
     }

@@ -18,7 +18,7 @@
 
     <TextView android:id="@+id/textScheduledSourceName"
               android:text="@string/placeholderTask"
-              android:layout_width="wrap_content"
+              android:layout_width="match_parent"
               android:layout_height="wrap_content"
               android:textColor="@android:color/black"
               android:textSize="26sp"

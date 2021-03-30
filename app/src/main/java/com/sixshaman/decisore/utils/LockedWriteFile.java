@@ -76,9 +76,10 @@ public class LockedWriteFile
 
         try
         {
+            //Do not call close() since it automatically releases the lock (which we don't need)
             BufferedWriter bufferedWriter = new BufferedWriter(mOutputStreamWriter);
             bufferedWriter.write(contents);
-            bufferedWriter.close();
+            bufferedWriter.flush();
         }
         catch (IOException e)
         {
