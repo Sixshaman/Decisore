@@ -7,5 +7,4 @@ import java.util.HashSet;
 
 public interface PoolElement extends SchedulerElement
 {
-    boolean isAvailable(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime);
 }

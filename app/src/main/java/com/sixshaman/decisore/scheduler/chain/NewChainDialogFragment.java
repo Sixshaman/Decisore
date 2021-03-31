@@ -19,13 +19,13 @@ import java.util.Objects;
 
 public class NewChainDialogFragment extends DialogFragment
 {
-    private ObjectivePool mPoolToAddTo;
+    private long mPoolIdToAddTo;
 
     private ObjectiveSchedulerCache mSchedulerCache;
 
     public NewChainDialogFragment()
     {
-        mPoolToAddTo = null;
+        mPoolIdToAddTo = -1;
     }
 
     public void setSchedulerCache(ObjectiveSchedulerCache schedulerCache)
@@ -33,9 +33,9 @@ public class NewChainDialogFragment extends DialogFragment
         mSchedulerCache = schedulerCache;
     }
 
-    public void setPoolToAddTo(ObjectivePool pool)
+    public void setPoolIdToAddTo(long poolId)
     {
-        mPoolToAddTo = pool;
+        mPoolIdToAddTo = poolId;
     }
 
     @NonNull
@@ -72,7 +72,7 @@ public class NewChainDialogFragment extends DialogFragment
                 TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
                 transactionDispatcher.setSchedulerCache(mSchedulerCache);
 
-                transactionDispatcher.addChainTransaction(mPoolToAddTo, configFolder, nameText, descriptionText);
+                transactionDispatcher.addChainTransaction(mPoolIdToAddTo, configFolder, nameText, descriptionText);
             }
         });
 

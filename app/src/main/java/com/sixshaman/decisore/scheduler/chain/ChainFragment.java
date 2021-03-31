@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.sixshaman.decisore.R;
 import com.sixshaman.decisore.scheduler.ObjectiveSchedulerCache;
+import com.sixshaman.decisore.scheduler.SchedulerActivity;
 import com.sixshaman.decisore.utils.LockedReadFile;
 import com.sixshaman.decisore.utils.NewObjectiveDialogFragment;
 import com.sixshaman.decisore.utils.TransactionDispatcher;
@@ -28,9 +29,6 @@ public class ChainFragment extends Fragment
 
     //The id of the chain displayed
     private long mObjectiveChainId;
-
-    //The pool to display
-    private ObjectiveChain mObjectiveChain;
 
     public ChainFragment()
     {
@@ -52,28 +50,31 @@ public class ChainFragment extends Fragment
 
         String configFolder = Objects.requireNonNull(mFragmentView.getContext().getExternalFilesDir("/app")).getAbsolutePath();
 
-        mObjectiveChain = mSchedulerCache.getChainById(mObjectiveChainId);
-        if(mObjectiveChain != null)
+        try
         {
-            RecyclerView recyclerView = mFragmentView.findViewById(R.id.objectiveSchedulerView);
-            mObjectiveChain.attachToChainView(mSchedulerCache, recyclerView);
+            LockedReadFile schedulerFile = new LockedReadFile(configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME);
+            mSchedulerCache.invalidate(schedulerFile);
+            schedulerFile.close();
+
+            TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
+            transactionDispatcher.setSchedulerCache(mSchedulerCache);
+
+            transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now());
+
+            RecyclerView recyclerView = mFragmentView.findViewById(R.id.objectiveChainView);
+            mSchedulerCache.attachToChainView(recyclerView, mObjectiveChainId);
             recyclerView.setLayoutManager(new LinearLayoutManager(mFragmentView.getContext()));
 
-            try
+            ObjectiveChain objectiveChain = mSchedulerCache.getChainById(mObjectiveChainId);
+            if(objectiveChain != null)
             {
-                LockedReadFile schedulerFile = new LockedReadFile(configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME);
-                mSchedulerCache.invalidate(schedulerFile);
-                schedulerFile.close();
-
-                TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
-                transactionDispatcher.setSchedulerCache(mSchedulerCache);
-
-                transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now());
+                SchedulerActivity activity = ((SchedulerActivity) requireActivity());
+                Objects.requireNonNull(activity.getSupportActionBar()).setTitle(objectiveChain.getName());
             }
-            catch(IOException e)
-            {
-                e.printStackTrace();
-            }
+        }
+        catch(IOException e)
+        {
+            e.printStackTrace();
         }
     }
 
@@ -89,9 +90,11 @@ public class ChainFragment extends Fragment
         super.onViewCreated(view, savedInstanceState);
 
         mFragmentView = view;
-        if(savedInstanceState != null)
+
+        Bundle args = getArguments();
+        if(args != null)
         {
-            mObjectiveChainId = savedInstanceState.getLong("EyyDee");
+            mObjectiveChainId = args.getLong("EyyDee");
 
             FloatingActionButton buttonNewObjective = mFragmentView.findViewById(R.id.addNewObjectiveToChain);
             buttonNewObjective.setOnClickListener(this::addObjective);
@@ -102,7 +105,7 @@ public class ChainFragment extends Fragment
     {
         NewObjectiveDialogFragment newObjectiveDialogFragment = new NewObjectiveDialogFragment();
         newObjectiveDialogFragment.setSchedulerCache(mSchedulerCache);
-        newObjectiveDialogFragment.setChainToAddTo(mObjectiveChain);
+        newObjectiveDialogFragment.setChainIdToAddTo(mObjectiveChainId);
 
         newObjectiveDialogFragment.show(getParentFragmentManager(), getString(R.string.newObjectiveDialogName));
     }

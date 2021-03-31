@@ -2,6 +2,8 @@ package com.sixshaman.decisore.scheduler.pool;
 
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
+import android.content.Context;
+import android.os.Bundle;
 import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -11,8 +13,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.RecyclerView;
 import com.sixshaman.decisore.R;
+import com.sixshaman.decisore.scheduler.chain.ChainFragment;
 import com.sixshaman.decisore.scheduler.chain.EditChainDialogFragment;
 import com.sixshaman.decisore.scheduler.chain.ObjectiveChain;
 import com.sixshaman.decisore.scheduler.ObjectiveSchedulerCache;
@@ -53,7 +58,20 @@ public class PoolElementViewHolder extends RecyclerView.ViewHolder implements Vi
         {
             if(mPoolElement instanceof ObjectiveChain)
             {
-                Toast.makeText(view.getContext(), ((ObjectiveChain) mPoolElement).getFirstObjective().getName(), Toast.LENGTH_SHORT).show();
+                Context parentContext = view.getContext();
+                if(parentContext instanceof FragmentActivity)
+                {
+                    FragmentManager fragmentManager = (((FragmentActivity) parentContext).getSupportFragmentManager());
+
+                    Bundle bundle = new Bundle();
+                    bundle.putLong("EyyDee", ((ObjectiveChain)mPoolElement).getId());
+
+                    FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                    fragmentTransaction.setReorderingAllowed(true);
+                    fragmentTransaction.replace(R.id.scheduler_fragment_container_view, ChainFragment.class, bundle);
+                    fragmentTransaction.addToBackStack(null);
+                    fragmentTransaction.commit();
+                }
             }
             else if(mPoolElement instanceof ScheduledObjective)
             {

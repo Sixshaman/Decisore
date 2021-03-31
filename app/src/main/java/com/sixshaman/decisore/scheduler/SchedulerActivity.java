@@ -19,14 +19,11 @@ public class SchedulerActivity extends AppCompatActivity
 
         setTitle(R.string.title_activity_objective_scheduler);
 
-        if (savedInstanceState == null)
-        {
-            FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentManager fragmentManager = getSupportFragmentManager();
 
-            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-            fragmentTransaction.setReorderingAllowed(true);
-            fragmentTransaction.replace(R.id.scheduler_fragment_container_view, SchedulerFragment.class, null);
-            fragmentTransaction.commit();
-        }
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.setReorderingAllowed(true);
+        fragmentTransaction.replace(R.id.scheduler_fragment_container_view, SchedulerFragment.class, null);
+        fragmentTransaction.commit();
     }
 }

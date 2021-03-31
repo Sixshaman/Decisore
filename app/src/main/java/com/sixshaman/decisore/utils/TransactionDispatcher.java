@@ -89,19 +89,22 @@ public class TransactionDispatcher
         return false;
     }
 
-    public synchronized ObjectiveChain addChainTransaction(ObjectivePool poolToAddTo, String configFolder, String chainName, String chainDescription)
+    public synchronized ObjectiveChain addChainTransaction(long poolIdToAddTo, String configFolder, String chainName, String chainDescription)
     {
         String schedulerFilePath = configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME;
         invalidateSchedulerCache(schedulerFilePath);
 
         LockedWriteFile schedulerWriteFile = new LockedWriteFile(schedulerFilePath);
 
-        ObjectiveChain newChain = mSchedulerCache.addObjectiveChain(poolToAddTo, chainName, chainDescription);
+        ObjectiveChain newChain = mSchedulerCache.addObjectiveChain(poolIdToAddTo, chainName, chainDescription);
         if(newChain != null)
         {
             if(mSchedulerCache.flush(schedulerWriteFile))
             {
                 schedulerWriteFile.close();
+
+                invalidateSchedulerCache(schedulerFilePath);
+
                 return newChain;
             }
         }
@@ -180,7 +183,7 @@ public class TransactionDispatcher
     }
 
     @SuppressWarnings("UnusedReturnValue")
-    public synchronized boolean addObjectiveTransaction(ObjectivePool poolToAddTo, ObjectiveChain chainToAddTo,
+    public synchronized boolean addObjectiveTransaction(long poolId, long chainId,
                                                         String configFolder, LocalDateTime createDateTime, LocalDateTime enlistDateTime,
                                                         Duration repeatDuration, float repeatProbability,
                                                         String objectiveName, String objectiveDescription, ArrayList<String> objectiveTags)
@@ -196,40 +199,32 @@ public class TransactionDispatcher
 
         long objectiveId = Math.max(maxListId, maxSchedulerId) + 1;
 
+        boolean correctTransaction = true;
+
         EnlistedObjective  enlistedObjectiveToAdd  = null;
         ScheduledObjective scheduledObjectiveToAdd = null;
-        if(!createDateTime.isBefore(enlistDateTime))
+        if(!createDateTime.isBefore(enlistDateTime) && repeatDuration == Duration.ZERO && repeatProbability < 0.0001f && chainId == -1 && poolId == -1)
         {
-            if(repeatDuration == Duration.ZERO && repeatProbability < 0.0001f)
-            {
-                //One-time objective
-                enlistedObjectiveToAdd = new EnlistedObjective(objectiveId, createDateTime, enlistDateTime,
-                                                               objectiveName, objectiveDescription, objectiveTags);
+            //One-time objective
+            enlistedObjectiveToAdd = new EnlistedObjective(objectiveId, createDateTime, enlistDateTime,
+                                                           objectiveName, objectiveDescription, objectiveTags);
+        }
+        else if(!createDateTime.isBefore(enlistDateTime) && chainId == -1 && poolId == -1)
+        {
+            //Repeated objective which gets added to the list immediately
+            scheduledObjectiveToAdd = new ScheduledObjective(objectiveId, objectiveName, objectiveDescription,
+                                                             createDateTime, enlistDateTime, objectiveTags,
+                                                             repeatDuration, repeatProbability);
 
-                if(chainToAddTo != null)
-                {
-                    chainToAddTo.bindObjectiveToChain(enlistedObjectiveToAdd.getId());
-                }
-            }
-            else
-            {
-                //Repeated objective which gets added to the list immediately
-                scheduledObjectiveToAdd = new ScheduledObjective(objectiveId, objectiveName, objectiveDescription,
-                                                                 createDateTime, enlistDateTime, objectiveTags,
-                                                                 repeatDuration, repeatProbability);
-
-                enlistedObjectiveToAdd = scheduledObjectiveToAdd.obtainEnlistedObjective(mListCache.constructBlockingIds(), enlistDateTime);
-            }
+            enlistedObjectiveToAdd = scheduledObjectiveToAdd.obtainEnlistedObjective(mListCache.constructBlockingIds(), enlistDateTime);
         }
         else
         {
-            //Add a new truly scheduled objective
+            //If a chain or a pool is provided or it's not the time to add the objective, always create a scheduled objective only
             scheduledObjectiveToAdd = new ScheduledObjective(objectiveId, objectiveName, objectiveDescription,
                                                              createDateTime, enlistDateTime, objectiveTags,
                                                              repeatDuration, repeatProbability);
         }
-
-        boolean correctTransaction = true;
 
         if(enlistedObjectiveToAdd != null)
         {
@@ -254,7 +249,7 @@ public class TransactionDispatcher
         {
             //1. Lock scheduler file
             LockedWriteFile schedulerWriteFile = new LockedWriteFile(schedulerFilePath);
-            if(!mSchedulerCache.addObjective(poolToAddTo, chainToAddTo, scheduledObjectiveToAdd))
+            if(!mSchedulerCache.addObjective(poolId, chainId, scheduledObjectiveToAdd))
             {
                 correctTransaction = false;
             }
@@ -530,7 +525,7 @@ public class TransactionDispatcher
         if(chain == null)
         {
             String objectiveName = enlistedObjective.getName();
-            chain = addChainTransaction(null, configFolder, objectiveName, "");
+            chain = addChainTransaction(-1, configFolder, objectiveName, "");
         }
 
         if(chain == null)
@@ -582,7 +577,7 @@ public class TransactionDispatcher
         if(chain == null)
         {
             String objectiveName = enlistedObjective.getName();
-            chain = addChainTransaction(null, configFolder, objectiveName, "");
+            chain = addChainTransaction(-1, configFolder, objectiveName, "");
         }
 
         if(chain == null)

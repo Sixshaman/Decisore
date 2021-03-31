@@ -17,6 +17,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import com.sixshaman.decisore.R;
 import com.sixshaman.decisore.scheduler.ObjectiveSchedulerCache;
+import com.sixshaman.decisore.scheduler.SchedulerActivity;
 import com.sixshaman.decisore.utils.LockedReadFile;
 import com.sixshaman.decisore.scheduler.chain.NewChainDialogFragment;
 import com.sixshaman.decisore.utils.NewObjectiveDialogFragment;
@@ -35,9 +36,6 @@ public class PoolFragment extends Fragment
 
     //The id of the pool displayed
     private long mObjectivePoolId;
-
-    //The pool to display
-    private ObjectivePool mObjectivePool;
 
     //https://stackoverflow.com/a/44508892
     private boolean mFabExpanded;
@@ -72,12 +70,15 @@ public class PoolFragment extends Fragment
             mSchedulerCache.invalidate(schedulerFile);
             schedulerFile.close();
 
-            mObjectivePool = mSchedulerCache.getPoolById(mObjectivePoolId);
-            if(mObjectivePool != null)
+            RecyclerView recyclerView = mFragmentView.findViewById(R.id.objectivePoolView);
+            mSchedulerCache.attachToPoolView(recyclerView, mObjectivePoolId);
+            recyclerView.setLayoutManager(new LinearLayoutManager(mFragmentView.getContext()));
+
+            ObjectivePool objectivePool = mSchedulerCache.getPoolById(mObjectivePoolId);
+            if(objectivePool != null)
             {
-                RecyclerView recyclerView = mFragmentView.findViewById(R.id.objectivePoolView);
-                mObjectivePool.attachToPoolView(recyclerView, mSchedulerCache);
-                recyclerView.setLayoutManager(new LinearLayoutManager(mFragmentView.getContext()));
+                SchedulerActivity activity = ((SchedulerActivity)requireActivity());
+                Objects.requireNonNull(activity.getSupportActionBar()).setTitle(objectivePool.getName());
             }
 
             TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
@@ -152,7 +153,7 @@ public class PoolFragment extends Fragment
     {
         NewChainDialogFragment newChainDialogFragment = new NewChainDialogFragment();
         newChainDialogFragment.setSchedulerCache(mSchedulerCache);
-        newChainDialogFragment.setPoolToAddTo(mObjectivePool);
+        newChainDialogFragment.setPoolIdToAddTo(mObjectivePoolId);
 
         newChainDialogFragment.show(getParentFragmentManager(), getString(R.string.newChainDialogName));
     }
@@ -161,7 +162,7 @@ public class PoolFragment extends Fragment
     {
         NewObjectiveDialogFragment newObjectiveDialogFragment = new NewObjectiveDialogFragment();
         newObjectiveDialogFragment.setSchedulerCache(mSchedulerCache);
-        newObjectiveDialogFragment.setPoolToAddTo(mObjectivePool);
+        newObjectiveDialogFragment.setPoolIdToAddTo(mObjectivePoolId);
 
         newObjectiveDialogFragment.show(getParentFragmentManager(), getString(R.string.newObjectiveDialogName));
     }

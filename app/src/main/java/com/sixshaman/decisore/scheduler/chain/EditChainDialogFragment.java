@@ -54,8 +54,8 @@ public class EditChainDialogFragment extends DialogFragment
 
         builder.setPositiveButton(R.string.createChain, (dialog, id) ->
         {
-            final EditText editTextName        = resultDialog.getValue().findViewById(R.id.editNewChainName);
-            final EditText editEditDescription = resultDialog.getValue().findViewById(R.id.editNewChainDescription);
+            final EditText editTextName        = resultDialog.getValue().findViewById(R.id.editEditChainName);
+            final EditText editEditDescription = resultDialog.getValue().findViewById(R.id.editEditChainDescription);
 
             String nameText = editTextName.getEditableText().toString();
             if(nameText.isEmpty())

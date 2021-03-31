@@ -20,7 +20,9 @@ import org.json.JSONObject;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Objects;
 
 //A pool that can randomly choose from several objective sources
 public class ObjectivePool implements SchedulerElement
@@ -65,6 +67,23 @@ public class ObjectivePool implements SchedulerElement
     {
         mPoolViewHolder = new ObjectivePool.PoolViewHolder(schedulerCache);
         recyclerView.setAdapter(mPoolViewHolder);
+
+        mPoolViewHolder.notifyDataSetChanged();
+    }
+
+    public void attachAllChainViews(HashMap<Long, RecyclerView> chainItemViews, ObjectiveSchedulerCache schedulerCache)
+    {
+        for(PoolElement poolElement: mObjectiveSources)
+        {
+            if(poolElement instanceof ObjectiveChain)
+            {
+                ObjectiveChain chain = (ObjectiveChain)poolElement;
+                if(chainItemViews.containsKey(chain.getId()))
+                {
+                    chain.attachToChainView(Objects.requireNonNull(chainItemViews.get(chain.getId())), schedulerCache);
+                }
+            }
+        }
     }
 
     public void addObjectiveSource(PoolElement source)
@@ -126,6 +145,9 @@ public class ObjectivePool implements SchedulerElement
                 if(mPoolViewHolder != null && deleteSucceeded)
                 {
                     mPoolViewHolder.notifyItemChanged(i);
+                }
+                else if(deleteSucceeded)
+                {
                     complexDeleteSucceeded = true;
                 }
             }
@@ -206,30 +228,34 @@ public class ObjectivePool implements SchedulerElement
         }
 
         //Only add the objective to the list if the previous objective from the pool is finished (i.e. isn't in blockingObjectiveIds)
-
-        //Check non-empty sources only
-        ArrayList<PoolElement> availableSources = new ArrayList<>();
-        for(PoolElement source: mObjectiveSources)
-        {
-            if(source.isAvailable(blockingObjectiveIds, referenceTime))
-            {
-                availableSources.add(source);
-            }
-        }
-
-        if(availableSources.size() == 0)
+        if(!isAvailable(blockingObjectiveIds, referenceTime))
         {
             return null;
         }
 
-        int  randomSourceIndex  = (int) RandomUtils.getInstance().getRandomUniform(0, availableSources.size() - 1);
-        PoolElement randomPoolElement = availableSources.get(randomSourceIndex);
+        //Check non-empty sources only
+        ArrayList<Integer> availableSourceIndices = new ArrayList<>();
+        for(int i = 0; i < mObjectiveSources.size(); i++)
+        {
+            if(mObjectiveSources.get(i).isAvailable(blockingObjectiveIds, referenceTime))
+            {
+                availableSourceIndices.add(i);
+            }
+        }
+
+        if(availableSourceIndices.size() == 0)
+        {
+            return null;
+        }
+
+        int  randomSourceIndexIndex = (int) RandomUtils.getInstance().getRandomUniform(0, availableSourceIndices.size() - 1);
+        PoolElement randomPoolElement = mObjectiveSources.get(availableSourceIndices.get(randomSourceIndexIndex));
 
         EnlistedObjective resultObjective = randomPoolElement.obtainEnlistedObjective(blockingObjectiveIds, referenceTime);
         if(!randomPoolElement.isValid())
         {
             //Delete finished objectives
-            mObjectiveSources.remove(randomSourceIndex);
+            mObjectiveSources.remove(availableSourceIndices.get(randomSourceIndexIndex).intValue());
         }
 
         if(resultObjective != null)
@@ -410,6 +436,12 @@ public class ObjectivePool implements SchedulerElement
         mDescription = description;
     }
 
+    @Override
+    public boolean isAvailable(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime)
+    {
+        return !blockingObjectiveIds.contains(mLastProvidedObjectiveId);
+    }
+
     //Pauses the pool
     void pause()
     {
@@ -427,6 +459,12 @@ public class ObjectivePool implements SchedulerElement
     public long getLastProvidedObjectiveId()
     {
         return mLastProvidedObjectiveId;
+    }
+
+    //Sets the last provided objective id
+    public void setLastProvidedObjectiveId(long lastId)
+    {
+        mLastProvidedObjectiveId = lastId;
     }
 
     public boolean isEmpty()
@@ -473,7 +511,10 @@ public class ObjectivePool implements SchedulerElement
                 viewName = chain.getName();
 
                 ScheduledObjective objective = chain.getFirstObjective();
-                viewDescription.setValue("Next objective: " + objective.getName());
+                if(objective != null)
+                {
+                    viewDescription.setValue("Next objective: " + objective.getName());
+                }
 
                 iconId = R.drawable.ic_scheduler_chain;
             }
