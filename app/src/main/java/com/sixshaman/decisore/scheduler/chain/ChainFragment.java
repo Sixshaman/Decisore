@@ -105,7 +105,7 @@ public class ChainFragment extends Fragment
     {
         NewObjectiveDialogFragment newObjectiveDialogFragment = new NewObjectiveDialogFragment();
         newObjectiveDialogFragment.setSchedulerCache(mSchedulerCache);
-        newObjectiveDialogFragment.setChainIdToAddTo(mObjectiveChainId);
+        newObjectiveDialogFragment.setChainIdToAddTo(mObjectiveChainId, false);
 
         newObjectiveDialogFragment.show(getParentFragmentManager(), getString(R.string.newObjectiveDialogName));
     }

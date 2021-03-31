@@ -98,6 +98,15 @@ public class ListActivity extends AppCompatActivity implements ListObjectiveCoun
         NewObjectiveDialogFragment newObjectiveDialogFragment = new NewObjectiveDialogFragment();
         newObjectiveDialogFragment.setListCache(mListCache);
 
+        newObjectiveDialogFragment.setOnAfterObjectiveCreatedListener(objectiveId ->
+        {
+            TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
+            transactionDispatcher.setListCache(mListCache);
+
+            String configFolder = Objects.requireNonNull(getExternalFilesDir("/app")).getAbsolutePath();
+            transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now());
+        });
+
         newObjectiveDialogFragment.show(getSupportFragmentManager(), getString(R.string.newObjectiveDialogName));
     }
 
