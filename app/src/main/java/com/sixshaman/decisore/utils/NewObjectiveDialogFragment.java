@@ -14,9 +14,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 import com.sixshaman.decisore.R;
+import com.sixshaman.decisore.list.EnlistedObjective;
 import com.sixshaman.decisore.list.ObjectiveListCache;
-import com.sixshaman.decisore.scheduler.chain.ObjectiveChain;
-import com.sixshaman.decisore.scheduler.pool.ObjectivePool;
 import com.sixshaman.decisore.scheduler.ObjectiveSchedulerCache;
 
 import java.time.Duration;
@@ -27,16 +26,23 @@ import java.util.Objects;
 
 public class NewObjectiveDialogFragment extends DialogFragment
 {
-    private long mPoolIdToAddTo;
-    private long mChainIdToAddTo;
+    private long    mPoolIdToAddTo;
+    private long    mChainIdToAddTo;
+    private boolean mAddToChainBeginning;
 
     private ObjectiveSchedulerCache mSchedulerCache;
     private ObjectiveListCache      mListCache;
+
+    private BeforeObjectiveCreatedListener mBeforeObjectiveCreatedListener;
+    private AfterObjectiveCreatedListener  mAfterObjectiveCreatedListener;
 
     public NewObjectiveDialogFragment()
     {
         mPoolIdToAddTo  = -1;
         mChainIdToAddTo = -1;
+
+        mBeforeObjectiveCreatedListener = ()          -> {};
+        mAfterObjectiveCreatedListener  = objectiveId -> {};
     }
 
     public void setSchedulerCache(ObjectiveSchedulerCache schedulerCache)
@@ -54,9 +60,20 @@ public class NewObjectiveDialogFragment extends DialogFragment
         mPoolIdToAddTo = poolId;
     }
 
-    public void setChainIdToAddTo(long chainId)
+    public void setChainIdToAddTo(long chainId, boolean addToBeginning)
     {
-        mChainIdToAddTo = chainId;
+        mChainIdToAddTo      = chainId;
+        mAddToChainBeginning = addToBeginning;
+    }
+
+    public void setOnBeforeObjectiveCreatedListener(BeforeObjectiveCreatedListener listener)
+    {
+        mBeforeObjectiveCreatedListener = listener;
+    }
+
+    public void setOnAfterObjectiveCreatedListener(AfterObjectiveCreatedListener listener)
+    {
+        mAfterObjectiveCreatedListener = listener;
     }
 
     @NonNull
@@ -191,12 +208,14 @@ public class NewObjectiveDialogFragment extends DialogFragment
                 transactionDispatcher.setSchedulerCache(mSchedulerCache);
                 transactionDispatcher.setListCache(mListCache);
 
-                transactionDispatcher.addObjectiveTransaction(mPoolIdToAddTo, mChainIdToAddTo,
-                                                              configFolder, objectiveCreateDate, objectiveScheduleDate.getValue(),
-                                                              objectiveRepeatDuration, objectiveRepeatProbability,
-                                                              nameText, descriptionText, new ArrayList<>());
+                mBeforeObjectiveCreatedListener.beforeObjectiveCreated();
 
-                transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now());
+                long newObjectiveId = transactionDispatcher.addObjectiveTransaction(mPoolIdToAddTo, mChainIdToAddTo, mAddToChainBeginning,
+                                                                                    configFolder, objectiveCreateDate, objectiveScheduleDate.getValue(),
+                                                                                    objectiveRepeatDuration, objectiveRepeatProbability,
+                                                                                    nameText, descriptionText, new ArrayList<>());
+
+                mAfterObjectiveCreatedListener.afterObjectiveCreated(newObjectiveId);
             }
         });
 

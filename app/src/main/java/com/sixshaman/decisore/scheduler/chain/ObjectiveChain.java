@@ -70,6 +70,19 @@ public class ObjectiveChain implements PoolElement
         }
     }
 
+    //Adds an objective to the front of the chain
+    public void addObjectiveToChainFront(ScheduledObjective objective)
+    {
+        mObjectives.addFirst(objective);
+        mBoundObjectives.add(objective.getId());
+
+        if(mChainViewHolder != null)
+        {
+            mChainViewHolder.notifyItemInserted(0);
+            mChainViewHolder.notifyItemRangeChanged(0, mObjectives.size());
+        }
+    }
+
     public boolean deleteObjectiveById(long objectiveId)
     {
         int indexToDelete = -1;
@@ -181,6 +194,14 @@ public class ObjectiveChain implements PoolElement
             if(objectiveId > maxId)
             {
                 maxId = objectiveId;
+            }
+        }
+
+        for(Long boundId: mBoundObjectives)
+        {
+            if(boundId > maxId)
+            {
+                maxId = boundId;
             }
         }
 

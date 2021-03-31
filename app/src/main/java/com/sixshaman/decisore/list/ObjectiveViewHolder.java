@@ -15,10 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.sixshaman.decisore.R;
 import com.sixshaman.decisore.scheduler.chain.ObjectiveChain;
 import com.sixshaman.decisore.scheduler.ObjectiveSchedulerCache;
-import com.sixshaman.decisore.utils.EditObjectiveDialogFragment;
-import com.sixshaman.decisore.utils.LockedReadFile;
-import com.sixshaman.decisore.utils.NewObjectiveDialogFragment;
-import com.sixshaman.decisore.utils.TransactionDispatcher;
+import com.sixshaman.decisore.utils.*;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -134,15 +131,34 @@ class ObjectiveViewHolder extends RecyclerView.ViewHolder implements View.OnCrea
                 return false;
             }
 
-            TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
-            transactionDispatcher.setSchedulerCache(objectiveSchedulerCache);
-            transactionDispatcher.setListCache(mObjectiveListCache);
-
-            EnlistedObjective oldObjective = mObjectiveListCache.getObjective(mObjectiveId);
-            ObjectiveChain addedChain = transactionDispatcher.rechainEnlistedObjective(configFolder, oldObjective);
+            final ValueHolder<Long> addedChainIdHolder = new ValueHolder<>((long)-1);
 
             NewObjectiveDialogFragment newObjectiveDialogFragment = new NewObjectiveDialogFragment();
-            newObjectiveDialogFragment.setChainIdToAddTo(addedChain.getId());
+            newObjectiveDialogFragment.setOnBeforeObjectiveCreatedListener(() ->
+            {
+                TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
+                transactionDispatcher.setSchedulerCache(objectiveSchedulerCache);
+                transactionDispatcher.setListCache(mObjectiveListCache);
+
+                EnlistedObjective oldObjective = mObjectiveListCache.getObjective(mObjectiveId);
+                long chainId = transactionDispatcher.rechainEnlistedObjective(configFolder, oldObjective);
+
+                addedChainIdHolder.setValue(chainId);
+            });
+
+            newObjectiveDialogFragment.setOnAfterObjectiveCreatedListener(objectiveId ->
+            {
+                TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
+                transactionDispatcher.setSchedulerCache(objectiveSchedulerCache);
+                transactionDispatcher.setListCache(mObjectiveListCache);
+
+                if(addedChainIdHolder.getValue() != -1)
+                {
+                    transactionDispatcher.bindObjectiveToChain(configFolder, addedChainIdHolder.getValue(), objectiveId);
+                }
+
+                transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now());
+            });
 
             newObjectiveDialogFragment.setSchedulerCache(objectiveSchedulerCache);
             newObjectiveDialogFragment.setListCache(mObjectiveListCache);
@@ -178,11 +194,10 @@ class ObjectiveViewHolder extends RecyclerView.ViewHolder implements View.OnCrea
             transactionDispatcher.setSchedulerCache(objectiveSchedulerCache);
             transactionDispatcher.setListCache(mObjectiveListCache);
 
-            EnlistedObjective currentObjective = mObjectiveListCache.getObjective(mObjectiveId);
-            ObjectiveChain addedChain = transactionDispatcher.touchChainWithObjective(configFolder, currentObjective);
+            long touchedChainId = transactionDispatcher.touchChainWithObjective(configFolder, mObjectiveId);
 
             NewObjectiveDialogFragment newObjectiveDialogFragment = new NewObjectiveDialogFragment();
-            newObjectiveDialogFragment.setChainIdToAddTo(addedChain.getId());
+            newObjectiveDialogFragment.setChainIdToAddTo(touchedChainId, true);
 
             newObjectiveDialogFragment.setSchedulerCache(objectiveSchedulerCache);
             newObjectiveDialogFragment.setListCache(mObjectiveListCache);

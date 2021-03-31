@@ -89,30 +89,29 @@ public class TransactionDispatcher
         return false;
     }
 
-    public synchronized ObjectiveChain addChainTransaction(long poolIdToAddTo, String configFolder, String chainName, String chainDescription)
+    public synchronized long addChainTransaction(long poolIdToAddTo, String configFolder, String chainName, String chainDescription)
     {
         String schedulerFilePath = configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME;
         invalidateSchedulerCache(schedulerFilePath);
 
         LockedWriteFile schedulerWriteFile = new LockedWriteFile(schedulerFilePath);
 
-        ObjectiveChain newChain = mSchedulerCache.addObjectiveChain(poolIdToAddTo, chainName, chainDescription);
-        if(newChain != null)
+        long newChainId = mSchedulerCache.addObjectiveChain(poolIdToAddTo, chainName, chainDescription);
+        if(newChainId != -1)
         {
             if(mSchedulerCache.flush(schedulerWriteFile))
             {
                 schedulerWriteFile.close();
-
                 invalidateSchedulerCache(schedulerFilePath);
 
-                return newChain;
+                return newChainId;
             }
         }
 
         schedulerWriteFile.close();
         invalidateSchedulerCache(schedulerFilePath);
 
-        return null;
+        return newChainId;
     }
 
     @SuppressWarnings("UnusedReturnValue")
@@ -183,10 +182,10 @@ public class TransactionDispatcher
     }
 
     @SuppressWarnings("UnusedReturnValue")
-    public synchronized boolean addObjectiveTransaction(long poolId, long chainId,
-                                                        String configFolder, LocalDateTime createDateTime, LocalDateTime enlistDateTime,
-                                                        Duration repeatDuration, float repeatProbability,
-                                                        String objectiveName, String objectiveDescription, ArrayList<String> objectiveTags)
+    public synchronized long addObjectiveTransaction(long poolId, long chainId, boolean addToChainBeginning,
+                                                     String configFolder, LocalDateTime createDateTime, LocalDateTime enlistDateTime,
+                                                     Duration repeatDuration, float repeatProbability,
+                                                     String objectiveName, String objectiveDescription, ArrayList<String> objectiveTags)
     {
         String schedulerFilePath = configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME;
         String listFilePath      = configFolder + "/" + ObjectiveListCache.LIST_FILENAME;
@@ -249,7 +248,7 @@ public class TransactionDispatcher
         {
             //1. Lock scheduler file
             LockedWriteFile schedulerWriteFile = new LockedWriteFile(schedulerFilePath);
-            if(!mSchedulerCache.addObjective(poolId, chainId, scheduledObjectiveToAdd))
+            if(!mSchedulerCache.addObjective(poolId, chainId, addToChainBeginning, scheduledObjectiveToAdd))
             {
                 correctTransaction = false;
             }
@@ -268,9 +267,11 @@ public class TransactionDispatcher
         {
             invalidateSchedulerCache(schedulerFilePath);
             invalidateListCache(listFilePath);
+
+            return -1;
         }
 
-        return correctTransaction;
+        return objectiveId;
     }
 
     @SuppressWarnings("UnusedReturnValue")
@@ -513,7 +514,7 @@ public class TransactionDispatcher
         return false;
     }
 
-    public synchronized ObjectiveChain rechainEnlistedObjective(String configFolder, EnlistedObjective enlistedObjective)
+    public synchronized long rechainEnlistedObjective(String configFolder, EnlistedObjective enlistedObjective)
     {
         String listFilePath      = configFolder + "/" + ObjectiveListCache.LIST_FILENAME;
         String schedulerFilePath = configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME;
@@ -521,16 +522,17 @@ public class TransactionDispatcher
         invalidateSchedulerCache(schedulerFilePath);
         invalidateListCache(listFilePath);
 
-        ObjectiveChain chain = mSchedulerCache.findChainOfObjective(enlistedObjective.getId());
-        if(chain == null)
+        long chainId = mSchedulerCache.findChainOfObjective(enlistedObjective.getId());
+        if(chainId == -1)
         {
             String objectiveName = enlistedObjective.getName();
-            chain = addChainTransaction(-1, configFolder, objectiveName, "");
+            chainId = addChainTransaction(-1, configFolder, objectiveName, "");
         }
 
+        ObjectiveChain chain = mSchedulerCache.getChainById(chainId);
         if(chain == null)
         {
-            return null;
+            return -1;
         }
 
         //1. Lock list and scheduler files
@@ -542,7 +544,7 @@ public class TransactionDispatcher
         {
             //4. Add objective to the archive
             ScheduledObjective scheduledObjective = enlistedObjective.toScheduled(enlistedObjective.getEnlistDate());
-            chain.addObjectiveToChain(scheduledObjective);
+            chain.addObjectiveToChainFront(scheduledObjective);
 
             //5. List cache flush
             if(mListCache.flush(listWriteFile))
@@ -553,7 +555,7 @@ public class TransactionDispatcher
                     schedulerWriteFile.close();
                     listWriteFile.close();
 
-                    return chain;
+                    return chainId;
                 }
             }
         }
@@ -564,43 +566,88 @@ public class TransactionDispatcher
         listWriteFile.close();
         invalidateListCache(listFilePath);
 
-        return null;
+        return -1;
     }
 
-    public synchronized ObjectiveChain touchChainWithObjective(String configFolder, EnlistedObjective enlistedObjective)
+    public synchronized long touchChainWithObjective(String configFolder, long objectiveId)
     {
         String schedulerFilePath = configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME;
 
         invalidateSchedulerCache(schedulerFilePath);
 
-        ObjectiveChain chain = mSchedulerCache.findChainOfObjective(enlistedObjective.getId());
-        if(chain == null)
+        long chainId = mSchedulerCache.findChainOfObjective(objectiveId);
+        if(chainId == -1)
         {
-            String objectiveName = enlistedObjective.getName();
-            chain = addChainTransaction(-1, configFolder, objectiveName, "");
+            EnlistedObjective enlistedObjective = mListCache.getObjective(objectiveId);
+            if(enlistedObjective == null)
+            {
+                ScheduledObjective scheduledObjective = mSchedulerCache.getObjectiveById(objectiveId);
+                if(scheduledObjective == null)
+                {
+                    return -1;
+                }
+
+                String objectiveName = scheduledObjective.getName();
+                chainId = addChainTransaction(-1, configFolder, objectiveName, "");
+            }
+            else
+            {
+                String objectiveName = enlistedObjective.getName();
+                chainId = addChainTransaction(-1, configFolder, objectiveName, "");
+            }
         }
 
+        ObjectiveChain chain = mSchedulerCache.getChainById(chainId);
         if(chain == null)
         {
-            return null;
+            return -1;
         }
 
         //2. Lock scheduler file
         LockedWriteFile schedulerWriteFile = new LockedWriteFile(schedulerFilePath);
-
-        chain.bindObjectiveToChain(enlistedObjective.getId());
+        chain.bindObjectiveToChain(objectiveId);
 
         //6. Archive cache flush
         if(mSchedulerCache.flush(schedulerWriteFile))
         {
             schedulerWriteFile.close();
-            return chain;
+            return chainId;
         }
 
         schedulerWriteFile.close();
         invalidateSchedulerCache(schedulerFilePath);
 
-        return null;
+        return -1;
+    }
+
+    @SuppressWarnings("UnusedReturnValue")
+    public synchronized boolean bindObjectiveToChain(String configFolder, long chainId, long objectiveId)
+    {
+        String schedulerFilePath = configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME;
+
+        invalidateSchedulerCache(schedulerFilePath);
+
+        ObjectiveChain chain = mSchedulerCache.getChainById(chainId);
+        if(chain == null)
+        {
+            return false;
+        }
+
+        //2. Lock scheduler file
+        LockedWriteFile schedulerWriteFile = new LockedWriteFile(schedulerFilePath);
+        chain.bindObjectiveToChain(objectiveId);
+
+        //6. Archive cache flush
+        if(mSchedulerCache.flush(schedulerWriteFile))
+        {
+            schedulerWriteFile.close();
+            return true;
+        }
+
+        schedulerWriteFile.close();
+        invalidateSchedulerCache(schedulerFilePath);
+
+        return false;
     }
 
     @SuppressWarnings("UnusedReturnValue")

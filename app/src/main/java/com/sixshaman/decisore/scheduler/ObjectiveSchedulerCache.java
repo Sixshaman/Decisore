@@ -234,7 +234,7 @@ public class ObjectiveSchedulerCache
     }
 
     //Creates a new objective chain
-    public ObjectiveChain addObjectiveChain(long poolIdToAddTo, String name, String description)
+    public long addObjectiveChain(long poolIdToAddTo, String name, String description)
     {
         ObjectivePool poolToAddTo = null;
         if(poolIdToAddTo != -1)
@@ -242,7 +242,7 @@ public class ObjectiveSchedulerCache
             poolToAddTo = getPoolById(poolIdToAddTo);
             if(poolToAddTo == null)
             {
-                return null;
+                return -1;
             }
         }
 
@@ -268,7 +268,7 @@ public class ObjectiveSchedulerCache
             }
         }
 
-        return chain;
+        return chainId;
     }
 
     //Creates a new objective pool
@@ -287,7 +287,7 @@ public class ObjectiveSchedulerCache
     }
 
     //Adds a general task to task pool pool or task chain chain scheduled to be added at deferTime with repeat duration repeatDuration and repeat probability repeatProbability
-    public boolean addObjective(long poolId, long chainId, ScheduledObjective scheduledObjective)
+    public boolean addObjective(long poolId, long chainId, boolean addToChainBeginning, ScheduledObjective scheduledObjective)
     {
         ObjectivePool poolToAddTo = null;
         if(poolId != -1)
@@ -325,7 +325,14 @@ public class ObjectiveSchedulerCache
         else if(poolToAddTo == null)
         {
             //Chain is provided, add the objective there
-            chainToAddTo.addObjectiveToChain(scheduledObjective);
+            if(addToChainBeginning)
+            {
+                chainToAddTo.addObjectiveToChainFront(scheduledObjective);
+            }
+            else
+            {
+                chainToAddTo.addObjectiveToChain(scheduledObjective);
+            }
 
             if(mSchedulerViewHolder != null)
             {
@@ -422,7 +429,7 @@ public class ObjectiveSchedulerCache
         //Simply add the objective if no source contains it
         if(!alreadyExisting)
         {
-            return addObjective(-1, -1, objective);
+            return addObjective(-1, -1, false, objective);
         }
 
         return true;
@@ -561,8 +568,45 @@ public class ObjectiveSchedulerCache
         return null;
     }
 
-    //Finds a chain that contained an objective with that name
-    public ObjectiveChain findChainOfObjective(long objectiveId)
+    public ScheduledObjective getObjectiveById(long id)
+    {
+        for(SchedulerElement schedulerElement: mSchedulerElements)
+        {
+            if(schedulerElement instanceof ObjectivePool)
+            {
+                ObjectivePool      objectivePool      = (ObjectivePool)schedulerElement;
+                ScheduledObjective scheduledObjective = objectivePool.getObjectiveById(id);
+
+                if(scheduledObjective != null)
+                {
+                    return scheduledObjective;
+                }
+            }
+            else if(schedulerElement instanceof ObjectiveChain)
+            {
+                ObjectiveChain     objectiveChain     = (ObjectiveChain)schedulerElement;
+                ScheduledObjective scheduledObjective = objectiveChain.getObjectiveById(id);
+
+                if(scheduledObjective != null)
+                {
+                    return scheduledObjective;
+                }
+            }
+            else if(schedulerElement instanceof ScheduledObjective)
+            {
+                ScheduledObjective scheduledObjective = (ScheduledObjective)schedulerElement;
+                if(scheduledObjective.getId() == id)
+                {
+                    return scheduledObjective;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    //Finds the id of a chain that contained an objective with that name
+    public long findChainOfObjective(long objectiveId)
     {
         for(SchedulerElement schedulerElement: mSchedulerElements)
         {
@@ -571,7 +615,7 @@ public class ObjectiveSchedulerCache
                 ObjectiveChain chain = (ObjectiveChain)schedulerElement;
                 if(chain.containedObjective(objectiveId))
                 {
-                    return chain;
+                    return chain.getId();
                 }
             }
             else if(schedulerElement instanceof ObjectivePool)
@@ -580,12 +624,12 @@ public class ObjectiveSchedulerCache
                 PoolElement   poolElement = pool.findSourceForObjective(objectiveId);
                 if(poolElement instanceof ObjectiveChain)
                 {
-                    return (ObjectiveChain)poolElement;
+                    return ((ObjectiveChain)poolElement).getId();
                 }
             }
         }
 
-        return null;
+        return -1;
     }
 
     public boolean editObjectiveName(long objectiveId, String objectiveName, String objectiveDescription)

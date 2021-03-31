@@ -165,6 +165,15 @@ public class SchedulerFragment extends Fragment
         NewObjectiveDialogFragment newObjectiveDialogFragment = new NewObjectiveDialogFragment();
         newObjectiveDialogFragment.setSchedulerCache(mSchedulerCache);
 
+        newObjectiveDialogFragment.setOnAfterObjectiveCreatedListener(objectiveId ->
+        {
+            TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
+            transactionDispatcher.setSchedulerCache(mSchedulerCache);
+
+            String configFolder = Objects.requireNonNull(mFragmentView.getContext().getExternalFilesDir("/app")).getAbsolutePath();
+            transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now());
+        });
+
         newObjectiveDialogFragment.show(getParentFragmentManager(), getString(R.string.newObjectiveDialogName));
     }
 
