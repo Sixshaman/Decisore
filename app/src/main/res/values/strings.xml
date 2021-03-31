@@ -7,8 +7,8 @@
     <string name="taskName">Name</string>
     <string name="taskDescription">Description</string>
     <string name="newObjectiveDialogName">New objective</string>
-    <string name="newChainDialogName">Edit chain</string>
-    <string name="editChainDialogName">New chain</string>
+    <string name="newChainDialogName">New chain</string>
+    <string name="editChainDialogName">Edit chain</string>
     <string name="newPoolDialogName">New pool</string>
     <string name="editPoolDialogName">Edit pool</string>
     <string name="editObjectiveDialogName">Edit objective</string>

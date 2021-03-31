@@ -44,8 +44,11 @@ public class ChainElementViewHolder extends RecyclerView.ViewHolder implements V
 
         mParentLayout.setOnCreateContextMenuListener(this);
 
-        final String onClickMessage = "Scheduled for " + mScheduledObjective.getScheduledEnlistDate().toString();
-        mParentLayout.setOnClickListener(view -> Toast.makeText(view.getContext(), onClickMessage, Toast.LENGTH_SHORT).show());
+        mParentLayout.setOnClickListener(view ->
+        {
+            final String onClickMessage = "Scheduled for " + mScheduledObjective.getScheduledEnlistDate().toString();
+            Toast.makeText(view.getContext(), onClickMessage, Toast.LENGTH_SHORT).show();
+        });
     }
 
     void setSourceMetadata(ObjectiveSchedulerCache schedulerCache, ScheduledObjective objective)

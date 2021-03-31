@@ -24,5 +24,7 @@ public interface SchedulerElement
     //Returns the element name(Objective/Chain/Pool)
     String getElementName();
 
+    boolean isAvailable(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime);
+
     EnlistedObjective obtainEnlistedObjective(final HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime);
 }

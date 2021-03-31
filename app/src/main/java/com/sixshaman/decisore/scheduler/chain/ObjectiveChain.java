@@ -49,10 +49,12 @@ public class ObjectiveChain implements PoolElement
         mBoundObjectives = new HashSet<>();
     }
 
-    public void attachToChainView(ObjectiveSchedulerCache schedulerCache, RecyclerView recyclerView)
+    public void attachToChainView(RecyclerView recyclerView, ObjectiveSchedulerCache schedulerCache)
     {
         mChainViewHolder = new ObjectiveChain.ChainViewHolder(schedulerCache);
         recyclerView.setAdapter(mChainViewHolder);
+
+        mChainViewHolder.notifyDataSetChanged();
     }
 
     //Adds an objective to the chain
@@ -162,6 +164,11 @@ public class ObjectiveChain implements PoolElement
 
     public ScheduledObjective getFirstObjective()
     {
+        if(mObjectives.isEmpty())
+        {
+            return null;
+        }
+
         return mObjectives.getFirst();
     }
 
@@ -309,6 +316,12 @@ public class ObjectiveChain implements PoolElement
             mObjectives.removeFirst();
         }
 
+        if(mChainViewHolder != null)
+        {
+            mChainViewHolder.notifyItemRemoved(0);
+            mChainViewHolder.notifyItemRangeChanged(0, mObjectives.size() - 1);
+        }
+
         return enlistedObjective;
     }
 
@@ -325,7 +338,7 @@ public class ObjectiveChain implements PoolElement
         @Override
         public ChainElementViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i)
         {
-            View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.layout_pool_element_view, viewGroup, false);
+            View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.layout_scheduled_objective_view, viewGroup, false);
             return new ChainElementViewHolder(view);
         }
 

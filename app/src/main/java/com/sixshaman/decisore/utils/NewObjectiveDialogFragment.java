@@ -27,16 +27,16 @@ import java.util.Objects;
 
 public class NewObjectiveDialogFragment extends DialogFragment
 {
-    private ObjectivePool  mPoolToAddTo;
-    private ObjectiveChain mChainToAddTo;
+    private long mPoolIdToAddTo;
+    private long mChainIdToAddTo;
 
     private ObjectiveSchedulerCache mSchedulerCache;
     private ObjectiveListCache      mListCache;
 
     public NewObjectiveDialogFragment()
     {
-        mPoolToAddTo  = null;
-        mChainToAddTo = null;
+        mPoolIdToAddTo  = -1;
+        mChainIdToAddTo = -1;
     }
 
     public void setSchedulerCache(ObjectiveSchedulerCache schedulerCache)
@@ -49,14 +49,14 @@ public class NewObjectiveDialogFragment extends DialogFragment
         mListCache = listCache;
     }
 
-    public void setPoolToAddTo(ObjectivePool pool)
+    public void setPoolIdToAddTo(long poolId)
     {
-        mPoolToAddTo = pool;
+        mPoolIdToAddTo = poolId;
     }
 
-    public void setChainToAddTo(ObjectiveChain chain)
+    public void setChainIdToAddTo(long chainId)
     {
-        mChainToAddTo = chain;
+        mChainIdToAddTo = chainId;
     }
 
     @NonNull
@@ -191,7 +191,7 @@ public class NewObjectiveDialogFragment extends DialogFragment
                 transactionDispatcher.setSchedulerCache(mSchedulerCache);
                 transactionDispatcher.setListCache(mListCache);
 
-                transactionDispatcher.addObjectiveTransaction(mPoolToAddTo, mChainToAddTo,
+                transactionDispatcher.addObjectiveTransaction(mPoolIdToAddTo, mChainIdToAddTo,
                                                               configFolder, objectiveCreateDate, objectiveScheduleDate.getValue(),
                                                               objectiveRepeatDuration, objectiveRepeatProbability,
                                                               nameText, descriptionText, new ArrayList<>());

@@ -38,6 +38,6 @@ public class RandomUtils
 
     public long getRandomUniform(long min, long max)
     {
-        return mRandomGenerator.nextLong() % (max - min + 1) + min;
+        return (Math.abs(mRandomGenerator.nextLong()) % (max - min + 1)) + min;
     }
 }

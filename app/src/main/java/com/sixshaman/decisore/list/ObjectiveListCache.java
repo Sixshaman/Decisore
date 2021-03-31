@@ -311,9 +311,8 @@ public class ObjectiveListCache
                 transactionDispatcher.setListCache(ObjectiveListCache.this);
 
                 transactionDispatcher.finishObjectiveTransaction(configFolder, objectiveToRemove, LocalDateTime.now());
+                transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now());
             });
-
-            objectiveViewHolder.mParentLayout.setOnClickListener(view -> Toast.makeText(mContext, mEnlistedObjectives.get(position).getDescription(), Toast.LENGTH_LONG).show());
 
             objectiveViewHolder.mCheckbox.setChecked(false);
 

@@ -71,6 +71,7 @@ public class SchedulerElementViewHolder extends RecyclerView.ViewHolder implemen
                     FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
                     fragmentTransaction.setReorderingAllowed(true);
                     fragmentTransaction.replace(R.id.scheduler_fragment_container_view, PoolFragment.class, bundle);
+                    fragmentTransaction.addToBackStack(null);
                     fragmentTransaction.commit();
                 }
             }
@@ -87,6 +88,7 @@ public class SchedulerElementViewHolder extends RecyclerView.ViewHolder implemen
                     FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
                     fragmentTransaction.setReorderingAllowed(true);
                     fragmentTransaction.replace(R.id.scheduler_fragment_container_view, ChainFragment.class, bundle);
+                    fragmentTransaction.addToBackStack(null);
                     fragmentTransaction.commit();
                 }
             }

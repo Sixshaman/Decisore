@@ -36,6 +36,7 @@ public class ObjectivePoolLatestLoader implements ObjectivePoolLoader
             }
 
             ObjectivePool objectivePool = new ObjectivePool(id, name, description);
+            objectivePool.setLastProvidedObjectiveId(lastId);
 
             String isActiveString = jsonObject.optString("IsActive");
 
@@ -64,17 +65,17 @@ public class ObjectivePoolLatestLoader implements ObjectivePoolLoader
 
                     if(sourceData != null)
                     {
-                        if(sourceType.equals("Chain"))
+                        if(sourceType.equals("ObjectiveChain"))
                         {
                             ObjectiveChainLatestLoader chainLatestLoader = new ObjectiveChainLatestLoader();
 
-                            ObjectiveChain chain = chainLatestLoader.fromJSON(jsonObject);
+                            ObjectiveChain chain = chainLatestLoader.fromJSON(sourceData);
                             if(chain != null)
                             {
                                 objectivePool.addObjectiveSource(chain);
                             }
                         }
-                        else if(sourceType.equals("Objective"))
+                        else if(sourceType.equals("ScheduledObjective"))
                         {
                             ScheduledObjectiveLatestLoader objectiveLatestLoader = new ScheduledObjectiveLatestLoader();
 

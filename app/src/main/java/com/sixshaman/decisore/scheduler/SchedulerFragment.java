@@ -59,6 +59,9 @@ public class SchedulerFragment extends Fragment
     {
         super.onResume();
 
+        SchedulerActivity activity = ((SchedulerActivity) requireActivity());
+        Objects.requireNonNull(activity.getSupportActionBar()).setTitle(R.string.title_activity_objective_scheduler);
+
         mSchedulerCache = new ObjectiveSchedulerCache();
 
         String configFolder = Objects.requireNonNull(mFragmentView.getContext().getExternalFilesDir("/app")).getAbsolutePath();

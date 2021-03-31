@@ -8,6 +8,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.RecyclerView;
@@ -50,6 +51,8 @@ class ObjectiveViewHolder extends RecyclerView.ViewHolder implements View.OnCrea
         mCheckbox = itemView.findViewById(R.id.checkBoxObjectiveDone);
 
         mParentLayout = itemView.findViewById(R.id.layoutObjectiveView);
+
+        mParentLayout.setOnClickListener(view -> Toast.makeText(itemView.getContext(), mObjectiveListCache.getObjective(mObjectiveId).getDescription(), Toast.LENGTH_SHORT).show());
 
         mParentLayout.setOnCreateContextMenuListener(this);
 
@@ -139,7 +142,7 @@ class ObjectiveViewHolder extends RecyclerView.ViewHolder implements View.OnCrea
             ObjectiveChain addedChain = transactionDispatcher.rechainEnlistedObjective(configFolder, oldObjective);
 
             NewObjectiveDialogFragment newObjectiveDialogFragment = new NewObjectiveDialogFragment();
-            newObjectiveDialogFragment.setChainToAddTo(addedChain);
+            newObjectiveDialogFragment.setChainIdToAddTo(addedChain.getId());
 
             newObjectiveDialogFragment.setSchedulerCache(objectiveSchedulerCache);
             newObjectiveDialogFragment.setListCache(mObjectiveListCache);
@@ -179,7 +182,7 @@ class ObjectiveViewHolder extends RecyclerView.ViewHolder implements View.OnCrea
             ObjectiveChain addedChain = transactionDispatcher.touchChainWithObjective(configFolder, currentObjective);
 
             NewObjectiveDialogFragment newObjectiveDialogFragment = new NewObjectiveDialogFragment();
-            newObjectiveDialogFragment.setChainToAddTo(addedChain);
+            newObjectiveDialogFragment.setChainIdToAddTo(addedChain.getId());
 
             newObjectiveDialogFragment.setSchedulerCache(objectiveSchedulerCache);
             newObjectiveDialogFragment.setListCache(mObjectiveListCache);
