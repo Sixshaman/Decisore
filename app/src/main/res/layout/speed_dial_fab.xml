@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+       xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!--Based on https://stackoverflow.com/a/44508892-->
+
+    <RelativeLayout
+            android:id="@+id/fab_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipChildren="false"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintRight_toRightOf="parent">
+
+        <ImageButton
+                style="@style/AdditionalTheme"
+                android:id="@+id/fab_add_pool"
+                android:src="@drawable/ic_scheduler_pool"
+                android:scaleType="centerInside"
+                android:padding="0dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_above="@+id/fab_add_chain"
+                android:layout_alignEnd="@+id/mainFabButton"
+                android:contentDescription="@null"
+                android:backgroundTint="@color/colorAccentTransparent"/>
+
+        <ImageButton
+                style="@style/AdditionalTheme"
+                android:id="@+id/fab_add_chain"
+                android:src="@drawable/ic_scheduler_chain"
+                android:scaleType="centerInside"
+                android:padding="0dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:contentDescription="@null"
+                android:layout_above="@+id/fab_add_objective"
+                android:layout_alignEnd="@id/mainFabButton"
+                android:backgroundTint="@color/colorAccentTransparent"/>
+
+        <ImageButton
+                style="@style/AdditionalTheme"
+                android:id="@+id/fab_add_objective"
+                android:src="@drawable/ic_scheduler_objective"
+                android:scaleType="centerInside"
+                android:padding="0dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:contentDescription="@null"
+                android:layout_above="@+id/mainFabButton"
+                android:layout_alignEnd="@id/mainFabButton"
+                android:backgroundTint="@color/colorAccentTransparent"/>
+
+        <ImageButton
+                style="@style/FloatingActionButtonSpeedDial"
+                android:id="@+id/mainFabButton"
+                android:src="@drawable/plus"
+                android:layout_width="54dp"
+                android:layout_height="54dp"
+                android:contentDescription="@null"
+                android:visibility="visible"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginVertical="16dp"
+                android:layout_marginBottom="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentEnd="true"/>
+    </RelativeLayout>
+</merge>

@@ -1,0 +1,382 @@
+package com.sixshaman.decisore.scheduler.chain;
+
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
+import com.sixshaman.decisore.R;
+import com.sixshaman.decisore.list.EnlistedObjective;
+import com.sixshaman.decisore.scheduler.ObjectiveSchedulerCache;
+import com.sixshaman.decisore.scheduler.pool.PoolElement;
+import com.sixshaman.decisore.scheduler.objective.ScheduledObjective;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.time.LocalDateTime;
+import java.util.*;
+
+public class ObjectiveChain implements PoolElement
+{
+    //View holder
+    private ChainViewHolder mChainViewHolder;
+
+    //Objective chain id
+    private final long mId;
+
+    //Objective chain name
+    private String mName;
+
+    //Objective chain description
+    private String mDescription;
+
+    //The objectives that this chain will provide one-by-one. Since Java doesn't have any non-deque Queue implementation, we will use ArrayDeque
+    private final LinkedList<ScheduledObjective> mObjectives;
+
+    //The list of ids of all objectives once provided by the chain
+    final HashSet<Long> mBoundObjectives;
+
+    //Creates a new objective chain
+    public ObjectiveChain(long id, String name, String description)
+    {
+        mId = id;
+
+        mName        = name;
+        mDescription = description;
+
+        mObjectives      = new LinkedList<>();
+        mBoundObjectives = new HashSet<>();
+    }
+
+    public void attachToChainView(RecyclerView recyclerView, ObjectiveSchedulerCache schedulerCache)
+    {
+        mChainViewHolder = new ObjectiveChain.ChainViewHolder(schedulerCache);
+        recyclerView.setAdapter(mChainViewHolder);
+
+        mChainViewHolder.notifyDataSetChanged();
+    }
+
+    //Adds an objective to the chain
+    public void addObjectiveToChain(ScheduledObjective objective)
+    {
+        mObjectives.addLast(objective);
+        mBoundObjectives.add(objective.getId());
+
+        if(mChainViewHolder != null)
+        {
+            mChainViewHolder.notifyItemInserted(mObjectives.size() - 1);
+            mChainViewHolder.notifyItemRangeChanged(mObjectives.size() - 1, mObjectives.size());
+        }
+    }
+
+    //Adds an objective to the front of the chain
+    public void addObjectiveToChainFront(ScheduledObjective objective)
+    {
+        mObjectives.addFirst(objective);
+        mBoundObjectives.add(objective.getId());
+
+        if(mChainViewHolder != null)
+        {
+            mChainViewHolder.notifyItemInserted(0);
+            mChainViewHolder.notifyItemRangeChanged(0, mObjectives.size());
+        }
+    }
+
+    public boolean deleteObjectiveById(long objectiveId)
+    {
+        int indexToDelete = -1;
+        for(int i = 0; i < mObjectives.size(); i++)
+        {
+            if(mObjectives.get(i).getId() == objectiveId)
+            {
+                indexToDelete = i;
+                break;
+            }
+        }
+
+        if(indexToDelete != -1)
+        {
+            mObjectives.remove(indexToDelete);
+
+            if(mChainViewHolder != null)
+            {
+                mChainViewHolder.notifyItemRemoved(indexToDelete);
+                mChainViewHolder.notifyItemRangeChanged(indexToDelete, mChainViewHolder.getItemCount());
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    @Override
+    public String getName()
+    {
+        return mName;
+    }
+
+    @Override
+    public String getDescription()
+    {
+        return mDescription;
+    }
+
+    public void setName(String chainName)
+    {
+        mName = chainName;
+    }
+
+    public void setDescription(String chainDescription)
+    {
+        mDescription = chainDescription;
+    }
+
+    @Override
+    public JSONObject toJSON()
+    {
+        JSONObject result = new JSONObject();
+
+        try
+        {
+            result.put("Id", mId);
+
+            result.put("Name",        mName);
+            result.put("Description", mDescription);
+
+            JSONArray objectivesArray = new JSONArray();
+            for(ScheduledObjective objective: mObjectives)
+            {
+                objectivesArray.put(objective.toJSON());
+            }
+
+            result.put("Objectives", objectivesArray);
+
+            JSONArray idHistoryArray = new JSONArray();
+            for(Long objectiveId: mBoundObjectives)
+            {
+                idHistoryArray.put(objectiveId.longValue());
+            }
+
+            result.put("ObjectiveHistory", idHistoryArray);
+        }
+        catch (JSONException e)
+        {
+            e.printStackTrace();
+        }
+
+        return result;
+    }
+
+    @SuppressWarnings("unused")
+    public int getObjectiveCount()
+    {
+        return mObjectives.size();
+    }
+
+    public ScheduledObjective getFirstObjective()
+    {
+        if(mObjectives.isEmpty())
+        {
+            return null;
+        }
+
+        return mObjectives.getFirst();
+    }
+
+    public long getMaxObjectiveId()
+    {
+        long maxId = -1;
+        for(ScheduledObjective objective: mObjectives)
+        {
+            long objectiveId = objective.getId();
+            if(objectiveId > maxId)
+            {
+                maxId = objectiveId;
+            }
+        }
+
+        for(Long boundId: mBoundObjectives)
+        {
+            if(boundId > maxId)
+            {
+                maxId = boundId;
+            }
+        }
+
+        return maxId;
+    }
+
+    public boolean containedObjective(long objectiveId)
+    {
+        for(Long historicId: mBoundObjectives)
+        {
+            if(historicId == objectiveId)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public ScheduledObjective getObjectiveById(long objectiveId)
+    {
+        for(ScheduledObjective objective: mObjectives)
+        {
+            if(objective.getId() == objectiveId)
+            {
+                return objective;
+            }
+        }
+
+        return null;
+    }
+
+    public boolean putBack(ScheduledObjective objective)
+    {
+        if(!mObjectives.isEmpty())
+        {
+            ScheduledObjective firstObjective = mObjectives.getFirst();
+            if(firstObjective.getId() == objective.getId())
+            {
+                firstObjective.rescheduleUnregulated(objective.getScheduledEnlistDate());
+            }
+            else
+            {
+                mObjectives.addFirst(objective);
+                mBoundObjectives.add(objective.getId()); //Just in case
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    //Marks the objective such that it belongs to this chain (without adding it to chain)
+    public void bindObjectiveToChain(long objectiveId)
+    {
+        mBoundObjectives.add(objectiveId);
+    }
+
+    public boolean isNotEmpty()
+    {
+        return !mObjectives.isEmpty();
+    }
+
+    public long getId()
+    {
+        return mId;
+    }
+
+    @Override
+    public boolean isPaused()
+    {
+        return false;
+    }
+
+    @Override
+    public boolean isValid()
+    {
+        return true;
+    }
+
+    @Override
+    public boolean isAvailable(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime)
+    {
+        if(isPaused())
+        {
+            return false;
+        }
+
+        for(Long boundId: mBoundObjectives)
+        {
+            if(blockingObjectiveIds.contains(boundId))
+            {
+                return false;
+            }
+        }
+
+        if(mObjectives.isEmpty())
+        {
+            return false;
+        }
+        else
+        {
+            ScheduledObjective firstObjective = mObjectives.getFirst();
+            return firstObjective.isAvailable(blockingObjectiveIds, referenceTime);
+        }
+    }
+
+    @Override
+    public String getElementName()
+    {
+        return "ObjectiveChain";
+    }
+
+    @Override
+    public EnlistedObjective obtainEnlistedObjective(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime)
+    {
+        if(!isAvailable(blockingObjectiveIds, referenceTime))
+        {
+            return null;
+        }
+
+        ScheduledObjective firstChainObjective = mObjectives.getFirst();
+
+        EnlistedObjective enlistedObjective = firstChainObjective.obtainEnlistedObjective(blockingObjectiveIds, referenceTime);
+        if(enlistedObjective == null)
+        {
+            return null;
+        }
+
+        if(!firstChainObjective.isValid())
+        {
+            mObjectives.removeFirst();
+        }
+
+        if(mChainViewHolder != null)
+        {
+            mChainViewHolder.notifyItemRemoved(0);
+            mChainViewHolder.notifyItemRangeChanged(0, mObjectives.size() - 1);
+        }
+
+        return enlistedObjective;
+    }
+
+    private class ChainViewHolder extends RecyclerView.Adapter<ChainElementViewHolder>
+    {
+        private final ObjectiveSchedulerCache mSchedulerCache;
+
+        ChainViewHolder(ObjectiveSchedulerCache schedulerCache)
+        {
+            mSchedulerCache = schedulerCache;
+        }
+
+        @NonNull
+        @Override
+        public ChainElementViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i)
+        {
+            View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.layout_scheduled_objective_view, viewGroup, false);
+            return new ChainElementViewHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull ChainElementViewHolder elementViewHolder, int position)
+        {
+            ScheduledObjective objective = mObjectives.get(position);
+
+            elementViewHolder.mTextView.setText(objective.getName());
+
+            elementViewHolder.setSourceMetadata(mSchedulerCache, objective);
+        }
+
+        @Override
+        public int getItemCount()
+        {
+            return mObjectives.size();
+        }
+    }
+}

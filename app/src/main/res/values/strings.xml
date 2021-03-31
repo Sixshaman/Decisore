@@ -1,32 +1,45 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Decisore</string>
-    <string name="title_activity_task_list">Today objectives</string>\
-    <string name="title_activity_task_archive">Finished objectives</string>
+    <string name="title_activity_objective_list">Today objectives</string>
+    <string name="title_activity_objective_archive">Finished objectives</string>
+    <string name="title_activity_objective_list_append"> today objectives</string>
     <string name="placeholderTask">Objective</string>
     <string name="taskName">Name</string>
     <string name="taskDescription">Description</string>
-    <string name="newTaskDialogName">New objective</string>
+    <string name="newObjectiveDialogName">New objective</string>
+    <string name="newChainDialogName">New chain</string>
+    <string name="editChainDialogName">Edit chain</string>
+    <string name="newPoolDialogName">New pool</string>
+    <string name="editPoolDialogName">Edit pool</string>
     <string name="editObjectiveDialogName">Edit objective</string>
     <string name="deleteObjectiveAreYouSure">Are you sure you want to delete</string>
     <string name="objectiveSchedule">Schedule for:</string>
     <string name="objectiveRepeats">Repeats:</string>
     <string name="objectiveOccasional">Occasional:</string>
-    <string name="createTask">DO IT, MOTHERFUCKER!</string>
+    <string name="createObjective">DO IT, MOTHERFUCKER!</string>
+    <string name="createChain">DO IT, MOTHERFUCKER!</string>
+    <string name="createPool">DO IT, MOTHERFUCKER!</string>
     <string name="createCancel">Cancel</string>
 
     <string name="menu_schedule_for_tomorrow">Schedule for tomorrow</string>
-    <string name="menu_schedule_for_arbitrary">Schedule for...</string>
-    <string name="menu_add_objective_before">Add objective before...</string>
-    <string name="menu_add_objective_after">Add objective after...</string>
-    <string name="menu_edit_objective">Edit objective...</string>
+    <string name="menu_schedule_for_arbitrary" tools:ignore="TypographyEllipsis">Schedule for...</string>
+    <string name="menu_add_objective_before" tools:ignore="TypographyEllipsis">Add objective before...</string>
+    <string name="menu_add_objective_after" tools:ignore="TypographyEllipsis">Add objective after...</string>
+    <string name="menu_edit_objective" tools:ignore="TypographyEllipsis">Edit objective...</string>
     <string name="menu_delete_objective">Delete objective</string>
+    <string name="menu_edit_chain" tools:ignore="TypographyEllipsis">Edit chain...</string>
+    <string name="menu_delete_chain">Delete chain</string>
+    <string name="menu_edit_pool" tools:ignore="TypographyEllipsis" >Edit pool...</string>
+    <string name="menu_delete_pool">Delete pool</string>
 
-    <string name="invalidTaskName">Invalid task name</string>
+    <string name="invalidObjectiveName">Invalid task name</string>
+    <string name="invalidChainName">Invalid chain name</string>
+    <string name="invalidPoolName">Invalid pool name</string>
     <string name="openArchive">Objective archive</string>
     <string name="openScheduler">Objective scheduler</string>
     <string name="unixStartDate" tools:ignore="TypographyDashes">1970-01-01</string>
     <string name="dateParseErrorISO8601">Error parsing date. Enter the date in ISO 8601 format</string>
-    <string name="frequencyParseError">Please enter the correct frwquency in days</string>
+    <string name="frequencyParseError">Please enter the correct frequency in days</string>
     <string name="repeat_interval">Repeat every:</string>
     <string name="approx_frequency">Approx frequency:</string>
     <string name="placeholder_number_of_days">X days</string>
@@ -36,5 +49,5 @@
         <item quantity="one">%1$d day</item>
         <item quantity="other">%1$d days</item>
     </plurals>
-    <string name="title_activity_task_scheduler">Scheduled objectives</string>
+    <string name="title_activity_objective_scheduler">Scheduled objectives</string>
 </resources>
