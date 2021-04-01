@@ -39,20 +39,7 @@ public class ObjectivePoolLatestLoader implements ObjectivePoolLoader
             objectivePool.setLastProvidedObjectiveId(lastId);
 
             String isActiveString = jsonObject.optString("IsActive");
-
-            boolean isActive = true;
-            if(!isActiveString.isEmpty())
-            {
-                if(isActiveString.equalsIgnoreCase("false"))
-                {
-                    isActive = false;
-                }
-            }
-
-            if(!isActive)
-            {
-                objectivePool.pause();
-            }
+            objectivePool.setPaused(!isActiveString.isEmpty() && isActiveString.equalsIgnoreCase("false"));
 
             JSONArray sourcesJsonArray = jsonObject.getJSONArray("Sources");
             for(int i = 0; i < sourcesJsonArray.length(); i++)

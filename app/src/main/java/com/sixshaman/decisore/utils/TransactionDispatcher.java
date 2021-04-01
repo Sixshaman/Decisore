@@ -621,6 +621,81 @@ public class TransactionDispatcher
     }
 
     @SuppressWarnings("UnusedReturnValue")
+    public synchronized boolean flipPauseObjective(String configFolder, long objectiveId)
+    {
+        String schedulerFilePath = configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME;
+
+        invalidateSchedulerCache(schedulerFilePath);
+
+        //2. Lock scheduler file
+        LockedWriteFile schedulerWriteFile = new LockedWriteFile(schedulerFilePath);
+
+        ScheduledObjective objective = mSchedulerCache.getObjectiveById(objectiveId);
+        objective.setPaused(!objective.isPaused());
+
+        if(mSchedulerCache.flush(schedulerWriteFile))
+        {
+            schedulerWriteFile.close();
+            return true;
+        }
+
+        schedulerWriteFile.close();
+        invalidateSchedulerCache(schedulerFilePath);
+
+        return false;
+    }
+
+    @SuppressWarnings("UnusedReturnValue")
+    public synchronized boolean flipPauseChain(String configFolder, long chainId)
+    {
+        String schedulerFilePath = configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME;
+
+        invalidateSchedulerCache(schedulerFilePath);
+
+        //2. Lock scheduler file
+        LockedWriteFile schedulerWriteFile = new LockedWriteFile(schedulerFilePath);
+
+        ObjectiveChain chain = mSchedulerCache.getChainById(chainId);
+        chain.setPaused(!chain.isPaused());
+
+        if(mSchedulerCache.flush(schedulerWriteFile))
+        {
+            schedulerWriteFile.close();
+            return true;
+        }
+
+        schedulerWriteFile.close();
+        invalidateSchedulerCache(schedulerFilePath);
+
+        return false;
+    }
+
+    @SuppressWarnings("UnusedReturnValue")
+    public synchronized boolean flipPausePool(String configFolder, long poolId)
+    {
+        String schedulerFilePath = configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME;
+
+        invalidateSchedulerCache(schedulerFilePath);
+
+        //2. Lock scheduler file
+        LockedWriteFile schedulerWriteFile = new LockedWriteFile(schedulerFilePath);
+
+        ObjectivePool pool = mSchedulerCache.getPoolById(poolId);
+        pool.setPaused(!pool.isPaused());
+
+        if(mSchedulerCache.flush(schedulerWriteFile))
+        {
+            schedulerWriteFile.close();
+            return true;
+        }
+
+        schedulerWriteFile.close();
+        invalidateSchedulerCache(schedulerFilePath);
+
+        return false;
+    }
+
+    @SuppressWarnings("UnusedReturnValue")
     public synchronized boolean bindObjectiveToChain(String configFolder, long chainId, long objectiveId)
     {
         String schedulerFilePath = configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME;
