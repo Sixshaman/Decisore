@@ -402,10 +402,15 @@ public class ObjectivePool implements SchedulerElement
     }
 
     @Override
-    @SuppressWarnings("unused")
     public boolean isPaused()
     {
         return !mIsActive;
+    }
+
+    @Override
+    public void setPaused(boolean paused)
+    {
+        mIsActive = !paused;
     }
 
     @Override
@@ -440,19 +445,6 @@ public class ObjectivePool implements SchedulerElement
     public boolean isAvailable(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime)
     {
         return !blockingObjectiveIds.contains(mLastProvidedObjectiveId);
-    }
-
-    //Pauses the pool
-    void pause()
-    {
-        mIsActive = false;
-    }
-
-    //Unpauses the pool
-    @SuppressWarnings("unused")
-    void unpause()
-    {
-        mIsActive = true;
     }
 
     //Gets the last provided objective id, to check if it has been finished yet

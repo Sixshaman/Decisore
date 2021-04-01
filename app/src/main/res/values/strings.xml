@@ -31,6 +31,8 @@
     <string name="menu_delete_chain">Delete chain</string>
     <string name="menu_edit_pool" tools:ignore="TypographyEllipsis" >Edit pool...</string>
     <string name="menu_delete_pool">Delete pool</string>
+    <string name="menu_pause_element">Pause</string>
+    <string name="menu_unpause_element">Unpause</string>
 
     <string name="invalidObjectiveName">Invalid task name</string>
     <string name="invalidChainName">Invalid chain name</string>

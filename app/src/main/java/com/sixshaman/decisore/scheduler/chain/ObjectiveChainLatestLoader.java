@@ -18,6 +18,8 @@ public class ObjectiveChainLatestLoader implements ObjectiveChainLoader
             String name        = jsonObject.optString("Name");
             String description = jsonObject.optString("Description");
 
+            String isActiveString = jsonObject.optString("IsActive");
+
             ObjectiveChain objectiveChain = new ObjectiveChain(id, name, description);
 
             JSONArray objectivesJsonArray = jsonObject.getJSONArray("Objectives");
@@ -45,6 +47,8 @@ public class ObjectiveChainLatestLoader implements ObjectiveChainLoader
                     objectiveChain.mBoundObjectives.add(objectiveId);
                 }
             }
+
+            objectiveChain.setPaused(!isActiveString.isEmpty() && isActiveString.equalsIgnoreCase("false"));
 
             return objectiveChain;
         }

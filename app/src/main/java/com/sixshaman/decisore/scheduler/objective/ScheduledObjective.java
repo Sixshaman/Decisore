@@ -181,6 +181,12 @@ public class ScheduledObjective implements PoolElement
     }
 
     @Override
+    public void setPaused(boolean paused)
+    {
+        mIsActive = !paused;
+    }
+
+    @Override
     public boolean isValid()
     {
         return mIsValid;

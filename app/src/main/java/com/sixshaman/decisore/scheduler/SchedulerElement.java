@@ -15,8 +15,9 @@ public interface SchedulerElement
 
     JSONObject toJSON();
 
-    @SuppressWarnings("unused")
     boolean isPaused();
+
+    void setPaused(boolean paused);
 
     //Returns true if it's valid, invalid elements can't be in scheduler
     boolean isValid();
