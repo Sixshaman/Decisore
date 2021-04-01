@@ -31,6 +31,9 @@ public class ObjectiveChain implements PoolElement
     //Objective chain description
     private String mDescription;
 
+    //Is this chain active?
+    private boolean mIsActive;
+
     //The objectives that this chain will provide one-by-one. Since Java doesn't have any non-deque Queue implementation, we will use ArrayDeque
     private final LinkedList<ScheduledObjective> mObjectives;
 
@@ -144,6 +147,8 @@ public class ObjectiveChain implements PoolElement
 
             result.put("Name",        mName);
             result.put("Description", mDescription);
+
+            result.put("IsActive", Boolean.toString(mIsActive));
 
             JSONArray objectivesArray = new JSONArray();
             for(ScheduledObjective objective: mObjectives)
@@ -274,7 +279,13 @@ public class ObjectiveChain implements PoolElement
     @Override
     public boolean isPaused()
     {
-        return false;
+        return !mIsActive;
+    }
+
+    @Override
+    public void setPaused(boolean paused)
+    {
+        mIsActive = !paused;
     }
 
     @Override

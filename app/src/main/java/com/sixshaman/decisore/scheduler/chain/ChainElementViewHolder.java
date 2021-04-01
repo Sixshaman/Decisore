@@ -25,6 +25,7 @@ public class ChainElementViewHolder extends RecyclerView.ViewHolder implements V
     final int MENU_EDIT_ELEMENT         = 0;
     final int MENU_DELETE_ELEMENT       = 1;
     final int MENU_RESCHEDULE_OBJECTIVE = 2;
+    final int MENU_PAUSE_OBJECTIVE      = 3;
 
     private ObjectiveSchedulerCache mObjectiveSchedulerCache;
 
@@ -62,15 +63,26 @@ public class ChainElementViewHolder extends RecyclerView.ViewHolder implements V
     {
         contextMenu.setHeaderTitle(mTextView.getText());
 
-        MenuItem rescheduleItem = contextMenu.add(0, MENU_RESCHEDULE_OBJECTIVE, Menu.NONE, R.string.menu_schedule_for_arbitrary);
-        MenuItem editItem       = contextMenu.add(1, MENU_EDIT_ELEMENT,         Menu.NONE, R.string.menu_edit_objective);
-        MenuItem deleteItem     = contextMenu.add(1, MENU_DELETE_ELEMENT,       Menu.NONE, R.string.menu_delete_objective);
+        TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
+        transactionDispatcher.setSchedulerCache(mObjectiveSchedulerCache);
 
+        String configFolder = Objects.requireNonNull(view.getContext().getExternalFilesDir("/app")).getAbsolutePath();
+
+        String pauseString;
+        if(mScheduledObjective.isPaused())
+        {
+            pauseString = view.getContext().getString(R.string.menu_unpause_element);
+        }
+        else
+        {
+            pauseString = view.getContext().getString(R.string.menu_pause_element);
+        }
+
+        int menuIndex = 0;
+
+        MenuItem rescheduleItem = contextMenu.add(menuIndex++, MENU_RESCHEDULE_OBJECTIVE, Menu.NONE, R.string.menu_schedule_for_arbitrary);
         rescheduleItem.setOnMenuItemClickListener(menuItem ->
         {
-            assert mObjectiveSchedulerCache != null;
-            assert mScheduledObjective      != null;
-
             DatePickerDialog datePickerDialog = new DatePickerDialog(view.getContext());
             datePickerDialog.setOnDateSetListener((datePicker, year, month, day) ->
             {
@@ -78,12 +90,7 @@ public class ChainElementViewHolder extends RecyclerView.ViewHolder implements V
                 //Also Java numerates months from 0, not from 1
                 LocalDateTime dateTime = LocalDateTime.of(year, month + 1, day, 6, 0, 0);
 
-                TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
-                transactionDispatcher.setSchedulerCache(mObjectiveSchedulerCache);
-
-                String configFolder = Objects.requireNonNull(view.getContext().getExternalFilesDir("/app")).getAbsolutePath();
                 transactionDispatcher.rescheduleScheduledObjectiveTransaction(configFolder, mScheduledObjective, dateTime);
-
                 transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now());
             });
 
@@ -91,11 +98,19 @@ public class ChainElementViewHolder extends RecyclerView.ViewHolder implements V
             return true;
         });
 
+        if(mScheduledObjective.isRepeatable())
+        {
+            MenuItem pauseItem = contextMenu.add(menuIndex++, MENU_PAUSE_OBJECTIVE, Menu.NONE, pauseString);
+            pauseItem.setOnMenuItemClickListener(menuItem ->
+            {
+                transactionDispatcher.flipPauseObjective(configFolder, mScheduledObjective.getId());
+                return true;
+            });
+        }
+
+        MenuItem editItem = contextMenu.add(menuIndex++, MENU_EDIT_ELEMENT, Menu.NONE, R.string.menu_edit_objective);
         editItem.setOnMenuItemClickListener(menuItem ->
         {
-            assert mObjectiveSchedulerCache != null;
-            assert mScheduledObjective      != null;
-
             EditObjectiveDialogFragment editObjectiveDialogFragment = new EditObjectiveDialogFragment(mScheduledObjective.getId(), mScheduledObjective.getName(), mScheduledObjective.getDescription());
             editObjectiveDialogFragment.setSchedulerCache(mObjectiveSchedulerCache);
             editObjectiveDialogFragment.setEditInScheduler(true);
@@ -107,26 +122,13 @@ public class ChainElementViewHolder extends RecyclerView.ViewHolder implements V
             return true;
         });
 
+        MenuItem deleteItem = contextMenu.add(menuIndex, MENU_DELETE_ELEMENT, Menu.NONE, R.string.menu_delete_objective);
         deleteItem.setOnMenuItemClickListener(menuItem ->
         {
-            assert mObjectiveSchedulerCache != null;
-            assert mScheduledObjective      != null;
-
             AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(view.getContext());
             alertDialogBuilder.setMessage(view.getContext().getString(R.string.deleteObjectiveAreYouSure) + " " + mScheduledObjective.getName() + "?");
-            alertDialogBuilder.setPositiveButton("Yes", (dialogInterface, i) ->
-            {
-                TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
-                transactionDispatcher.setSchedulerCache(mObjectiveSchedulerCache);
-
-                String configFolder = Objects.requireNonNull(view.getContext().getExternalFilesDir("/app")).getAbsolutePath();
-                transactionDispatcher.deleteObjectiveFromSchedulerTransaction(configFolder, mScheduledObjective);
-            });
-
-            alertDialogBuilder.setNegativeButton("No", (dialogInterface, i) ->
-            {
-
-            });
+            alertDialogBuilder.setPositiveButton("Yes", (dialogInterface, i) -> transactionDispatcher.deleteObjectiveFromSchedulerTransaction(configFolder, mScheduledObjective));
+            alertDialogBuilder.setNegativeButton("No", (dialogInterface, i) -> {});
 
             alertDialogBuilder.show();
 
