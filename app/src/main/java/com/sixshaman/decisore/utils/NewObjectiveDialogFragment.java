@@ -100,10 +100,10 @@ public class NewObjectiveDialogFragment extends DialogFragment
             final EditText editTextName         = resultDialog.getValue().findViewById(R.id.editObjectiveName);
             final EditText editTextNDescription = resultDialog.getValue().findViewById(R.id.editObjectiveDescription);
 
-            final Spinner  scheduleSpinner    = resultDialog.getValue().findViewById(R.id.spinnerObjectiveSchedule);
-            final Spinner  repeatSpinner      = resultDialog.getValue().findViewById(R.id.spinnerObjectiveRepeats);
-            final Spinner  intervalSpinner    = resultDialog.getValue().findViewById(R.id.spinnerObjectiveInterval);
-            final CheckBox occasionalCheckbox = resultDialog.getValue().findViewById(R.id.checkboxOccasional);
+            final AlwaysItemSelectedSpinner scheduleSpinner    = resultDialog.getValue().findViewById(R.id.spinnerObjectiveSchedule);
+            final Spinner                   repeatSpinner      = resultDialog.getValue().findViewById(R.id.spinnerObjectiveRepeats);
+            final Spinner                   intervalSpinner    = resultDialog.getValue().findViewById(R.id.spinnerObjectiveInterval);
+            final CheckBox                  occasionalCheckbox = resultDialog.getValue().findViewById(R.id.checkboxOccasional);
 
             String nameText = editTextName.getEditableText().toString();
             if(nameText.isEmpty())

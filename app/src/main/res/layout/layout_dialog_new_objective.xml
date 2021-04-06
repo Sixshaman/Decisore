@@ -59,7 +59,8 @@
                 android:layout_column="0"
                 android:id="@+id/textViewTaskType"
                 android:layout_marginTop="0dp"/>
-        <Spinner
+
+        <com.sixshaman.decisore.utils.AlwaysItemSelectedSpinner
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_row="3"
