@@ -413,6 +413,7 @@ public class ObjectiveSchedulerCache
                 if(objectiveChain.containedObjective(objective.getId()))
                 {
                     objectiveChain.putBack(objective);
+                    alreadyExisting = true;
                 }
             }
             else if(schedulerElement instanceof ScheduledObjective)
