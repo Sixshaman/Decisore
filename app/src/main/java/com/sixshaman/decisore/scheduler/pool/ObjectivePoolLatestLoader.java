@@ -8,6 +8,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+
 public class ObjectivePoolLatestLoader implements ObjectivePoolLoader
 {
     public ObjectivePool fromJSON(JSONObject jsonObject)
@@ -34,6 +39,9 @@ public class ObjectivePoolLatestLoader implements ObjectivePoolLoader
             {
                 return null;
             }
+
+            String produceFrequencyString = jsonObject.optString("ProduceFrequency");
+            String lastProducedDateString = jsonObject.optString("LastUpdate");
 
             ObjectivePool objectivePool = new ObjectivePool(id, name, description);
             objectivePool.setLastProvidedObjectiveId(lastId);
@@ -73,6 +81,29 @@ public class ObjectivePoolLatestLoader implements ObjectivePoolLoader
                             }
                         }
                     }
+                }
+            }
+
+            if(!produceFrequencyString.isEmpty())
+            {
+                try
+                {
+                    long produceFrequencyMinutes = Long.parseLong(produceFrequencyString);
+                    Duration produceFrequency = Duration.ofMinutes(produceFrequencyMinutes);
+
+                    objectivePool.setProduceFrequency(produceFrequency);
+
+                    if(!lastProducedDateString.isEmpty())
+                    {
+                        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss:nnnnnnnnn");
+                        LocalDateTime lastProducedDate = LocalDateTime.parse(lastProducedDateString, dateTimeFormatter);
+
+                        objectivePool.setLastUpdate(lastProducedDate);
+                    }
+                }
+                catch(NumberFormatException | DateTimeParseException e)
+                {
+                    e.printStackTrace();
                 }
             }
 

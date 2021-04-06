@@ -18,7 +18,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -42,6 +44,12 @@ public class ObjectivePool implements SchedulerElement
     //The list of all the objective sources the pool can choose from
     private final ArrayList<PoolElement> mObjectiveSources;
 
+    //The minimum frequency at which the pool can provide objectives (0 specifies the "instant" pool)
+    private Duration mProduceFrequency;
+
+    //The date-time at which the last objective was provided (valid only for non-instant pools)
+    private LocalDateTime mLastUpdate;
+
     //The id of the objective that was most recently provided by this pool.
     private long mLastProvidedObjectiveId;
 
@@ -61,6 +69,9 @@ public class ObjectivePool implements SchedulerElement
         mLastProvidedObjectiveId = -1;
 
         mIsActive = true;
+
+        mLastUpdate       = LocalDateTime.MIN;
+        mProduceFrequency = Duration.ZERO;
     }
 
     public void attachToPoolView(RecyclerView recyclerView, ObjectiveSchedulerCache schedulerCache)
@@ -191,6 +202,12 @@ public class ObjectivePool implements SchedulerElement
 
             result.put("IsActive", Boolean.toString(mIsActive));
 
+            result.put("ProduceFrequency", Long.toString(mProduceFrequency.toMinutes()));
+
+            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss:nnnnnnnnn");
+            String lastUpdateString = dateTimeFormatter.format(mLastUpdate);
+            result.put("LastUpdate", lastUpdateString);
+
             JSONArray sourcesArray = new JSONArray();
             for(PoolElement element: mObjectiveSources)
             {
@@ -261,27 +278,14 @@ public class ObjectivePool implements SchedulerElement
         if(resultObjective != null)
         {
             mLastProvidedObjectiveId = resultObjective.getId();
+
+            if(!mProduceFrequency.isZero())
+            {
+                mLastUpdate = referenceTime;
+            }
         }
 
         return resultObjective;
-    }
-
-    //Returns the number of objective sources in pool
-    public int getSourceCount()
-    {
-        return mObjectiveSources.size();
-    }
-
-    //Returns the source with given index
-    public PoolElement getSource(int position)
-    {
-        return mObjectiveSources.get(position);
-    }
-
-    //Returns true if the pool contains the source
-    public boolean containsSource(PoolElement source)
-    {
-        return mObjectiveSources.contains(source);
     }
 
     public long getMaxChainId()
@@ -396,6 +400,17 @@ public class ObjectivePool implements SchedulerElement
         return null;
     }
 
+    @Override
+    public boolean isAvailable(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime)
+    {
+        if(!mProduceFrequency.isZero() && mLastUpdate.plus(mProduceFrequency).isBefore(referenceTime))
+        {
+            return false;
+        }
+
+        return !blockingObjectiveIds.contains(mLastProvidedObjectiveId);
+    }
+
     public long getId()
     {
         return mId;
@@ -441,10 +456,33 @@ public class ObjectivePool implements SchedulerElement
         mDescription = description;
     }
 
-    @Override
-    public boolean isAvailable(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime)
+    //Returns the number of objective sources in pool
+    public int getSourceCount()
     {
-        return !blockingObjectiveIds.contains(mLastProvidedObjectiveId);
+        return mObjectiveSources.size();
+    }
+
+    //Returns the source with given index
+    public PoolElement getSource(int position)
+    {
+        return mObjectiveSources.get(position);
+    }
+
+    //Returns true if the pool contains the source
+    public boolean containsSource(PoolElement source)
+    {
+        return mObjectiveSources.contains(source);
+    }
+
+    public void setProduceFrequency(Duration produceFrequency)
+    {
+        mProduceFrequency = produceFrequency;
+    }
+
+    //Only to be used for JSON loading, consider it private
+    void setLastUpdate(LocalDateTime lastUpdate)
+    {
+        mLastUpdate = lastUpdate;
     }
 
     //Gets the last provided objective id, to check if it has been finished yet
