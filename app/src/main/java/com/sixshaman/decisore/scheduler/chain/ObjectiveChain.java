@@ -50,6 +50,8 @@ public class ObjectiveChain implements PoolElement
 
         mObjectives      = new LinkedList<>();
         mBoundObjectives = new HashSet<>();
+
+        mIsActive = true;
     }
 
     public void attachToChainView(RecyclerView recyclerView, ObjectiveSchedulerCache schedulerCache)
