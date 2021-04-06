@@ -194,16 +194,20 @@ class ObjectiveViewHolder extends RecyclerView.ViewHolder implements View.OnCrea
             transactionDispatcher.setSchedulerCache(objectiveSchedulerCache);
             transactionDispatcher.setListCache(mObjectiveListCache);
 
-            long touchedChainId = transactionDispatcher.touchChainWithObjective(configFolder, mObjectiveId);
-
             NewObjectiveDialogFragment newObjectiveDialogFragment = new NewObjectiveDialogFragment();
-            newObjectiveDialogFragment.setChainIdToAddTo(touchedChainId, true);
 
             newObjectiveDialogFragment.setSchedulerCache(objectiveSchedulerCache);
             newObjectiveDialogFragment.setListCache(mObjectiveListCache);
 
             FragmentActivity fragmentActivity = (FragmentActivity)view.getContext();
             newObjectiveDialogFragment.show(fragmentActivity.getSupportFragmentManager(), fragmentActivity.getString(R.string.newObjectiveDialogName));
+
+            //IS ALREADY NON-ACTIVE AT THIS POINT
+            newObjectiveDialogFragment.setOnBeforeObjectiveCreatedListener(() ->
+            {
+                long touchedChainId = transactionDispatcher.touchChainWithObjective(configFolder, mObjectiveId);
+                newObjectiveDialogFragment.setChainIdToAddTo(touchedChainId, true);
+            });
 
             return true;
         });
