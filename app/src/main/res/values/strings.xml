@@ -2,7 +2,7 @@
     <string name="app_name">Decisore</string>
     <string name="title_activity_objective_list">Today objectives</string>
     <string name="title_activity_objective_archive">Finished objectives</string>
-    <string name="title_activity_objective_list_append"> today objectives</string>
+    <string name="title_activity_objective_list_append">today objectives</string>
     <string name="placeholderTask">Objective</string>
     <string name="taskName">Name</string>
     <string name="taskDescription">Description</string>
@@ -30,7 +30,7 @@
     <string name="menu_delete_objective">Delete objective</string>
     <string name="menu_edit_chain" tools:ignore="TypographyEllipsis">Edit chain...</string>
     <string name="menu_delete_chain">Delete chain</string>
-    <string name="menu_edit_pool" tools:ignore="TypographyEllipsis" >Edit pool...</string>
+    <string name="menu_edit_pool" tools:ignore="TypographyEllipsis">Edit pool...</string>
     <string name="menu_delete_pool">Delete pool</string>
     <string name="menu_pause_element">Pause</string>
     <string name="menu_unpause_element">Unpause</string>
@@ -40,6 +40,7 @@
     <string name="invalidPoolName">Invalid pool name</string>
     <string name="openArchive">Objective archive</string>
     <string name="openScheduler">Objective scheduler</string>
+    <string name="openOptions">Options</string>
     <string name="unixStartDate" tools:ignore="TypographyDashes">1970-01-01</string>
     <string name="dateParseErrorISO8601">Error parsing date. Enter the date in ISO 8601 format</string>
     <string name="frequencyParseError">Please enter the correct frequency in days</string>
@@ -53,4 +54,19 @@
         <item quantity="other">%1$d days</item>
     </plurals>
     <string name="title_activity_objective_scheduler">Scheduled objectives</string>
+    <string name="title_activity_settings">SettingsActivity</string>
+
+    <!-- Preference Titles -->
+    <string name="messages_header">Messages</string>
+    <string name="sync_header">Sync</string>
+
+    <!-- Messages Preferences -->
+    <string name="signature_title">Your signature</string>
+    <string name="reply_title">Default reply action</string>
+
+    <!-- Sync Preferences -->
+    <string name="sync_title">Sync email periodically</string>
+    <string name="attachment_title">Download incoming attachments</string>
+    <string name="attachment_summary_on">Automatically download attachments for incoming emails</string>
+    <string name="attachment_summary_off">Only download attachments when manually requested</string>
 </resources>

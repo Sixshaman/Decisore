@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.appcompat.widget.Toolbar;
 import com.sixshaman.decisore.R;
 import com.sixshaman.decisore.archive.ArchiveActivity;
+import com.sixshaman.decisore.options.SettingsActivity;
 import com.sixshaman.decisore.scheduler.SchedulerActivity;
 import com.sixshaman.decisore.utils.LockedReadFile;
 import com.sixshaman.decisore.utils.NewObjectiveDialogFragment;
@@ -87,6 +88,13 @@ public class ListActivity extends AppCompatActivity implements ListObjectiveCoun
         {
             Intent schedulerOpenIntent = new Intent(ListActivity.this, SchedulerActivity.class);
             startActivity(schedulerOpenIntent);
+            return true;
+        });
+
+        menu.findItem(R.id.menuOpenOptions).setOnMenuItemClickListener(item ->
+        {
+            Intent optionsOpenIntent = new Intent(ListActivity.this, SettingsActivity.class);
+            startActivity(optionsOpenIntent);
             return true;
         });
 
