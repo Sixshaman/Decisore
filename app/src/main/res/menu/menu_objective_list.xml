@@ -14,4 +14,10 @@
         app:showAsAction="never">
     </item>
 
+    <item
+        android:id="@+id/menuOpenOptions"
+        android:title="@string/openOptions"
+        app:showAsAction="never">
+    </item>
+
 </menu>
