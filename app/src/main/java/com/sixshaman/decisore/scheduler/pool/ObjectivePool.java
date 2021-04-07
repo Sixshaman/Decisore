@@ -405,7 +405,7 @@ public class ObjectivePool implements SchedulerElement
     @Override
     public boolean isAvailable(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime)
     {
-        if(!mProduceFrequency.isZero() && mLastUpdate.plus(mProduceFrequency).isBefore(referenceTime))
+        if(!mProduceFrequency.isZero() && !mLastUpdate.plus(mProduceFrequency).isBefore(referenceTime))
         {
             return false;
         }
