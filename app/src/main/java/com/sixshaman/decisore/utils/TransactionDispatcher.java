@@ -44,14 +44,14 @@ public class TransactionDispatcher
     }
 
     @SuppressWarnings("UnusedReturnValue")
-    public synchronized boolean addPoolTransaction(String configFolder, String poolName, String poolDescription)
+    public synchronized boolean addPoolTransaction(String configFolder, String poolName, String poolDescription, Duration produceFrequency)
     {
         String schedulerFilePath = configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME;
 
         invalidateSchedulerCache(schedulerFilePath);
 
         LockedWriteFile schedulerWriteFile = new LockedWriteFile(schedulerFilePath);
-        mSchedulerCache.addObjectivePool(poolName, poolDescription);
+        mSchedulerCache.addObjectivePool(poolName, poolDescription, produceFrequency);
 
         if(mSchedulerCache.flush(schedulerWriteFile))
         {
@@ -89,14 +89,14 @@ public class TransactionDispatcher
         return false;
     }
 
-    public synchronized long addChainTransaction(long poolIdToAddTo, String configFolder, String chainName, String chainDescription)
+    public synchronized long addChainTransaction(long poolIdToAddTo, String configFolder, String chainName, String chainDescription, Duration produceFrequency)
     {
         String schedulerFilePath = configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME;
         invalidateSchedulerCache(schedulerFilePath);
 
         LockedWriteFile schedulerWriteFile = new LockedWriteFile(schedulerFilePath);
 
-        long newChainId = mSchedulerCache.addObjectiveChain(poolIdToAddTo, chainName, chainDescription);
+        long newChainId = mSchedulerCache.addObjectiveChain(poolIdToAddTo, chainName, chainDescription, produceFrequency);
         if(newChainId != -1)
         {
             if(mSchedulerCache.flush(schedulerWriteFile))
@@ -526,7 +526,7 @@ public class TransactionDispatcher
         if(chainId == -1)
         {
             String objectiveName = enlistedObjective.getName();
-            chainId = addChainTransaction(-1, configFolder, objectiveName, "");
+            chainId = addChainTransaction(-1, configFolder, objectiveName, "", Duration.ZERO);
         }
 
         ObjectiveChain chain = mSchedulerCache.getChainById(chainId);
@@ -588,12 +588,12 @@ public class TransactionDispatcher
                 }
 
                 String objectiveName = scheduledObjective.getName();
-                chainId = addChainTransaction(-1, configFolder, objectiveName, "");
+                chainId = addChainTransaction(-1, configFolder, objectiveName, "", Duration.ZERO);
             }
             else
             {
                 String objectiveName = enlistedObjective.getName();
-                chainId = addChainTransaction(-1, configFolder, objectiveName, "");
+                chainId = addChainTransaction(-1, configFolder, objectiveName, "", Duration.ZERO);
             }
         }
 

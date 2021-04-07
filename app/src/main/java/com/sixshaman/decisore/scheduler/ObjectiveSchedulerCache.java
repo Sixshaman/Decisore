@@ -15,6 +15,7 @@ After removing the objective from the scheduler:
 
 */
 
+import android.util.LongSparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -38,6 +39,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -61,18 +63,18 @@ public class ObjectiveSchedulerCache
     private SchedulerCacheViewHolder mSchedulerViewHolder;
 
     //The view holders of the cached pools
-    private final HashMap<Long, RecyclerView> mPoolItemViews;
+    private final LongSparseArray<RecyclerView> mPoolItemViews;
 
     //The view holders of the cached chains
-    private final HashMap<Long, RecyclerView> mChainItemViews;
+    private final LongSparseArray<RecyclerView> mChainItemViews;
 
     //Creates a new objective scheduler
     public ObjectiveSchedulerCache()
     {
         mSchedulerElements = new ArrayList<>();
 
-        mPoolItemViews  = new HashMap<>();
-        mChainItemViews = new HashMap<>();
+        mPoolItemViews  = new LongSparseArray<>();
+        mChainItemViews = new LongSparseArray<>();
     }
 
     public void attachToSchedulerView(RecyclerView recyclerView)
@@ -157,9 +159,10 @@ public class ObjectiveSchedulerCache
                             ObjectivePool pool = poolLatestLoader.fromJSON(elementData);
                             mSchedulerElements.add(pool);
 
-                            if(mPoolItemViews.containsKey(pool.getId()))
+                            RecyclerView poolView = mPoolItemViews.get(pool.getId(), null);
+                            if(poolView != null)
                             {
-                                pool.attachToPoolView(Objects.requireNonNull(mPoolItemViews.get(pool.getId())), this);
+                                pool.attachToPoolView(poolView, this);
                             }
 
                             pool.attachAllChainViews(mChainItemViews, this);
@@ -168,9 +171,10 @@ public class ObjectiveSchedulerCache
                             ObjectiveChain chain = chainLatestLoader.fromJSON(elementData);
                             mSchedulerElements.add(chain);
 
-                            if(mChainItemViews.containsKey(chain.getId()))
+                            RecyclerView chainView = mChainItemViews.get(chain.getId(), null);
+                            if(chainView != null)
                             {
-                                chain.attachToChainView(Objects.requireNonNull(mChainItemViews.get(chain.getId())), this);
+                                chain.attachToChainView(chainView, this);
                             }
 
                             break;
@@ -234,7 +238,7 @@ public class ObjectiveSchedulerCache
     }
 
     //Creates a new objective chain
-    public long addObjectiveChain(long poolIdToAddTo, String name, String description)
+    public long addObjectiveChain(long poolIdToAddTo, String name, String description, Duration produceFrequency)
     {
         ObjectivePool poolToAddTo = null;
         if(poolIdToAddTo != -1)
@@ -248,6 +252,7 @@ public class ObjectiveSchedulerCache
 
         long chainId = getMaxChainId() + 1;
         ObjectiveChain chain = new ObjectiveChain(chainId, name, description);
+        chain.setProduceFrequency(produceFrequency);
 
         if(poolToAddTo == null)
         {
@@ -272,11 +277,13 @@ public class ObjectiveSchedulerCache
     }
 
     //Creates a new objective pool
-    public void addObjectivePool(String name, String description)
+    public void addObjectivePool(String name, String description, Duration produceFrequency)
     {
         long poolId = getMaxPoolId() + 1;
 
         ObjectivePool pool = new ObjectivePool(poolId, name, description);
+        pool.setProduceFrequency(produceFrequency);
+
         mSchedulerElements.add(pool);
 
         if(mSchedulerViewHolder != null)
