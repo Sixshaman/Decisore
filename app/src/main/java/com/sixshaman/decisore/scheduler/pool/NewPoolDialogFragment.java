@@ -5,7 +5,9 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.DialogFragment;
@@ -14,6 +16,7 @@ import com.sixshaman.decisore.scheduler.ObjectiveSchedulerCache;
 import com.sixshaman.decisore.utils.TransactionDispatcher;
 import com.sixshaman.decisore.utils.ValueHolder;
 
+import java.time.Duration;
 import java.util.Objects;
 
 public class NewPoolDialogFragment extends DialogFragment
@@ -33,14 +36,13 @@ public class NewPoolDialogFragment extends DialogFragment
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState)
     {
-        Activity activity = getActivity();
+        Activity activity = requireActivity();
 
         final ValueHolder<AlertDialog> resultDialog = new ValueHolder<>(null);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(activity);
-        LayoutInflater inflater = Objects.requireNonNull(activity).getLayoutInflater();
 
-        builder.setView(inflater.inflate(R.layout.layout_dialog_new_pool, null));
+        builder.setView(View.inflate(activity, R.layout.layout_dialog_new_pool, null));
         builder.setTitle(R.string.newPoolDialogName);
 
         builder.setPositiveButton(R.string.createPool, (dialog, id) ->
@@ -48,7 +50,38 @@ public class NewPoolDialogFragment extends DialogFragment
             final EditText editTextName        = resultDialog.getValue().findViewById(R.id.editNewPoolName);
             final EditText editEditDescription = resultDialog.getValue().findViewById(R.id.editNewPoolDescription);
 
-            String nameText = editTextName.getEditableText().toString();
+            final Spinner frequencySpinner = resultDialog.getValue().findViewById(R.id.spinnerPoolFrequency);
+
+            String nameText        = editTextName.getEditableText().toString();
+            String descriptionText = editEditDescription.getEditableText().toString();
+
+            Duration poolProduceFrequency = Duration.ofNanos(1); //Just to stop Intellij IDEA from whining about already assigned value
+
+            int objectiveIntervalIndex = frequencySpinner.getSelectedItemPosition();
+            switch(objectiveIntervalIndex)
+            {
+                case 0: //Instant
+                {
+                    poolProduceFrequency = Duration.ZERO;
+                    break;
+                }
+                case 1: //Daily
+                {
+                    poolProduceFrequency = Duration.ofDays(1);
+                    break;
+                }
+                case 2: //Weekly
+                {
+                    poolProduceFrequency = Duration.ofDays(7);
+                    break;
+                }
+                case 3: //Monthly
+                {
+                    poolProduceFrequency = Duration.ofDays(30);
+                    break;
+                }
+            }
+
             if(nameText.isEmpty())
             {
                 Toast toast = Toast.makeText(activity, R.string.invalidPoolName, Toast.LENGTH_SHORT);
@@ -56,14 +89,12 @@ public class NewPoolDialogFragment extends DialogFragment
             }
             else
             {
-                String descriptionText = editEditDescription.getEditableText().toString();
-
                 String configFolder = Objects.requireNonNull(activity.getExternalFilesDir("/app")).getAbsolutePath();
 
                 TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
                 transactionDispatcher.setSchedulerCache(mSchedulerCache);
 
-                transactionDispatcher.addPoolTransaction(configFolder, nameText, descriptionText);
+                transactionDispatcher.addPoolTransaction(configFolder, nameText, descriptionText, poolProduceFrequency);
             }
         });
 

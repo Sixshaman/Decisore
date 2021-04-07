@@ -17,4 +17,11 @@
         <item>Week</item>
         <item>Month</item>
     </string-array>
+
+    <string-array name="produceFrequencyTypes">
+        <item>Instant</item>
+        <item>Daily</item>
+        <item>Weekly</item>
+        <item>Monthly</item>
+    </string-array>
 </resources>

@@ -1,5 +1,6 @@
 package com.sixshaman.decisore.scheduler.pool;
 
+import android.util.LongSparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -82,16 +83,17 @@ public class ObjectivePool implements SchedulerElement
         mPoolViewHolder.notifyDataSetChanged();
     }
 
-    public void attachAllChainViews(HashMap<Long, RecyclerView> chainItemViews, ObjectiveSchedulerCache schedulerCache)
+    public void attachAllChainViews(LongSparseArray<RecyclerView> chainItemViews, ObjectiveSchedulerCache schedulerCache)
     {
         for(PoolElement poolElement: mObjectiveSources)
         {
             if(poolElement instanceof ObjectiveChain)
             {
                 ObjectiveChain chain = (ObjectiveChain)poolElement;
-                if(chainItemViews.containsKey(chain.getId()))
+                RecyclerView chainView = chainItemViews.get(chain.getId(), null);
+                if(chainView != null)
                 {
-                    chain.attachToChainView(Objects.requireNonNull(chainItemViews.get(chain.getId())), schedulerCache);
+                    chain.attachToChainView(chainView, schedulerCache);
                 }
             }
         }
