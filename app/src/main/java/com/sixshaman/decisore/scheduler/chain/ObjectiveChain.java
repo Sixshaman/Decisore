@@ -185,7 +185,7 @@ public class ObjectiveChain implements PoolElement
             return false;
         }
 
-        if(!mProduceFrequency.isZero() && mInstantCount == 0 && mLastUpdate.plus(mProduceFrequency).isBefore(referenceTime))
+        if(!mProduceFrequency.isZero() && mInstantCount == 0 && !mLastUpdate.plus(mProduceFrequency).isBefore(referenceTime))
         {
             return false;
         }
