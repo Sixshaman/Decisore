@@ -163,10 +163,7 @@ public class ScheduledObjective implements PoolElement
     //Reschedules the objective to the new enlist date (possibly out-of-order)
     public void rescheduleUnregulated(LocalDateTime newEnlistDate)
     {
-        if(newEnlistDate.isBefore(mScheduledAddDate))
-        {
-           mScheduledAddDate = newEnlistDate;
-        }
+        mScheduledAddDate = newEnlistDate;
     }
 
     public boolean isRepeatable()

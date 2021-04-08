@@ -443,7 +443,7 @@ public class TransactionDispatcher
     }
 
     @SuppressWarnings("UnusedReturnValue")
-    public synchronized boolean rescheduleScheduledObjectiveTransaction(String configFolder, ScheduledObjective objective, LocalDateTime nextEnlistDate)
+    public synchronized boolean rescheduleScheduledObjectiveTransaction(String configFolder, long objectiveId, LocalDateTime nextEnlistDate)
     {
         String schedulerFilePath = configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME;
 
@@ -451,6 +451,8 @@ public class TransactionDispatcher
 
         //2. Lock scheduler file
         LockedWriteFile schedulerWriteFile = new LockedWriteFile(schedulerFilePath);
+
+        ScheduledObjective objective = mSchedulerCache.getObjectiveById(objectiveId);
         objective.rescheduleUnregulated(nextEnlistDate);
 
         if(mSchedulerCache.flush(schedulerWriteFile))
