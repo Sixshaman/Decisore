@@ -239,7 +239,7 @@ public class ObjectivePool implements SchedulerElement
 
     //Gets an objective from a random source
     @Override
-    public EnlistedObjective obtainEnlistedObjective(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime)
+    public EnlistedObjective obtainEnlistedObjective(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime, int dayStartHour)
     {
         if(!mIsActive)
         {
@@ -270,7 +270,7 @@ public class ObjectivePool implements SchedulerElement
         int  randomSourceIndexIndex = (int) RandomUtils.getInstance().getRandomUniform(0, availableSourceIndices.size() - 1);
         PoolElement randomPoolElement = mObjectiveSources.get(availableSourceIndices.get(randomSourceIndexIndex));
 
-        EnlistedObjective resultObjective = randomPoolElement.obtainEnlistedObjective(blockingObjectiveIds, referenceTime);
+        EnlistedObjective resultObjective = randomPoolElement.obtainEnlistedObjective(blockingObjectiveIds, referenceTime, dayStartHour);
         if(!randomPoolElement.isValid())
         {
             //Delete finished objectives

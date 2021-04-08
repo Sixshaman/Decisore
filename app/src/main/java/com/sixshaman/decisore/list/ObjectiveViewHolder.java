@@ -2,6 +2,7 @@ package com.sixshaman.decisore.list;
 
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
+import android.content.SharedPreferences;
 import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -11,6 +12,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.FragmentActivity;
+import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.sixshaman.decisore.R;
 import com.sixshaman.decisore.scheduler.chain.ObjectiveChain;
@@ -76,11 +78,15 @@ class ObjectiveViewHolder extends RecyclerView.ViewHolder implements View.OnCrea
         MenuItem editItem             = contextMenu.add(2, MENU_EDIT_OBJECTIVE,         Menu.NONE, R.string.menu_edit_objective);
         MenuItem deleteItem           = contextMenu.add(2, MENU_DELETE_OBJECTIVE,       Menu.NONE, R.string.menu_delete_objective);
 
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(Objects.requireNonNull(view.getContext()).getApplicationContext());
+        String dayStartTimeString = sharedPreferences.getString("day_start_time", "6");
+        int dayStartTime = ParseUtils.parseInt(dayStartTimeString, 6);
+
         scheduleTomorrowItem.setOnMenuItemClickListener(menuItem ->
         {
-            LocalDateTime enlistDateTime = LocalDateTime.now().minusHours(6); //Day starts at 6AM!
+            LocalDateTime enlistDateTime = LocalDateTime.now().minusHours(dayStartTime);
             enlistDateTime = enlistDateTime.plusDays(1).truncatedTo(ChronoUnit.DAYS);
-            enlistDateTime = enlistDateTime.plusHours(6); //Day starts at 6AM
+            enlistDateTime = enlistDateTime.plusHours(dayStartTime);
 
             TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
             transactionDispatcher.setListCache(mObjectiveListCache);
@@ -96,9 +102,8 @@ class ObjectiveViewHolder extends RecyclerView.ViewHolder implements View.OnCrea
             DatePickerDialog datePickerDialog = new DatePickerDialog(view.getContext());
             datePickerDialog.setOnDateSetListener((datePicker, year, month, day) ->
             {
-                //Day starts at 6 AM
-                //Also Java numerates months from 0, not from 1
-                LocalDateTime dateTime = LocalDateTime.of(year, month + 1, day, 6, 0, 0);
+                //Java numerates months from 0, not from 1
+                LocalDateTime dateTime = LocalDateTime.of(year, month + 1, day, dayStartTime, 0, 0);
 
                 TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
                 transactionDispatcher.setListCache(mObjectiveListCache);
@@ -157,7 +162,7 @@ class ObjectiveViewHolder extends RecyclerView.ViewHolder implements View.OnCrea
                     transactionDispatcher.bindObjectiveToChain(configFolder, addedChainIdHolder.getValue(), objectiveId);
                 }
 
-                transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now());
+                transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now(), dayStartTime);
             });
 
             newObjectiveDialogFragment.setSchedulerCache(objectiveSchedulerCache);

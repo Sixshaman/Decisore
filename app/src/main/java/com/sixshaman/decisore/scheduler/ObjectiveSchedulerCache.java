@@ -104,14 +104,14 @@ public class ObjectiveSchedulerCache
     }
 
     //Updates the objective scheduler. Returns the list of objectives ready to-do
-    public ArrayList<EnlistedObjective> dumpReadyObjectives(final HashSet<Long> blockingObjectiveIds, LocalDateTime enlistDateTime)
+    public ArrayList<EnlistedObjective> dumpReadyObjectives(final HashSet<Long> blockingObjectiveIds, LocalDateTime enlistDateTime, int dayStartHour)
     {
         ArrayList<EnlistedObjective> result = new ArrayList<>();
 
         ArrayList<SchedulerElement> changedElements = new ArrayList<>(); //Rebuild objective source list after each update event
         for(SchedulerElement element: mSchedulerElements)
         {
-            EnlistedObjective enlistedObjective = element.obtainEnlistedObjective(blockingObjectiveIds, enlistDateTime);
+            EnlistedObjective enlistedObjective = element.obtainEnlistedObjective(blockingObjectiveIds, enlistDateTime, dayStartHour);
             if(enlistedObjective != null)
             {
                 result.add(enlistedObjective);
