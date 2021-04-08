@@ -98,8 +98,11 @@ public class NewObjectiveDialogFragment extends DialogFragment
         final ValueHolder<LocalDateTime> objectiveScheduleDate = new ValueHolder<>(objectiveCreateDate);
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(Objects.requireNonNull(getContext()).getApplicationContext());
-        String dayStartTimeString = sharedPreferences.getString("day_start_time", "6");
+        String dayStartTimeString  = sharedPreferences.getString("day_start_time", "6");
+        String dayEndNowTimeString = sharedPreferences.getString("day_last_today_time", "16");
+
         int dayStartTime = ParseUtils.parseInt(dayStartTimeString, 6);
+        int dayEndTime   = ParseUtils.parseInt(dayEndNowTimeString, 16);
 
         builder.setPositiveButton(R.string.createObjective, (dialog, id) ->
         {
@@ -238,12 +241,30 @@ public class NewObjectiveDialogFragment extends DialogFragment
             DateSpinnerCustomTextAdapter customTextAdapter = new DateSpinnerCustomTextAdapter(scheduleSpinner.getContext());
             scheduleSpinner.setAdapter(customTextAdapter);
 
+            //Default selection
+            if(objectiveCreateDate.getHour() >= dayEndTime)
+            {
+                scheduleSpinner.setSelection(1);
+            }
+            else
+            {
+                scheduleSpinner.setSelection(0);
+            }
+
             scheduleSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener()
             {
                 @Override
                 public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
                 {
-                    if(position == 3) //Custom date
+                    if(position == 0) //Now
+                    {
+                        if(objectiveCreateDate.getHour() >= dayEndTime)
+                        {
+                            scheduleSpinner.setSelection(1);
+                            Toast.makeText(view.getContext(), R.string.doItTomorrowPrinciple, Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                    else if(position == 3) //Custom date
                     {
                         DatePickerDialog datePickerDialog = new DatePickerDialog(activity);
                         datePickerDialog.setOnDateSetListener((datePicker, year, month, day) ->
