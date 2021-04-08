@@ -53,6 +53,19 @@ public class ListActivity extends AppCompatActivity implements ListObjectiveCoun
 
         String configFolder = Objects.requireNonNull(getExternalFilesDir("/app")).getAbsolutePath();
 
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        String dayStartTimeString = sharedPreferences.getString("day_start_time", "6");
+        int dayStartTime = ParseUtils.parseInt(dayStartTimeString, 6);
+
+        if(sharedPreferences.getBoolean("show_objective_count", true))
+        {
+            setTitle(mListCache.getObjectiveCount() + " " + getString(R.string.title_activity_objective_list_append));
+        }
+        else
+        {
+            setTitle(R.string.title_activity_objective_list);
+        }
+
         RecyclerView recyclerView = findViewById(R.id.objectiveListView);
         mListCache.attachToView(recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -67,10 +80,6 @@ public class ListActivity extends AppCompatActivity implements ListObjectiveCoun
         {
             e.printStackTrace();
         }
-
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        String dayStartTimeString = sharedPreferences.getString("day_start_time", "6");
-        int dayStartTime = ParseUtils.parseInt(dayStartTimeString, 6);
 
         TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
         transactionDispatcher.setListCache(mListCache);
@@ -132,6 +141,10 @@ public class ListActivity extends AppCompatActivity implements ListObjectiveCoun
     @Override
     public void onListObjectiveCountChanged(int newObjectiveCount)
     {
-        setTitle(newObjectiveCount + " " + getString(R.string.title_activity_objective_list_append));
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        if(sharedPreferences.getBoolean("show_objective_count", true))
+        {
+            setTitle(newObjectiveCount + " " + getString(R.string.title_activity_objective_list_append));
+        }
     }
 }

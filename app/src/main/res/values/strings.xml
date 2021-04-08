@@ -56,6 +56,7 @@
     <string name="title_activity_objective_scheduler">Scheduled objectives</string>
     <string name="title_activity_settings">SettingsActivity</string>
 
-    <!-- Preference Titles -->
     <string name="day_start">Day start time</string>
+    <string name="show_objective_count">Show current objective count</string>
+
 </resources>
