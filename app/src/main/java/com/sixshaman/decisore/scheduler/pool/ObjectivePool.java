@@ -290,6 +290,15 @@ public class ObjectivePool implements SchedulerElement
         return resultObjective;
     }
 
+    @Override
+    public void updateDayStart(LocalDateTime referenceTime, int oldStartHour, int newStartHour)
+    {
+        for(PoolElement poolElement: mObjectiveSources)
+        {
+            poolElement.updateDayStart(referenceTime, oldStartHour, newStartHour);
+        }
+    }
+
     public long getMaxChainId()
     {
         long maxId = 0;

@@ -248,6 +248,15 @@ public class ObjectiveChain implements PoolElement
         return enlistedObjective;
     }
 
+    @Override
+    public void updateDayStart(LocalDateTime referenceTime, int oldStartHour, int newStartHour)
+    {
+        for(ScheduledObjective objective: mObjectives)
+        {
+            objective.updateDayStart(referenceTime, oldStartHour, newStartHour);
+        }
+    }
+
     public ScheduledObjective getFirstObjective()
     {
         if(mObjectives.isEmpty())

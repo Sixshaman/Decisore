@@ -28,4 +28,6 @@ public interface SchedulerElement
     boolean isAvailable(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime);
 
     EnlistedObjective obtainEnlistedObjective(final HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime, int dayStartHour);
+
+    void updateDayStart(LocalDateTime referenceTime, int oldStartHour, int newStartHour);
 }

@@ -390,6 +390,28 @@ public class TransactionDispatcher
     }
 
     @SuppressWarnings("UnusedReturnValue")
+    public synchronized boolean updateNewDayStart(String configFolder, int oldStartHour, int newStartHour)
+    {
+        String schedulerFilePath = configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME;
+        invalidateSchedulerCache(schedulerFilePath);
+
+        LockedWriteFile schedulerWriteFile = new LockedWriteFile(schedulerFilePath);
+
+        mSchedulerCache.updateDayStart(oldStartHour, newStartHour);
+
+        if(mSchedulerCache.flush(schedulerWriteFile))
+        {
+            schedulerWriteFile.close();
+            return true;
+        }
+
+        schedulerWriteFile.close();
+        invalidateSchedulerCache(schedulerFilePath);
+
+        return false;
+    }
+
+    @SuppressWarnings("UnusedReturnValue")
     public synchronized boolean updateObjectiveListTransaction(String configFolder, LocalDateTime enlistDateTime, int dayStartHour)
     {
         String schedulerFilePath = configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME;

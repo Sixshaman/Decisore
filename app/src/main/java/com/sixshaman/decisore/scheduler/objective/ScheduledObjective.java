@@ -222,6 +222,16 @@ public class ScheduledObjective implements PoolElement
     }
 
     @Override
+    public void updateDayStart(LocalDateTime referenceTime, int oldStartHour, int newStartHour)
+    {
+        if(mScheduledAddDate.isAfter(referenceTime))
+        {
+            mRegularScheduledAddDate = mRegularScheduledAddDate.minusHours(oldStartHour).plusHours(newStartHour);
+            mScheduledAddDate        = mScheduledAddDate.minusHours(oldStartHour).plusHours(newStartHour);
+        }
+    }
+
+    @Override
     public boolean isAvailable(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime)
     {
         return !isPaused() && referenceTime.isAfter(getScheduledEnlistDate()) && !blockingObjectiveIds.contains(mId);

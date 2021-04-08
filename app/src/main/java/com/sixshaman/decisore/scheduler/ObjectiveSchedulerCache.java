@@ -938,6 +938,15 @@ public class ObjectiveSchedulerCache
         return (plainIndexToDelete != -1) || complexDeleteSucceeded;
     }
 
+    public void updateDayStart(int oldStartHour, int newStartHour)
+    {
+        LocalDateTime referenceTime = LocalDateTime.now();
+        for(SchedulerElement schedulerElement: mSchedulerElements)
+        {
+            schedulerElement.updateDayStart(referenceTime, oldStartHour, newStartHour);
+        }
+    }
+
     private class SchedulerCacheViewHolder extends RecyclerView.Adapter<SchedulerElementViewHolder>
     {
         @NonNull
