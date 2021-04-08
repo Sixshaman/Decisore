@@ -9,6 +9,12 @@
                 app:title="@string/day_start"
                 app:useSimpleSummaryProvider="true"/>
 
+        <EditTextPreference
+                app:key="day_last_today_time"
+                app:defaultValue="16"
+                app:title="@string/day_end_schedule_now"
+                app:useSimpleSummaryProvider="true"/>
+
         <SwitchPreferenceCompat
                 app:key="show_objective_count"
                 app:defaultValue="true"

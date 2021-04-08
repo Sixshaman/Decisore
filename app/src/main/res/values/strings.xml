@@ -43,6 +43,7 @@
     <string name="openOptions">Options</string>
     <string name="unixStartDate" tools:ignore="TypographyDashes">1970-01-01</string>
     <string name="dateParseErrorISO8601">Error parsing date. Enter the date in ISO 8601 format</string>
+    <string name="doItTomorrowPrinciple">It\'s too late to schedule for today. Do it tomorrow.</string>
     <string name="frequencyParseError">Please enter the correct frequency in days</string>
     <string name="repeat_interval">Repeat every:</string>
     <string name="approx_frequency">Approx frequency:</string>
@@ -57,6 +58,7 @@
     <string name="title_activity_settings">SettingsActivity</string>
 
     <string name="day_start">Day start time</string>
+    <string name="day_end_schedule_now">New objective threshold</string>
     <string name="show_objective_count">Show current objective count</string>
 
 </resources>

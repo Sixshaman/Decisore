@@ -55,6 +55,9 @@ public class SettingsActivity extends AppCompatActivity
             EditTextPreference dayStartTimePreference = Objects.requireNonNull(preferenceManager.findPreference("day_start_time"));
             dayStartTimePreference.setOnBindEditTextListener(editText -> editText.setInputType(InputType.TYPE_CLASS_NUMBER));
 
+            EditTextPreference dayEndTimePreference = Objects.requireNonNull(preferenceManager.findPreference("day_last_today_time"));
+            dayEndTimePreference.setOnBindEditTextListener(editText -> editText.setInputType(InputType.TYPE_CLASS_NUMBER));
+
             final ValueHolder<Integer> oldStartHour = new ValueHolder<>(ParseUtils.parseInt(dayStartTimePreference.getText(), 6));
             dayStartTimePreference.setOnPreferenceChangeListener((preference, newValue) ->
             {
@@ -80,6 +83,27 @@ public class SettingsActivity extends AppCompatActivity
                 transactionDispatcher.updateNewDayStart(configFolder, oldStartHour.getValue(), newHour);
 
                 oldStartHour.setValue(newHour);
+                return true;
+            });
+
+            dayEndTimePreference.setOnPreferenceChangeListener((preference, newValue) ->
+            {
+                int newHour;
+
+                String newHourStr = newValue.toString();
+                try
+                {
+                    newHour = Integer.parseInt(newHourStr);
+                    if(newHour < 0 || newHour > 24) //24, not 23 for a reason
+                    {
+                        return false;
+                    }
+                }
+                catch (NumberFormatException e)
+                {
+                    return false;
+                }
+
                 return true;
             });
         }
