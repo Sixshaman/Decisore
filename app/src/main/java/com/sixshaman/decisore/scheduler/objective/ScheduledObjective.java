@@ -134,7 +134,7 @@ public class ScheduledObjective implements PoolElement
             return;
         }
 
-        mRegularScheduledAddDate = mRegularScheduledAddDate.plusDays(1).minusHours(6).truncatedTo(ChronoUnit.DAYS).plusHours(6); //Add at least one day
+        mRegularScheduledAddDate = mRegularScheduledAddDate.plusDays(mRepeatDuration.toDays()).minusHours(6).truncatedTo(ChronoUnit.DAYS).plusHours(6);
 
         while(mRegularScheduledAddDate.isBefore(referenceTime)) //Simulate the passing of time
         {
