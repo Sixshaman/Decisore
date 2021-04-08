@@ -1,8 +1,10 @@
 package com.sixshaman.decisore.scheduler.chain;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -14,6 +16,7 @@ import com.sixshaman.decisore.scheduler.ObjectiveSchedulerCache;
 import com.sixshaman.decisore.scheduler.SchedulerActivity;
 import com.sixshaman.decisore.utils.LockedReadFile;
 import com.sixshaman.decisore.utils.NewObjectiveDialogFragment;
+import com.sixshaman.decisore.utils.ParseUtils;
 import com.sixshaman.decisore.utils.TransactionDispatcher;
 
 import java.io.IOException;
@@ -56,10 +59,14 @@ public class ChainFragment extends Fragment
             mSchedulerCache.invalidate(schedulerFile);
             schedulerFile.close();
 
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext().getApplicationContext());
+            String dayStartTimeString = sharedPreferences.getString("day_start_time", "6");
+            int dayStartTime = ParseUtils.parseInt(dayStartTimeString, 6);
+
             TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
             transactionDispatcher.setSchedulerCache(mSchedulerCache);
 
-            transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now());
+            transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now(), dayStartTime);
 
             RecyclerView recyclerView = mFragmentView.findViewById(R.id.objectiveChainView);
             mSchedulerCache.attachToChainView(recyclerView, mObjectiveChainId);

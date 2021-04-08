@@ -1,8 +1,10 @@
 package com.sixshaman.decisore.list;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.*;
+import androidx.preference.PreferenceManager;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -14,6 +16,7 @@ import com.sixshaman.decisore.options.SettingsActivity;
 import com.sixshaman.decisore.scheduler.SchedulerActivity;
 import com.sixshaman.decisore.utils.LockedReadFile;
 import com.sixshaman.decisore.utils.NewObjectiveDialogFragment;
+import com.sixshaman.decisore.utils.ParseUtils;
 import com.sixshaman.decisore.utils.TransactionDispatcher;
 
 import java.io.IOException;
@@ -65,10 +68,14 @@ public class ListActivity extends AppCompatActivity implements ListObjectiveCoun
             e.printStackTrace();
         }
 
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        String dayStartTimeString = sharedPreferences.getString("day_start_time", "6");
+        int dayStartTime = ParseUtils.parseInt(dayStartTimeString, 6);
+
         TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
         transactionDispatcher.setListCache(mListCache);
 
-        transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now());
+        transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now(), dayStartTime);
     }
 
     @Override
@@ -108,11 +115,15 @@ public class ListActivity extends AppCompatActivity implements ListObjectiveCoun
 
         newObjectiveDialogFragment.setOnAfterObjectiveCreatedListener(objectiveId ->
         {
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+            String dayStartTimeString = sharedPreferences.getString("day_start_time", "6");
+            int dayStartTime = ParseUtils.parseInt(dayStartTimeString, 6);
+
             TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
             transactionDispatcher.setListCache(mListCache);
 
             String configFolder = Objects.requireNonNull(getExternalFilesDir("/app")).getAbsolutePath();
-            transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now());
+            transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now(), dayStartTime);
         });
 
         newObjectiveDialogFragment.show(getSupportFragmentManager(), getString(R.string.newObjectiveDialogName));

@@ -1,18 +1,23 @@
 package com.sixshaman.decisore.scheduler.objective;
 
+import android.content.SharedPreferences;
+import androidx.preference.PreferenceManager;
 import com.sixshaman.decisore.list.EnlistedObjective;
 import com.sixshaman.decisore.scheduler.pool.PoolElement;
+import com.sixshaman.decisore.utils.ParseUtils;
 import com.sixshaman.decisore.utils.RandomUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.security.Provider;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Objects;
 
 public class ScheduledObjective implements PoolElement
 {
@@ -126,7 +131,7 @@ public class ScheduledObjective implements PoolElement
     }
 
     //Reschedules the objective to the new enlist date
-    public void reschedule(LocalDateTime referenceTime)
+    public void reschedule(LocalDateTime referenceTime, int dayStartTime)
     {
         //Cannot reschedule non-repeated objectives and won't reschedule paused objectives
         if(mRepeatProbability < 0.0001f || !mIsActive)
@@ -134,7 +139,7 @@ public class ScheduledObjective implements PoolElement
             return;
         }
 
-        mRegularScheduledAddDate = mRegularScheduledAddDate.plusDays(mRepeatDuration.toDays()).minusHours(6).truncatedTo(ChronoUnit.DAYS).plusHours(6);
+        mRegularScheduledAddDate = mRegularScheduledAddDate.plusDays(mRepeatDuration.toDays()).minusHours(dayStartTime).truncatedTo(ChronoUnit.DAYS).plusHours(dayStartTime);
 
         while(mRegularScheduledAddDate.isBefore(referenceTime)) //Simulate the passing of time
         {
@@ -157,7 +162,7 @@ public class ScheduledObjective implements PoolElement
         }
 
         //Day starts at 6AM
-        mScheduledAddDate = mRegularScheduledAddDate.truncatedTo(ChronoUnit.DAYS).plusHours(6);
+        mScheduledAddDate = mRegularScheduledAddDate.truncatedTo(ChronoUnit.DAYS).plusHours(dayStartTime);
     }
 
     //Reschedules the objective to the new enlist date (possibly out-of-order)
@@ -196,7 +201,7 @@ public class ScheduledObjective implements PoolElement
     }
 
     @Override
-    public EnlistedObjective obtainEnlistedObjective(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime)
+    public EnlistedObjective obtainEnlistedObjective(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime, int dayStartHour)
     {
         if(!isAvailable(blockingObjectiveIds, referenceTime))
         {
@@ -210,7 +215,7 @@ public class ScheduledObjective implements PoolElement
         }
         else
         {
-            reschedule(referenceTime);
+            reschedule(referenceTime, dayStartHour);
         }
 
         return enlistedObjective;

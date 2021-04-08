@@ -3,6 +3,7 @@ package com.sixshaman.decisore.scheduler.pool;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.ContextMenu;
 import android.view.Menu;
@@ -15,6 +16,7 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.sixshaman.decisore.R;
 import com.sixshaman.decisore.list.ObjectiveListCache;
@@ -25,6 +27,7 @@ import com.sixshaman.decisore.scheduler.ObjectiveSchedulerCache;
 import com.sixshaman.decisore.scheduler.objective.ScheduledObjective;
 import com.sixshaman.decisore.utils.EditObjectiveDialogFragment;
 import com.sixshaman.decisore.utils.LockedReadFile;
+import com.sixshaman.decisore.utils.ParseUtils;
 import com.sixshaman.decisore.utils.TransactionDispatcher;
 
 import java.io.IOException;
@@ -126,12 +129,15 @@ public class PoolElementViewHolder extends RecyclerView.ViewHolder implements Vi
                 DatePickerDialog datePickerDialog = new DatePickerDialog(view.getContext());
                 datePickerDialog.setOnDateSetListener((datePicker, year, month, day) ->
                 {
-                    //Day starts at 6 AM
-                    //Also Java numerates months from 0, not from 1
-                    LocalDateTime dateTime = LocalDateTime.of(year, month + 1, day, 6, 0, 0);
+                    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(Objects.requireNonNull(view.getContext()).getApplicationContext());
+                    String dayStartTimeString = sharedPreferences.getString("day_start_time", "6");
+                    int dayStartTime = ParseUtils.parseInt(dayStartTimeString, 6);
+
+                    //Java numerates months from 0, not from 1
+                    LocalDateTime dateTime = LocalDateTime.of(year, month + 1, day, dayStartTime, 0, 0);
 
                     transactionDispatcher.rescheduleScheduledObjectiveTransaction(configFolder, scheduledObjective.getId(), dateTime);
-                    transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now());
+                    transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now(), dayStartTime);
                 });
 
                 datePickerDialog.show();

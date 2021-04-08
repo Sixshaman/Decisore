@@ -210,7 +210,7 @@ public class ObjectiveChain implements PoolElement
     }
 
     @Override
-    public EnlistedObjective obtainEnlistedObjective(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime)
+    public EnlistedObjective obtainEnlistedObjective(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime, int dayStartHour)
     {
         if(!isAvailable(blockingObjectiveIds, referenceTime))
         {
@@ -219,7 +219,7 @@ public class ObjectiveChain implements PoolElement
 
         ScheduledObjective firstChainObjective = mObjectives.getFirst();
 
-        EnlistedObjective enlistedObjective = firstChainObjective.obtainEnlistedObjective(blockingObjectiveIds, referenceTime);
+        EnlistedObjective enlistedObjective = firstChainObjective.obtainEnlistedObjective(blockingObjectiveIds, referenceTime, dayStartHour);
         if(enlistedObjective == null)
         {
             return null;

@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,6 +14,7 @@ import android.widget.*;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
+import androidx.preference.PreferenceManager;
 import com.sixshaman.decisore.R;
 import com.sixshaman.decisore.list.EnlistedObjective;
 import com.sixshaman.decisore.list.ObjectiveListCache;
@@ -95,6 +97,10 @@ public class NewObjectiveDialogFragment extends DialogFragment
         //I blamed Java for necessity to make hacks like ValueHolder... Then I learned about RefCell in Rust. Lol. Apparently good languages have this too
         final ValueHolder<LocalDateTime> objectiveScheduleDate = new ValueHolder<>(objectiveCreateDate);
 
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(Objects.requireNonNull(getContext()).getApplicationContext());
+        String dayStartTimeString = sharedPreferences.getString("day_start_time", "6");
+        int dayStartTime = ParseUtils.parseInt(dayStartTimeString, 6);
+
         builder.setPositiveButton(R.string.createObjective, (dialog, id) ->
         {
             final EditText editTextName         = resultDialog.getValue().findViewById(R.id.editObjectiveName);
@@ -129,13 +135,13 @@ public class NewObjectiveDialogFragment extends DialogFragment
                     case 1: //Tomorrow
                     {
                         //Day starts at 6 AM
-                        objectiveScheduleDate.setValue(objectiveCreateDate.minusHours(6).plusDays(1).truncatedTo(ChronoUnit.DAYS).plusHours(6));
+                        objectiveScheduleDate.setValue(objectiveCreateDate.minusHours(dayStartTime).plusDays(1).truncatedTo(ChronoUnit.DAYS).plusHours(dayStartTime));
                         break;
                     }
                     case 2: //In a week
                     {
                         //Day starts at 6 AM
-                        objectiveScheduleDate.setValue(objectiveCreateDate.minusHours(6).plusDays(7).truncatedTo(ChronoUnit.DAYS).plusHours(6));
+                        objectiveScheduleDate.setValue(objectiveCreateDate.minusHours(dayStartTime).plusDays(7).truncatedTo(ChronoUnit.DAYS).plusHours(dayStartTime));
                         break;
                     }
                     case 3: //Custom
@@ -213,7 +219,7 @@ public class NewObjectiveDialogFragment extends DialogFragment
                 long newObjectiveId = transactionDispatcher.addObjectiveTransaction(mPoolIdToAddTo, mChainIdToAddTo, mAddToChainBeginning,
                                                                                     configFolder, objectiveCreateDate, objectiveScheduleDate.getValue(),
                                                                                     objectiveRepeatDuration, objectiveRepeatProbability,
-                                                                                    nameText, descriptionText, new ArrayList<>());
+                                                                                    nameText, descriptionText, new ArrayList<>(), dayStartTime);
 
                 mAfterObjectiveCreatedListener.afterObjectiveCreated(newObjectiveId);
             }
@@ -244,7 +250,7 @@ public class NewObjectiveDialogFragment extends DialogFragment
                         {
                             //Day starts at 6 AM
                             //Also Java numerates months from 0, not from 1
-                            LocalDateTime dateTime = LocalDateTime.of(year, month + 1, day, 6, 0, 0);
+                            LocalDateTime dateTime = LocalDateTime.of(year, month + 1, day, dayStartTime, 0, 0);
                             objectiveScheduleDate.setValue(dateTime);
 
                             customTextAdapter.setCustomText(dateTime.toLocalDate().toString());

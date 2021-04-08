@@ -185,7 +185,8 @@ public class TransactionDispatcher
     public synchronized long addObjectiveTransaction(long poolId, long chainId, boolean addToChainBeginning,
                                                      String configFolder, LocalDateTime createDateTime, LocalDateTime enlistDateTime,
                                                      Duration repeatDuration, float repeatProbability,
-                                                     String objectiveName, String objectiveDescription, ArrayList<String> objectiveTags)
+                                                     String objectiveName, String objectiveDescription, ArrayList<String> objectiveTags,
+                                                     int dayStartHour)
     {
         String schedulerFilePath = configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME;
         String listFilePath      = configFolder + "/" + ObjectiveListCache.LIST_FILENAME;
@@ -215,7 +216,7 @@ public class TransactionDispatcher
                                                              createDateTime, enlistDateTime, objectiveTags,
                                                              repeatDuration, repeatProbability);
 
-            enlistedObjectiveToAdd = scheduledObjectiveToAdd.obtainEnlistedObjective(mListCache.constructBlockingIds(), enlistDateTime);
+            enlistedObjectiveToAdd = scheduledObjectiveToAdd.obtainEnlistedObjective(mListCache.constructBlockingIds(), enlistDateTime, dayStartHour);
         }
         else
         {
@@ -389,7 +390,7 @@ public class TransactionDispatcher
     }
 
     @SuppressWarnings("UnusedReturnValue")
-    public synchronized boolean updateObjectiveListTransaction(String configFolder, LocalDateTime enlistDateTime)
+    public synchronized boolean updateObjectiveListTransaction(String configFolder, LocalDateTime enlistDateTime, int dayStartHour)
     {
         String schedulerFilePath = configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME;
         String listFilePath      = configFolder + "/" + ObjectiveListCache.LIST_FILENAME;
@@ -402,7 +403,7 @@ public class TransactionDispatcher
         LockedWriteFile listWriteFile      = new LockedWriteFile(listFilePath);
 
         //3. Prepare the list of objectives to add
-        ArrayList<EnlistedObjective> enlistedObjectives = mSchedulerCache.dumpReadyObjectives(mListCache.constructBlockingIds(), enlistDateTime);
+        ArrayList<EnlistedObjective> enlistedObjectives = mSchedulerCache.dumpReadyObjectives(mListCache.constructBlockingIds(), enlistDateTime, dayStartHour);
         if(enlistedObjectives != null)
         {
             //4. Add objectives

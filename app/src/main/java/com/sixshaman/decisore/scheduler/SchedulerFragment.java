@@ -3,6 +3,7 @@ package com.sixshaman.decisore.scheduler;
 import android.animation.Animator;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
+import android.content.SharedPreferences;
 import android.graphics.drawable.Animatable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -10,6 +11,7 @@ import android.view.ViewTreeObserver;
 import android.widget.ImageButton;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -72,6 +74,10 @@ public class SchedulerFragment extends Fragment
 
         try
         {
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext().getApplicationContext());
+            String dayStartTimeString = sharedPreferences.getString("day_start_time", "6");
+            int dayStartTime = ParseUtils.parseInt(dayStartTimeString, 6);
+
             LockedReadFile schedulerFile = new LockedReadFile(configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME);
             mSchedulerCache.invalidate(schedulerFile);
             schedulerFile.close();
@@ -79,7 +85,7 @@ public class SchedulerFragment extends Fragment
             TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
             transactionDispatcher.setSchedulerCache(mSchedulerCache);
 
-            transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now());
+            transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now(), dayStartTime);
         }
         catch(IOException e)
         {
@@ -167,11 +173,15 @@ public class SchedulerFragment extends Fragment
 
         newObjectiveDialogFragment.setOnAfterObjectiveCreatedListener(objectiveId ->
         {
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext().getApplicationContext());
+            String dayStartTimeString = sharedPreferences.getString("day_start_time", "6");
+            int dayStartTime = ParseUtils.parseInt(dayStartTimeString, 6);
+
             TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
             transactionDispatcher.setSchedulerCache(mSchedulerCache);
 
             String configFolder = Objects.requireNonNull(mFragmentView.getContext().getExternalFilesDir("/app")).getAbsolutePath();
-            transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now());
+            transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now(), dayStartTime);
         });
 
         newObjectiveDialogFragment.show(getParentFragmentManager(), getString(R.string.newObjectiveDialogName));
