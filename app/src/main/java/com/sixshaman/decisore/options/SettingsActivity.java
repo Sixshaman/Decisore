@@ -16,6 +16,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.preference.PreferenceFragmentCompat;
+import com.sixshaman.decisore.utils.ParseUtils;
+import com.sixshaman.decisore.utils.TransactionDispatcher;
+import com.sixshaman.decisore.utils.ValueHolder;
 
 import java.util.Objects;
 
@@ -52,12 +55,15 @@ public class SettingsActivity extends AppCompatActivity
             EditTextPreference dayStartTimePreference = Objects.requireNonNull(preferenceManager.findPreference("day_start_time"));
             dayStartTimePreference.setOnBindEditTextListener(editText -> editText.setInputType(InputType.TYPE_CLASS_NUMBER));
 
+            final ValueHolder<Integer> oldStartHour = new ValueHolder<>(ParseUtils.parseInt(dayStartTimePreference.getText(), 6));
             dayStartTimePreference.setOnPreferenceChangeListener((preference, newValue) ->
             {
+                int newHour;
+
                 String newHourStr = newValue.toString();
                 try
                 {
-                    int newHour = Integer.parseInt(newHourStr);
+                    newHour = Integer.parseInt(newHourStr);
                     if(newHour < 0 || newHour > 23)
                     {
                         return false;
@@ -68,6 +74,12 @@ public class SettingsActivity extends AppCompatActivity
                     return false;
                 }
 
+                String configFolder = Objects.requireNonNull(requireContext().getExternalFilesDir("/app")).getAbsolutePath();
+
+                TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
+                transactionDispatcher.updateNewDayStart(configFolder, oldStartHour.getValue(), newHour);
+
+                oldStartHour.setValue(newHour);
                 return true;
             });
         }
