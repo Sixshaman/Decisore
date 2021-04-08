@@ -17,6 +17,7 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.RecyclerView;
 import com.sixshaman.decisore.R;
+import com.sixshaman.decisore.list.ObjectiveListCache;
 import com.sixshaman.decisore.scheduler.chain.ChainFragment;
 import com.sixshaman.decisore.scheduler.chain.EditChainDialogFragment;
 import com.sixshaman.decisore.scheduler.pool.EditPoolDialogFragment;
@@ -25,8 +26,10 @@ import com.sixshaman.decisore.scheduler.pool.ObjectivePool;
 import com.sixshaman.decisore.scheduler.pool.PoolFragment;
 import com.sixshaman.decisore.scheduler.objective.ScheduledObjective;
 import com.sixshaman.decisore.utils.EditObjectiveDialogFragment;
+import com.sixshaman.decisore.utils.LockedReadFile;
 import com.sixshaman.decisore.utils.TransactionDispatcher;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -147,7 +150,7 @@ public class SchedulerElementViewHolder extends RecyclerView.ViewHolder implemen
                     //Also Java numerates months from 0, not from 1
                     LocalDateTime dateTime = LocalDateTime.of(year, month + 1, day, 6, 0, 0);
 
-                    transactionDispatcher.rescheduleScheduledObjectiveTransaction(configFolder, scheduledObjective, dateTime);
+                    transactionDispatcher.rescheduleScheduledObjectiveTransaction(configFolder, scheduledObjective.getId(), dateTime);
                     transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now());
                 });
 

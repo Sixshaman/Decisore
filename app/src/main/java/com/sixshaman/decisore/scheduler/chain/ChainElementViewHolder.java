@@ -12,11 +12,14 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.RecyclerView;
 import com.sixshaman.decisore.R;
+import com.sixshaman.decisore.list.ObjectiveListCache;
 import com.sixshaman.decisore.scheduler.ObjectiveSchedulerCache;
 import com.sixshaman.decisore.scheduler.objective.ScheduledObjective;
 import com.sixshaman.decisore.utils.EditObjectiveDialogFragment;
+import com.sixshaman.decisore.utils.LockedReadFile;
 import com.sixshaman.decisore.utils.TransactionDispatcher;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -90,7 +93,7 @@ public class ChainElementViewHolder extends RecyclerView.ViewHolder implements V
                 //Also Java numerates months from 0, not from 1
                 LocalDateTime dateTime = LocalDateTime.of(year, month + 1, day, 6, 0, 0);
 
-                transactionDispatcher.rescheduleScheduledObjectiveTransaction(configFolder, mScheduledObjective, dateTime);
+                transactionDispatcher.rescheduleScheduledObjectiveTransaction(configFolder, mScheduledObjective.getId(), dateTime);
                 transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now());
             });
 
