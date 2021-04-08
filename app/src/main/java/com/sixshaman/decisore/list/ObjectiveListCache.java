@@ -274,6 +274,11 @@ public class ObjectiveListCache
         }
     }
 
+    public int getObjectiveCount()
+    {
+        return mEnlistedObjectives.size();
+    }
+
     public HashSet<Long> constructBlockingIds()
     {
         HashSet<Long> blockingIds = new HashSet<>();

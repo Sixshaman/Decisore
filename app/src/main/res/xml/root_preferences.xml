@@ -4,10 +4,15 @@
     <PreferenceCategory>
 
         <EditTextPreference
-                app:defaultValue="6"
                 app:key="day_start_time"
+                app:defaultValue="6"
                 app:title="@string/day_start"
                 app:useSimpleSummaryProvider="true"/>
+
+        <SwitchPreferenceCompat
+                app:key="show_objective_count"
+                app:defaultValue="true"
+                app:title="@string/show_objective_count"/>
 
     </PreferenceCategory>
 
