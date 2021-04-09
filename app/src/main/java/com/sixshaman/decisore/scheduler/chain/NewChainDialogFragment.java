@@ -6,6 +6,7 @@ import android.app.Dialog;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
@@ -60,7 +61,8 @@ public class NewChainDialogFragment extends DialogFragment
             final EditText editTextName        = resultDialog.getValue().findViewById(R.id.editNewChainName);
             final EditText editEditDescription = resultDialog.getValue().findViewById(R.id.editNewChainDescription);
 
-            final Spinner frequencySpinner = resultDialog.getValue().findViewById(R.id.spinnerChainFrequency);
+            final Spinner  frequencySpinner   = resultDialog.getValue().findViewById(R.id.spinnerChainFrequency);
+            final CheckBox autoDeleteCheckbox = resultDialog.getValue().findViewById(R.id.checkboxAutoDelete);
 
             String nameText        = editTextName.getEditableText().toString();
             String descriptionText = editEditDescription.getEditableText().toString();
@@ -92,6 +94,7 @@ public class NewChainDialogFragment extends DialogFragment
                 }
             }
 
+            boolean useAutoDelete = autoDeleteCheckbox.isChecked();
             if(nameText.isEmpty())
             {
                 Toast toast = Toast.makeText(activity, R.string.invalidChainName, Toast.LENGTH_SHORT);
@@ -104,7 +107,7 @@ public class NewChainDialogFragment extends DialogFragment
                 TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
                 transactionDispatcher.setSchedulerCache(mSchedulerCache);
 
-                transactionDispatcher.addChainTransaction(mPoolIdToAddTo, configFolder, nameText, descriptionText, chainProduceFrequency);
+                transactionDispatcher.addChainTransaction(mPoolIdToAddTo, configFolder, nameText, descriptionText, chainProduceFrequency, useAutoDelete);
             }
         });
 
