@@ -36,6 +36,9 @@ public class ObjectiveChain implements PoolElement
     //Is this chain active?
     private boolean mIsActive;
 
+    //Does this chain get deleted immediately after finishing every objective?
+    private boolean mIsAutoDelete;
+
     //The minimum frequency at which the chain can provide objectives (0 specifies the "instant" chain)
     private Duration mProduceFrequency;
 
@@ -63,6 +66,8 @@ public class ObjectiveChain implements PoolElement
         mBoundObjectives = new HashSet<>();
 
         mIsActive = true;
+
+        mIsAutoDelete = false;
 
         mLastUpdate       = LocalDateTime.MIN; //FAR PAST, A LONG LONG TIME AGO.
         mProduceFrequency = Duration.ZERO;     //Default
@@ -144,6 +149,8 @@ public class ObjectiveChain implements PoolElement
             result.put("Description", mDescription);
 
             result.put("IsActive", Boolean.toString(mIsActive));
+
+            result.put("IsAutoDelete", Boolean.toString(mIsAutoDelete));
 
             result.put("ProduceFrequency", Long.toString(mProduceFrequency.toMinutes()));
 
@@ -403,10 +410,15 @@ public class ObjectiveChain implements PoolElement
         mIsActive = !paused;
     }
 
+    public void setAutoDelete(boolean autoDelete)
+    {
+        mIsAutoDelete = autoDelete;
+    }
+
     @Override
     public boolean isValid()
     {
-        return true;
+        return !mIsAutoDelete || (mBoundObjectives.isEmpty() || !mObjectives.isEmpty()); //Don't delete newly created chains (they have 0 bound objectives)
     }
 
     @Override

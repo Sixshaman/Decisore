@@ -238,7 +238,7 @@ public class ObjectiveSchedulerCache
     }
 
     //Creates a new objective chain
-    public long addObjectiveChain(long poolIdToAddTo, String name, String description, Duration produceFrequency)
+    public long addObjectiveChain(long poolIdToAddTo, String name, String description, Duration produceFrequency, boolean useAutoDelete)
     {
         ObjectivePool poolToAddTo = null;
         if(poolIdToAddTo != -1)
@@ -253,6 +253,7 @@ public class ObjectiveSchedulerCache
         long chainId = getMaxChainId() + 1;
         ObjectiveChain chain = new ObjectiveChain(chainId, name, description);
         chain.setProduceFrequency(produceFrequency);
+        chain.setAutoDelete(useAutoDelete);
 
         if(poolToAddTo == null)
         {

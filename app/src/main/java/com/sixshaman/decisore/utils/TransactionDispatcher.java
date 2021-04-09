@@ -89,14 +89,14 @@ public class TransactionDispatcher
         return false;
     }
 
-    public synchronized long addChainTransaction(long poolIdToAddTo, String configFolder, String chainName, String chainDescription, Duration produceFrequency)
+    public synchronized long addChainTransaction(long poolIdToAddTo, String configFolder, String chainName, String chainDescription, Duration produceFrequency, boolean useAutoDelete)
     {
         String schedulerFilePath = configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME;
         invalidateSchedulerCache(schedulerFilePath);
 
         LockedWriteFile schedulerWriteFile = new LockedWriteFile(schedulerFilePath);
 
-        long newChainId = mSchedulerCache.addObjectiveChain(poolIdToAddTo, chainName, chainDescription, produceFrequency);
+        long newChainId = mSchedulerCache.addObjectiveChain(poolIdToAddTo, chainName, chainDescription, produceFrequency, useAutoDelete);
         if(newChainId != -1)
         {
             if(mSchedulerCache.flush(schedulerWriteFile))
@@ -551,7 +551,7 @@ public class TransactionDispatcher
         if(chainId == -1)
         {
             String objectiveName = enlistedObjective.getName();
-            chainId = addChainTransaction(-1, configFolder, objectiveName, "", Duration.ZERO);
+            chainId = addChainTransaction(-1, configFolder, objectiveName, "", Duration.ZERO, true); //Implicitly created chains are auto-delete
         }
 
         ObjectiveChain chain = mSchedulerCache.getChainById(chainId);
@@ -613,12 +613,12 @@ public class TransactionDispatcher
                 }
 
                 String objectiveName = scheduledObjective.getName();
-                chainId = addChainTransaction(-1, configFolder, objectiveName, "", Duration.ZERO);
+                chainId = addChainTransaction(-1, configFolder, objectiveName, "", Duration.ZERO, true);
             }
             else
             {
                 String objectiveName = enlistedObjective.getName();
-                chainId = addChainTransaction(-1, configFolder, objectiveName, "", Duration.ZERO);
+                chainId = addChainTransaction(-1, configFolder, objectiveName, "", Duration.ZERO, true);
             }
         }
 
