@@ -264,6 +264,41 @@ public class ObjectiveChain implements PoolElement
         }
     }
 
+    @Override
+    public boolean isRelatedToObjective(long objectiveId)
+    {
+        return containedObjective(objectiveId);
+    }
+
+    @Override
+    public boolean mergeRelatedObjective(ScheduledObjective objective)
+    {
+        if(!isRelatedToObjective(objective.getId()))
+        {
+            return false;
+        }
+
+        putBack(objective);
+        return true;
+    }
+
+    @Override
+    public ObjectiveChain getRelatedChainById(long chainId)
+    {
+        return this;
+    }
+
+    @Override
+    public ObjectiveChain getChainForObjectiveById(long objectiveId)
+    {
+        if(containedObjective(objectiveId))
+        {
+            return this;
+        }
+
+        return null;
+    }
+
     public ScheduledObjective getFirstObjective()
     {
         if(mObjectives.isEmpty())
@@ -274,7 +309,8 @@ public class ObjectiveChain implements PoolElement
         return mObjectives.getFirst();
     }
 
-    public long getMaxObjectiveId()
+    @Override
+    public long getMaxRelatedObjectiveId()
     {
         long maxId = -1;
         for(ScheduledObjective objective: mObjectives)
@@ -297,6 +333,12 @@ public class ObjectiveChain implements PoolElement
         return maxId;
     }
 
+    @Override
+    public long getMaxRelatedChainId()
+    {
+        return getId();
+    }
+
     public boolean containedObjective(long objectiveId)
     {
         for(Long historicId: mBoundObjectives)
@@ -310,13 +352,15 @@ public class ObjectiveChain implements PoolElement
         return false;
     }
 
-    public ScheduledObjective getObjectiveById(long objectiveId)
+    @Override
+    public ScheduledObjective getRelatedObjectiveById(long objectiveId)
     {
         for(ScheduledObjective objective: mObjectives)
         {
-            if(objective.getId() == objectiveId)
+            ScheduledObjective relatedObjective = objective.getRelatedObjectiveById(objectiveId);
+            if(relatedObjective != null)
             {
-                return objective;
+                return relatedObjective;
             }
         }
 
