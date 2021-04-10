@@ -299,17 +299,31 @@ public class ObjectivePool implements SchedulerElement
         }
     }
 
-    public long getMaxChainId()
+    @Override
+    public boolean isRelatedToObjective(long objectiveId)
+    {
+        return findSourceForObjective(objectiveId) != null;
+    }
+
+    @Override
+    public boolean mergeRelatedObjective(ScheduledObjective objective)
+    {
+        PoolElement source = findSourceForObjective(objective.getId());
+        if(source == null)
+        {
+            return false;
+        }
+
+        return source.mergeRelatedObjective(objective);
+    }
+
+    @Override
+    public long getMaxRelatedObjectiveId()
     {
         long maxId = 0;
         for(PoolElement source: mObjectiveSources)
         {
-            long sourceMaxId = 0;
-            if(source instanceof ObjectiveChain)
-            {
-                sourceMaxId = ((ObjectiveChain)source).getId();
-            }
-
+            long sourceMaxId = source.getMaxRelatedObjectiveId();
             if(sourceMaxId > maxId)
             {
                 maxId = sourceMaxId;
@@ -319,21 +333,18 @@ public class ObjectivePool implements SchedulerElement
         return maxId;
     }
 
-    public long getMaxObjectiveId()
+    @Override
+    public long getMaxRelatedChainId()
     {
         long maxId = 0;
         for(PoolElement source: mObjectiveSources)
         {
-            long sourceMaxId = 0;
-            if(source instanceof ObjectiveChain)
+            if(source instanceof ScheduledObjective)
             {
-                sourceMaxId = ((ObjectiveChain) source).getMaxObjectiveId();
-            }
-            else if(source instanceof ScheduledObjective)
-            {
-                sourceMaxId = ((ScheduledObjective)source).getId();
+                continue;
             }
 
+            long sourceMaxId = source.getMaxRelatedChainId();
             if(sourceMaxId > maxId)
             {
                 maxId = sourceMaxId;
@@ -343,7 +354,8 @@ public class ObjectivePool implements SchedulerElement
         return maxId;
     }
 
-    public ObjectiveChain getChainById(long id)
+    @Override
+    public ObjectiveChain getRelatedChainById(long id)
     {
         for(PoolElement source: mObjectiveSources)
         {
@@ -360,28 +372,33 @@ public class ObjectivePool implements SchedulerElement
         return null;
     }
 
-    public ScheduledObjective getObjectiveById(long objectiveId)
+    @Override
+    public ObjectiveChain getChainForObjectiveById(long objectiveId)
     {
         for(PoolElement source: mObjectiveSources)
         {
             if(source instanceof ObjectiveChain)
             {
-                ObjectiveChain     chain     = ((ObjectiveChain)source);
-                ScheduledObjective objective = chain.getObjectiveById(objectiveId);
-
-                if(objective != null)
+                ObjectiveChain chain = ((ObjectiveChain)source);
+                if(chain.isRelatedToObjective(objectiveId))
                 {
-                    return objective;
+                    return chain;
                 }
             }
-            else if(source instanceof ScheduledObjective)
-            {
-                ScheduledObjective objective = ((ScheduledObjective)source);
+        }
 
-                if(objective.getId() == objectiveId)
-                {
-                    return objective;
-                }
+        return null;
+    }
+
+    @Override
+    public ScheduledObjective getRelatedObjectiveById(long objectiveId)
+    {
+        for(PoolElement source: mObjectiveSources)
+        {
+            ScheduledObjective relatedObjective = source.getRelatedObjectiveById(objectiveId);
+            if(relatedObjective != null)
+            {
+                return relatedObjective;
             }
         }
 
@@ -392,19 +409,9 @@ public class ObjectivePool implements SchedulerElement
     {
         for(PoolElement source: mObjectiveSources)
         {
-            if(source instanceof ObjectiveChain)
+            if(source.isRelatedToObjective(objectiveId))
             {
-                if(((ObjectiveChain)source).containedObjective(objectiveId))
-                {
-                    return source;
-                }
-            }
-            else if(source instanceof ScheduledObjective)
-            {
-                if(((ScheduledObjective) source).getId() == objectiveId)
-                {
-                    return source;
-                }
+                return source;
             }
         }
 

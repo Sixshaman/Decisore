@@ -3,6 +3,7 @@ package com.sixshaman.decisore.scheduler.objective;
 import android.content.SharedPreferences;
 import androidx.preference.PreferenceManager;
 import com.sixshaman.decisore.list.EnlistedObjective;
+import com.sixshaman.decisore.scheduler.chain.ObjectiveChain;
 import com.sixshaman.decisore.scheduler.pool.PoolElement;
 import com.sixshaman.decisore.utils.ParseUtils;
 import com.sixshaman.decisore.utils.RandomUtils;
@@ -229,6 +230,62 @@ public class ScheduledObjective implements PoolElement
             mRegularScheduledAddDate = mRegularScheduledAddDate.minusHours(oldStartHour).plusHours(newStartHour);
             mScheduledAddDate        = mScheduledAddDate.minusHours(oldStartHour).plusHours(newStartHour);
         }
+    }
+
+    @Override
+    public boolean isRelatedToObjective(long objectiveId)
+    {
+        return mId == objectiveId;
+    }
+
+    @Override
+    public boolean mergeRelatedObjective(ScheduledObjective objective)
+    {
+        if(!isRelatedToObjective(objective.getId()))
+        {
+            return false;
+        }
+
+        rescheduleUnregulated(objective.getScheduledEnlistDate());
+        return true;
+    }
+
+    @Override
+    public ScheduledObjective getRelatedObjectiveById(long objectiveId)
+    {
+        if(mId == objectiveId)
+        {
+            return this;
+        }
+
+        return null;
+    }
+
+    @Override
+    public ObjectiveChain getRelatedChainById(long chainId)
+    {
+        //There's never a chain related
+        return null;
+    }
+
+    @Override
+    public ObjectiveChain getChainForObjectiveById(long objectiveId)
+    {
+        //There's never a chain related
+        return null;
+    }
+
+    @Override
+    public long getMaxRelatedObjectiveId()
+    {
+        return getId();
+    }
+
+    @Override
+    public long getMaxRelatedChainId()
+    {
+        //There's never a chain related
+        return -1;
     }
 
     @Override
