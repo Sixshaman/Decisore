@@ -34,14 +34,16 @@ import com.sixshaman.decisore.utils.TransactionDispatcher;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 
 public class SchedulerElementViewHolder extends RecyclerView.ViewHolder implements View.OnCreateContextMenuListener
 {
-    final int MENU_EDIT_ELEMENT         = 0;
-    final int MENU_DELETE_ELEMENT       = 1;
-    final int MENU_RESCHEDULE_OBJECTIVE = 2;
-    final int MENU_PAUSE_ELEMENT        = 3;
+    final int MENU_EDIT_ELEMENT             = 0;
+    final int MENU_DELETE_ELEMENT           = 1;
+    final int MENU_RESCHEDULE_OBJECTIVE_NOW = 2;
+    final int MENU_RESCHEDULE_OBJECTIVE     = 3;
+    final int MENU_PAUSE_ELEMENT            = 4;
 
     private ObjectiveSchedulerCache mObjectiveSchedulerCache;
 
@@ -138,10 +140,24 @@ public class SchedulerElementViewHolder extends RecyclerView.ViewHolder implemen
         {
             ScheduledObjective scheduledObjective = (ScheduledObjective)mSchedulerElement;
 
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(Objects.requireNonNull(view.getContext()).getApplicationContext());
+            String dayStartTimeString = sharedPreferences.getString("day_start_time", "6");
+            int dayStartTime = ParseUtils.parseInt(dayStartTimeString, 6);
+
             TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
             transactionDispatcher.setSchedulerCache(mObjectiveSchedulerCache);
 
             String configFolder = Objects.requireNonNull(view.getContext().getExternalFilesDir("/app")).getAbsolutePath();
+
+            MenuItem rescheduleNowItem = contextMenu.add(menuIndex, MENU_RESCHEDULE_OBJECTIVE_NOW, Menu.NONE, R.string.menu_schedule_for_now);
+            rescheduleNowItem.setOnMenuItemClickListener(menuItem ->
+            {
+                LocalDateTime enlistDateTime = LocalDateTime.now();
+
+                transactionDispatcher.rescheduleScheduledObjectiveTransaction(configFolder, scheduledObjective.getId(), enlistDateTime);
+                transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now(), dayStartTime);
+                return true;
+            });
 
             MenuItem rescheduleItem = contextMenu.add(menuIndex++, MENU_RESCHEDULE_OBJECTIVE, Menu.NONE, R.string.menu_schedule_for_arbitrary);
             rescheduleItem.setOnMenuItemClickListener(menuItem ->
@@ -149,10 +165,6 @@ public class SchedulerElementViewHolder extends RecyclerView.ViewHolder implemen
                 DatePickerDialog datePickerDialog = new DatePickerDialog(view.getContext());
                 datePickerDialog.setOnDateSetListener((datePicker, year, month, day) ->
                 {
-                    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(Objects.requireNonNull(view.getContext()).getApplicationContext());
-                    String dayStartTimeString = sharedPreferences.getString("day_start_time", "6");
-                    int dayStartTime = ParseUtils.parseInt(dayStartTimeString, 6);
-
                     //Java numerates months from 0, not from 1
                     LocalDateTime dateTime = LocalDateTime.of(year, month + 1, day, dayStartTime, 0, 0);
 
