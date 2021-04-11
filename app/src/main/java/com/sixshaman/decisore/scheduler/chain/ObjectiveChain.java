@@ -285,7 +285,12 @@ public class ObjectiveChain implements PoolElement
     @Override
     public ObjectiveChain getRelatedChainById(long chainId)
     {
-        return this;
+        if(chainId == getId())
+        {
+            return this;
+        }
+
+        return null;
     }
 
     @Override

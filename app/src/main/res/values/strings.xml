@@ -23,6 +23,7 @@
     <string name="createPool">DO IT, MOTHERFUCKER!</string>
     <string name="createCancel">Cancel</string>
 
+    <string name="menu_schedule_for_now">Schedule for now</string>
     <string name="menu_schedule_for_tomorrow">Schedule for tomorrow</string>
     <string name="menu_schedule_for_arbitrary" tools:ignore="TypographyEllipsis">Schedule for...</string>
     <string name="menu_add_objective_before" tools:ignore="TypographyEllipsis">Add objective before...</string>
