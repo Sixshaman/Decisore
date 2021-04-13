@@ -115,6 +115,7 @@ public class TwoSidedArrayList<T> extends AbstractList<T> implements List<T>, Ra
         return element;
     }
 
+    @Override
     public boolean isEmpty()
     {
         return (freeIndexFront + 1) % data.length == freeIndexBack;
