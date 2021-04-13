@@ -44,14 +44,14 @@ public class TransactionDispatcher
     }
 
     @SuppressWarnings("UnusedReturnValue")
-    public synchronized boolean addPoolTransaction(String configFolder, String poolName, String poolDescription)
+    public synchronized boolean addPoolTransaction(String configFolder, String poolName, String poolDescription, Duration produceFrequency)
     {
         String schedulerFilePath = configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME;
 
         invalidateSchedulerCache(schedulerFilePath);
 
         LockedWriteFile schedulerWriteFile = new LockedWriteFile(schedulerFilePath);
-        mSchedulerCache.addObjectivePool(poolName, poolDescription);
+        mSchedulerCache.addObjectivePool(poolName, poolDescription, produceFrequency);
 
         if(mSchedulerCache.flush(schedulerWriteFile))
         {
@@ -89,14 +89,14 @@ public class TransactionDispatcher
         return false;
     }
 
-    public synchronized long addChainTransaction(long poolIdToAddTo, String configFolder, String chainName, String chainDescription)
+    public synchronized long addChainTransaction(long poolIdToAddTo, String configFolder, String chainName, String chainDescription, Duration produceFrequency, boolean useAutoDelete)
     {
         String schedulerFilePath = configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME;
         invalidateSchedulerCache(schedulerFilePath);
 
         LockedWriteFile schedulerWriteFile = new LockedWriteFile(schedulerFilePath);
 
-        long newChainId = mSchedulerCache.addObjectiveChain(poolIdToAddTo, chainName, chainDescription);
+        long newChainId = mSchedulerCache.addObjectiveChain(poolIdToAddTo, chainName, chainDescription, produceFrequency, useAutoDelete);
         if(newChainId != -1)
         {
             if(mSchedulerCache.flush(schedulerWriteFile))
@@ -185,7 +185,8 @@ public class TransactionDispatcher
     public synchronized long addObjectiveTransaction(long poolId, long chainId, boolean addToChainBeginning,
                                                      String configFolder, LocalDateTime createDateTime, LocalDateTime enlistDateTime,
                                                      Duration repeatDuration, float repeatProbability,
-                                                     String objectiveName, String objectiveDescription, ArrayList<String> objectiveTags)
+                                                     String objectiveName, String objectiveDescription, ArrayList<String> objectiveTags,
+                                                     int dayStartHour)
     {
         String schedulerFilePath = configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME;
         String listFilePath      = configFolder + "/" + ObjectiveListCache.LIST_FILENAME;
@@ -215,7 +216,7 @@ public class TransactionDispatcher
                                                              createDateTime, enlistDateTime, objectiveTags,
                                                              repeatDuration, repeatProbability);
 
-            enlistedObjectiveToAdd = scheduledObjectiveToAdd.obtainEnlistedObjective(mListCache.constructBlockingIds(), enlistDateTime);
+            enlistedObjectiveToAdd = scheduledObjectiveToAdd.obtainEnlistedObjective(mListCache.constructBlockingIds(), enlistDateTime, dayStartHour);
         }
         else
         {
@@ -389,7 +390,29 @@ public class TransactionDispatcher
     }
 
     @SuppressWarnings("UnusedReturnValue")
-    public synchronized boolean updateObjectiveListTransaction(String configFolder, LocalDateTime enlistDateTime)
+    public synchronized boolean updateNewDayStart(String configFolder, int oldStartHour, int newStartHour)
+    {
+        String schedulerFilePath = configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME;
+        invalidateSchedulerCache(schedulerFilePath);
+
+        LockedWriteFile schedulerWriteFile = new LockedWriteFile(schedulerFilePath);
+
+        mSchedulerCache.updateDayStart(oldStartHour, newStartHour);
+
+        if(mSchedulerCache.flush(schedulerWriteFile))
+        {
+            schedulerWriteFile.close();
+            return true;
+        }
+
+        schedulerWriteFile.close();
+        invalidateSchedulerCache(schedulerFilePath);
+
+        return false;
+    }
+
+    @SuppressWarnings("UnusedReturnValue")
+    public synchronized boolean updateObjectiveListTransaction(String configFolder, LocalDateTime enlistDateTime, int dayStartHour)
     {
         String schedulerFilePath = configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME;
         String listFilePath      = configFolder + "/" + ObjectiveListCache.LIST_FILENAME;
@@ -402,7 +425,7 @@ public class TransactionDispatcher
         LockedWriteFile listWriteFile      = new LockedWriteFile(listFilePath);
 
         //3. Prepare the list of objectives to add
-        ArrayList<EnlistedObjective> enlistedObjectives = mSchedulerCache.dumpReadyObjectives(mListCache.constructBlockingIds(), enlistDateTime);
+        ArrayList<EnlistedObjective> enlistedObjectives = mSchedulerCache.dumpReadyObjectives(mListCache.constructBlockingIds(), enlistDateTime, dayStartHour);
         if(enlistedObjectives != null)
         {
             //4. Add objectives
@@ -443,7 +466,7 @@ public class TransactionDispatcher
     }
 
     @SuppressWarnings("UnusedReturnValue")
-    public synchronized boolean rescheduleScheduledObjectiveTransaction(String configFolder, ScheduledObjective objective, LocalDateTime nextEnlistDate)
+    public synchronized boolean rescheduleScheduledObjectiveTransaction(String configFolder, long objectiveId, LocalDateTime nextEnlistDate)
     {
         String schedulerFilePath = configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME;
 
@@ -451,6 +474,8 @@ public class TransactionDispatcher
 
         //2. Lock scheduler file
         LockedWriteFile schedulerWriteFile = new LockedWriteFile(schedulerFilePath);
+
+        ScheduledObjective objective = mSchedulerCache.getObjectiveById(objectiveId);
         objective.rescheduleUnregulated(nextEnlistDate);
 
         if(mSchedulerCache.flush(schedulerWriteFile))
@@ -526,7 +551,7 @@ public class TransactionDispatcher
         if(chainId == -1)
         {
             String objectiveName = enlistedObjective.getName();
-            chainId = addChainTransaction(-1, configFolder, objectiveName, "");
+            chainId = addChainTransaction(-1, configFolder, objectiveName, "", Duration.ZERO, true); //Implicitly created chains are auto-delete
         }
 
         ObjectiveChain chain = mSchedulerCache.getChainById(chainId);
@@ -588,12 +613,12 @@ public class TransactionDispatcher
                 }
 
                 String objectiveName = scheduledObjective.getName();
-                chainId = addChainTransaction(-1, configFolder, objectiveName, "");
+                chainId = addChainTransaction(-1, configFolder, objectiveName, "", Duration.ZERO, true);
             }
             else
             {
                 String objectiveName = enlistedObjective.getName();
-                chainId = addChainTransaction(-1, configFolder, objectiveName, "");
+                chainId = addChainTransaction(-1, configFolder, objectiveName, "", Duration.ZERO, true);
             }
         }
 

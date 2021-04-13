@@ -7,7 +7,7 @@
                                                    android:id="@+id/layoutFinishedObjectiveView">
 
     <TextView android:id="@+id/textFinishedObjectiveName"
-              android:text="@string/placeholderTask"
+              android:text="@string/placeholderObjective"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
               android:textColor="@android:color/black"

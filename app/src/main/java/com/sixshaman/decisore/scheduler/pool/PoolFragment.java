@@ -3,6 +3,7 @@ package com.sixshaman.decisore.scheduler.pool;
 import android.animation.Animator;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
+import android.content.SharedPreferences;
 import android.graphics.drawable.Animatable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -10,6 +11,7 @@ import android.view.ViewTreeObserver;
 import android.widget.ImageButton;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -21,6 +23,7 @@ import com.sixshaman.decisore.scheduler.SchedulerActivity;
 import com.sixshaman.decisore.utils.LockedReadFile;
 import com.sixshaman.decisore.scheduler.chain.NewChainDialogFragment;
 import com.sixshaman.decisore.utils.NewObjectiveDialogFragment;
+import com.sixshaman.decisore.utils.ParseUtils;
 import com.sixshaman.decisore.utils.TransactionDispatcher;
 
 import java.io.IOException;
@@ -81,10 +84,14 @@ public class PoolFragment extends Fragment
                 Objects.requireNonNull(activity.getSupportActionBar()).setTitle(objectivePool.getName());
             }
 
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext().getApplicationContext());
+            String dayStartTimeString = sharedPreferences.getString("day_start_time", "6");
+            int dayStartTime = ParseUtils.parseInt(dayStartTimeString, 6);
+
             TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
             transactionDispatcher.setSchedulerCache(mSchedulerCache);
 
-            transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now());
+            transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now(), dayStartTime);
         }
         catch(IOException e)
         {

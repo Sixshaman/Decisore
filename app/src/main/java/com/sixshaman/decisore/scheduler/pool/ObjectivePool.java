@@ -1,5 +1,6 @@
 package com.sixshaman.decisore.scheduler.pool;
 
+import android.util.LongSparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,7 +19,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -42,6 +45,12 @@ public class ObjectivePool implements SchedulerElement
     //The list of all the objective sources the pool can choose from
     private final ArrayList<PoolElement> mObjectiveSources;
 
+    //The minimum frequency at which the pool can provide objectives (0 specifies the "instant" pool)
+    private Duration mProduceFrequency;
+
+    //The date-time at which the last objective was provided (valid only for non-instant pools)
+    private LocalDateTime mLastUpdate;
+
     //The id of the objective that was most recently provided by this pool.
     private long mLastProvidedObjectiveId;
 
@@ -61,6 +70,9 @@ public class ObjectivePool implements SchedulerElement
         mLastProvidedObjectiveId = -1;
 
         mIsActive = true;
+
+        mLastUpdate       = LocalDateTime.MIN;
+        mProduceFrequency = Duration.ZERO;
     }
 
     public void attachToPoolView(RecyclerView recyclerView, ObjectiveSchedulerCache schedulerCache)
@@ -71,16 +83,17 @@ public class ObjectivePool implements SchedulerElement
         mPoolViewHolder.notifyDataSetChanged();
     }
 
-    public void attachAllChainViews(HashMap<Long, RecyclerView> chainItemViews, ObjectiveSchedulerCache schedulerCache)
+    public void attachAllChainViews(LongSparseArray<RecyclerView> chainItemViews, ObjectiveSchedulerCache schedulerCache)
     {
         for(PoolElement poolElement: mObjectiveSources)
         {
             if(poolElement instanceof ObjectiveChain)
             {
                 ObjectiveChain chain = (ObjectiveChain)poolElement;
-                if(chainItemViews.containsKey(chain.getId()))
+                RecyclerView chainView = chainItemViews.get(chain.getId(), null);
+                if(chainView != null)
                 {
-                    chain.attachToChainView(Objects.requireNonNull(chainItemViews.get(chain.getId())), schedulerCache);
+                    chain.attachToChainView(chainView, schedulerCache);
                 }
             }
         }
@@ -191,6 +204,12 @@ public class ObjectivePool implements SchedulerElement
 
             result.put("IsActive", Boolean.toString(mIsActive));
 
+            result.put("ProduceFrequency", Long.toString(mProduceFrequency.toMinutes()));
+
+            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss:nnnnnnnnn");
+            String lastUpdateString = dateTimeFormatter.format(mLastUpdate);
+            result.put("LastUpdate", lastUpdateString);
+
             JSONArray sourcesArray = new JSONArray();
             for(PoolElement element: mObjectiveSources)
             {
@@ -220,7 +239,7 @@ public class ObjectivePool implements SchedulerElement
 
     //Gets an objective from a random source
     @Override
-    public EnlistedObjective obtainEnlistedObjective(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime)
+    public EnlistedObjective obtainEnlistedObjective(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime, int dayStartHour)
     {
         if(!mIsActive)
         {
@@ -251,7 +270,7 @@ public class ObjectivePool implements SchedulerElement
         int  randomSourceIndexIndex = (int) RandomUtils.getInstance().getRandomUniform(0, availableSourceIndices.size() - 1);
         PoolElement randomPoolElement = mObjectiveSources.get(availableSourceIndices.get(randomSourceIndexIndex));
 
-        EnlistedObjective resultObjective = randomPoolElement.obtainEnlistedObjective(blockingObjectiveIds, referenceTime);
+        EnlistedObjective resultObjective = randomPoolElement.obtainEnlistedObjective(blockingObjectiveIds, referenceTime, dayStartHour);
         if(!randomPoolElement.isValid())
         {
             //Delete finished objectives
@@ -261,40 +280,50 @@ public class ObjectivePool implements SchedulerElement
         if(resultObjective != null)
         {
             mLastProvidedObjectiveId = resultObjective.getId();
+
+            if(!mProduceFrequency.isZero())
+            {
+                mLastUpdate = referenceTime;
+            }
         }
 
         return resultObjective;
     }
 
-    //Returns the number of objective sources in pool
-    public int getSourceCount()
+    @Override
+    public void updateDayStart(LocalDateTime referenceTime, int oldStartHour, int newStartHour)
     {
-        return mObjectiveSources.size();
+        for(PoolElement poolElement: mObjectiveSources)
+        {
+            poolElement.updateDayStart(referenceTime, oldStartHour, newStartHour);
+        }
     }
 
-    //Returns the source with given index
-    public PoolElement getSource(int position)
+    @Override
+    public boolean isRelatedToObjective(long objectiveId)
     {
-        return mObjectiveSources.get(position);
+        return findSourceForObjective(objectiveId) != null;
     }
 
-    //Returns true if the pool contains the source
-    public boolean containsSource(PoolElement source)
+    @Override
+    public boolean mergeRelatedObjective(ScheduledObjective objective)
     {
-        return mObjectiveSources.contains(source);
+        PoolElement source = findSourceForObjective(objective.getId());
+        if(source == null)
+        {
+            return false;
+        }
+
+        return source.mergeRelatedObjective(objective);
     }
 
-    public long getMaxChainId()
+    @Override
+    public long getMaxRelatedObjectiveId()
     {
         long maxId = 0;
         for(PoolElement source: mObjectiveSources)
         {
-            long sourceMaxId = 0;
-            if(source instanceof ObjectiveChain)
-            {
-                sourceMaxId = ((ObjectiveChain)source).getId();
-            }
-
+            long sourceMaxId = source.getMaxRelatedObjectiveId();
             if(sourceMaxId > maxId)
             {
                 maxId = sourceMaxId;
@@ -304,21 +333,18 @@ public class ObjectivePool implements SchedulerElement
         return maxId;
     }
 
-    public long getMaxObjectiveId()
+    @Override
+    public long getMaxRelatedChainId()
     {
         long maxId = 0;
         for(PoolElement source: mObjectiveSources)
         {
-            long sourceMaxId = 0;
-            if(source instanceof ObjectiveChain)
+            if(source instanceof ScheduledObjective)
             {
-                sourceMaxId = ((ObjectiveChain) source).getMaxObjectiveId();
-            }
-            else if(source instanceof ScheduledObjective)
-            {
-                sourceMaxId = ((ScheduledObjective)source).getId();
+                continue;
             }
 
+            long sourceMaxId = source.getMaxRelatedChainId();
             if(sourceMaxId > maxId)
             {
                 maxId = sourceMaxId;
@@ -328,7 +354,8 @@ public class ObjectivePool implements SchedulerElement
         return maxId;
     }
 
-    public ObjectiveChain getChainById(long id)
+    @Override
+    public ObjectiveChain getRelatedChainById(long id)
     {
         for(PoolElement source: mObjectiveSources)
         {
@@ -345,28 +372,33 @@ public class ObjectivePool implements SchedulerElement
         return null;
     }
 
-    public ScheduledObjective getObjectiveById(long objectiveId)
+    @Override
+    public ObjectiveChain getChainForObjectiveById(long objectiveId)
     {
         for(PoolElement source: mObjectiveSources)
         {
             if(source instanceof ObjectiveChain)
             {
-                ObjectiveChain     chain     = ((ObjectiveChain)source);
-                ScheduledObjective objective = chain.getObjectiveById(objectiveId);
-
-                if(objective != null)
+                ObjectiveChain chain = ((ObjectiveChain)source);
+                if(chain.isRelatedToObjective(objectiveId))
                 {
-                    return objective;
+                    return chain;
                 }
             }
-            else if(source instanceof ScheduledObjective)
-            {
-                ScheduledObjective objective = ((ScheduledObjective)source);
+        }
 
-                if(objective.getId() == objectiveId)
-                {
-                    return objective;
-                }
+        return null;
+    }
+
+    @Override
+    public ScheduledObjective getRelatedObjectiveById(long objectiveId)
+    {
+        for(PoolElement source: mObjectiveSources)
+        {
+            ScheduledObjective relatedObjective = source.getRelatedObjectiveById(objectiveId);
+            if(relatedObjective != null)
+            {
+                return relatedObjective;
             }
         }
 
@@ -377,23 +409,24 @@ public class ObjectivePool implements SchedulerElement
     {
         for(PoolElement source: mObjectiveSources)
         {
-            if(source instanceof ObjectiveChain)
+            if(source.isRelatedToObjective(objectiveId))
             {
-                if(((ObjectiveChain)source).containedObjective(objectiveId))
-                {
-                    return source;
-                }
-            }
-            else if(source instanceof ScheduledObjective)
-            {
-                if(((ScheduledObjective) source).getId() == objectiveId)
-                {
-                    return source;
-                }
+                return source;
             }
         }
 
         return null;
+    }
+
+    @Override
+    public boolean isAvailable(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime)
+    {
+        if(!mProduceFrequency.isZero() && !mLastUpdate.plus(mProduceFrequency).isBefore(referenceTime))
+        {
+            return false;
+        }
+
+        return !blockingObjectiveIds.contains(mLastProvidedObjectiveId);
     }
 
     public long getId()
@@ -441,10 +474,33 @@ public class ObjectivePool implements SchedulerElement
         mDescription = description;
     }
 
-    @Override
-    public boolean isAvailable(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime)
+    //Returns the number of objective sources in pool
+    public int getSourceCount()
     {
-        return !blockingObjectiveIds.contains(mLastProvidedObjectiveId);
+        return mObjectiveSources.size();
+    }
+
+    //Returns the source with given index
+    public PoolElement getSource(int position)
+    {
+        return mObjectiveSources.get(position);
+    }
+
+    //Returns true if the pool contains the source
+    public boolean containsSource(PoolElement source)
+    {
+        return mObjectiveSources.contains(source);
+    }
+
+    public void setProduceFrequency(Duration produceFrequency)
+    {
+        mProduceFrequency = produceFrequency;
+    }
+
+    //Only to be used for JSON loading, consider it private
+    void setLastUpdate(LocalDateTime lastUpdate)
+    {
+        mLastUpdate = lastUpdate;
     }
 
     //Gets the last provided objective id, to check if it has been finished yet

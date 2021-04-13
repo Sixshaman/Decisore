@@ -6,7 +6,7 @@
                                                    app:layout_constraintStart_toStartOf="parent"
                                                    app:layout_constraintEnd_toEndOf="parent"
                                                    android:layout_margin="16dp"
-                                                   android:id="@+id/layoutDialogEditTask">
+                                                   android:id="@+id/layoutDialogEditObjective">
 
     <EditText
             android:theme="@style/AdditionalTheme"
@@ -15,7 +15,7 @@
             android:inputType="text"
             android:ems="10"
             android:id="@+id/editEditObjectiveName"
-            android:hint="@string/taskName"
+            android:hint="@string/objectiveName"
             android:autofillHints=""
             android:importantForAutofill="no"
             app:layout_constraintStart_toStartOf="parent"
@@ -35,6 +35,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             android:autofillHints=""
-            android:hint="@string/taskDescription"/>
+            android:hint="@string/objectiveDescription"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

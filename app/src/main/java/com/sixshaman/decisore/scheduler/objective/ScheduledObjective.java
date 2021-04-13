@@ -1,18 +1,24 @@
 package com.sixshaman.decisore.scheduler.objective;
 
+import android.content.SharedPreferences;
+import androidx.preference.PreferenceManager;
 import com.sixshaman.decisore.list.EnlistedObjective;
+import com.sixshaman.decisore.scheduler.chain.ObjectiveChain;
 import com.sixshaman.decisore.scheduler.pool.PoolElement;
+import com.sixshaman.decisore.utils.ParseUtils;
 import com.sixshaman.decisore.utils.RandomUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.security.Provider;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Objects;
 
 public class ScheduledObjective implements PoolElement
 {
@@ -126,7 +132,7 @@ public class ScheduledObjective implements PoolElement
     }
 
     //Reschedules the objective to the new enlist date
-    public void reschedule(LocalDateTime referenceTime)
+    public void reschedule(LocalDateTime referenceTime, int dayStartTime)
     {
         //Cannot reschedule non-repeated objectives and won't reschedule paused objectives
         if(mRepeatProbability < 0.0001f || !mIsActive)
@@ -134,7 +140,7 @@ public class ScheduledObjective implements PoolElement
             return;
         }
 
-        mRegularScheduledAddDate = mRegularScheduledAddDate.plusDays(1).minusHours(6).truncatedTo(ChronoUnit.DAYS).plusHours(6); //Add at least one day
+        mRegularScheduledAddDate = mRegularScheduledAddDate.plusDays(mRepeatDuration.toDays()).minusHours(dayStartTime).truncatedTo(ChronoUnit.DAYS).plusHours(dayStartTime);
 
         while(mRegularScheduledAddDate.isBefore(referenceTime)) //Simulate the passing of time
         {
@@ -157,16 +163,13 @@ public class ScheduledObjective implements PoolElement
         }
 
         //Day starts at 6AM
-        mScheduledAddDate = mRegularScheduledAddDate.truncatedTo(ChronoUnit.DAYS).plusHours(6);
+        mScheduledAddDate = mRegularScheduledAddDate.truncatedTo(ChronoUnit.DAYS).plusHours(dayStartTime);
     }
 
     //Reschedules the objective to the new enlist date (possibly out-of-order)
     public void rescheduleUnregulated(LocalDateTime newEnlistDate)
     {
-        if(newEnlistDate.isBefore(mScheduledAddDate))
-        {
-           mScheduledAddDate = newEnlistDate;
-        }
+        mScheduledAddDate = newEnlistDate;
     }
 
     public boolean isRepeatable()
@@ -199,7 +202,7 @@ public class ScheduledObjective implements PoolElement
     }
 
     @Override
-    public EnlistedObjective obtainEnlistedObjective(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime)
+    public EnlistedObjective obtainEnlistedObjective(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime, int dayStartHour)
     {
         if(!isAvailable(blockingObjectiveIds, referenceTime))
         {
@@ -213,10 +216,76 @@ public class ScheduledObjective implements PoolElement
         }
         else
         {
-            reschedule(referenceTime);
+            reschedule(referenceTime, dayStartHour);
         }
 
         return enlistedObjective;
+    }
+
+    @Override
+    public void updateDayStart(LocalDateTime referenceTime, int oldStartHour, int newStartHour)
+    {
+        if(mScheduledAddDate.isAfter(referenceTime))
+        {
+            mRegularScheduledAddDate = mRegularScheduledAddDate.minusHours(oldStartHour).plusHours(newStartHour);
+            mScheduledAddDate        = mScheduledAddDate.minusHours(oldStartHour).plusHours(newStartHour);
+        }
+    }
+
+    @Override
+    public boolean isRelatedToObjective(long objectiveId)
+    {
+        return mId == objectiveId;
+    }
+
+    @Override
+    public boolean mergeRelatedObjective(ScheduledObjective objective)
+    {
+        if(!isRelatedToObjective(objective.getId()))
+        {
+            return false;
+        }
+
+        rescheduleUnregulated(objective.getScheduledEnlistDate());
+        return true;
+    }
+
+    @Override
+    public ScheduledObjective getRelatedObjectiveById(long objectiveId)
+    {
+        if(mId == objectiveId)
+        {
+            return this;
+        }
+
+        return null;
+    }
+
+    @Override
+    public ObjectiveChain getRelatedChainById(long chainId)
+    {
+        //There's never a chain related
+        return null;
+    }
+
+    @Override
+    public ObjectiveChain getChainForObjectiveById(long objectiveId)
+    {
+        //There's never a chain related
+        return null;
+    }
+
+    @Override
+    public long getMaxRelatedObjectiveId()
+    {
+        return getId();
+    }
+
+    @Override
+    public long getMaxRelatedChainId()
+    {
+        //There's never a chain related
+        return -1;
     }
 
     @Override

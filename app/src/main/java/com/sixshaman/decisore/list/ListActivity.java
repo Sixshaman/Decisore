@@ -1,8 +1,10 @@
 package com.sixshaman.decisore.list;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.*;
+import androidx.preference.PreferenceManager;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -10,9 +12,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.appcompat.widget.Toolbar;
 import com.sixshaman.decisore.R;
 import com.sixshaman.decisore.archive.ArchiveActivity;
+import com.sixshaman.decisore.options.SettingsActivity;
 import com.sixshaman.decisore.scheduler.SchedulerActivity;
 import com.sixshaman.decisore.utils.LockedReadFile;
 import com.sixshaman.decisore.utils.NewObjectiveDialogFragment;
+import com.sixshaman.decisore.utils.ParseUtils;
 import com.sixshaman.decisore.utils.TransactionDispatcher;
 
 import java.io.IOException;
@@ -49,6 +53,19 @@ public class ListActivity extends AppCompatActivity implements ListObjectiveCoun
 
         String configFolder = Objects.requireNonNull(getExternalFilesDir("/app")).getAbsolutePath();
 
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        String dayStartTimeString = sharedPreferences.getString("day_start_time", "6");
+        int dayStartTime = ParseUtils.parseInt(dayStartTimeString, 6);
+
+        if(sharedPreferences.getBoolean("show_objective_count", true))
+        {
+            setTitle(mListCache.getObjectiveCount() + " " + getString(R.string.title_activity_objective_list_append));
+        }
+        else
+        {
+            setTitle(R.string.title_activity_objective_list);
+        }
+
         RecyclerView recyclerView = findViewById(R.id.objectiveListView);
         mListCache.attachToView(recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -67,7 +84,7 @@ public class ListActivity extends AppCompatActivity implements ListObjectiveCoun
         TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
         transactionDispatcher.setListCache(mListCache);
 
-        transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now());
+        transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now(), dayStartTime);
     }
 
     @Override
@@ -90,6 +107,13 @@ public class ListActivity extends AppCompatActivity implements ListObjectiveCoun
             return true;
         });
 
+        menu.findItem(R.id.menuOpenOptions).setOnMenuItemClickListener(item ->
+        {
+            Intent optionsOpenIntent = new Intent(ListActivity.this, SettingsActivity.class);
+            startActivity(optionsOpenIntent);
+            return true;
+        });
+
         return true;
     }
 
@@ -100,11 +124,15 @@ public class ListActivity extends AppCompatActivity implements ListObjectiveCoun
 
         newObjectiveDialogFragment.setOnAfterObjectiveCreatedListener(objectiveId ->
         {
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+            String dayStartTimeString = sharedPreferences.getString("day_start_time", "6");
+            int dayStartTime = ParseUtils.parseInt(dayStartTimeString, 6);
+
             TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
             transactionDispatcher.setListCache(mListCache);
 
             String configFolder = Objects.requireNonNull(getExternalFilesDir("/app")).getAbsolutePath();
-            transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now());
+            transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now(), dayStartTime);
         });
 
         newObjectiveDialogFragment.show(getSupportFragmentManager(), getString(R.string.newObjectiveDialogName));
@@ -113,6 +141,10 @@ public class ListActivity extends AppCompatActivity implements ListObjectiveCoun
     @Override
     public void onListObjectiveCountChanged(int newObjectiveCount)
     {
-        setTitle(newObjectiveCount + " " + getString(R.string.title_activity_objective_list_append));
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        if(sharedPreferences.getBoolean("show_objective_count", true))
+        {
+            setTitle(newObjectiveCount + " " + getString(R.string.title_activity_objective_list_append));
+        }
     }
 }

@@ -1,13 +1,16 @@
 package com.sixshaman.decisore.list;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.view.*;
 import androidx.annotation.NonNull;
+import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.RecyclerView;
 import android.widget.Toast;
 import com.sixshaman.decisore.R;
 import com.sixshaman.decisore.utils.LockedReadFile;
 import com.sixshaman.decisore.utils.LockedWriteFile;
+import com.sixshaman.decisore.utils.ParseUtils;
 import com.sixshaman.decisore.utils.TransactionDispatcher;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -271,6 +274,11 @@ public class ObjectiveListCache
         }
     }
 
+    public int getObjectiveCount()
+    {
+        return mEnlistedObjectives.size();
+    }
+
     public HashSet<Long> constructBlockingIds()
     {
         HashSet<Long> blockingIds = new HashSet<>();
@@ -307,11 +315,15 @@ public class ObjectiveListCache
 
                 EnlistedObjective objectiveToRemove = mEnlistedObjectives.get(position);
 
+                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(Objects.requireNonNull(view.getContext()).getApplicationContext());
+                String dayStartTimeString = sharedPreferences.getString("day_start_time", "6");
+                int dayStartTime = ParseUtils.parseInt(dayStartTimeString, 6);
+
                 TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
                 transactionDispatcher.setListCache(ObjectiveListCache.this);
 
                 transactionDispatcher.finishObjectiveTransaction(configFolder, objectiveToRemove, LocalDateTime.now());
-                transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now());
+                transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now(), dayStartTime);
             });
 
             objectiveViewHolder.mCheckbox.setChecked(false);

@@ -10,11 +10,14 @@ import com.sixshaman.decisore.list.EnlistedObjective;
 import com.sixshaman.decisore.scheduler.ObjectiveSchedulerCache;
 import com.sixshaman.decisore.scheduler.pool.PoolElement;
 import com.sixshaman.decisore.scheduler.objective.ScheduledObjective;
+import com.sixshaman.decisore.utils.TwoSidedArrayList;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class ObjectiveChain implements PoolElement
@@ -34,8 +37,20 @@ public class ObjectiveChain implements PoolElement
     //Is this chain active?
     private boolean mIsActive;
 
+    //Does this chain get deleted immediately after finishing every objective?
+    private boolean mIsAutoDelete;
+
+    //The minimum frequency at which the chain can provide objectives (0 specifies the "instant" chain)
+    private Duration mProduceFrequency;
+
+    //The date-time at which the last objective was provided (valid only for non-instant chains)
+    private LocalDateTime mLastUpdate;
+
+    //Used to counter the problem of scheduling the objective for tomorrow and thus shifting the update date
+    private int mInstantCount;
+
     //The objectives that this chain will provide one-by-one. Since Java doesn't have any non-deque Queue implementation, we will use ArrayDeque
-    private final LinkedList<ScheduledObjective> mObjectives;
+    private final TwoSidedArrayList<ScheduledObjective> mObjectives;
 
     //The list of ids of all objectives once provided by the chain
     final HashSet<Long> mBoundObjectives;
@@ -48,8 +63,16 @@ public class ObjectiveChain implements PoolElement
         mName        = name;
         mDescription = description;
 
-        mObjectives      = new LinkedList<>();
+        mObjectives      = new TwoSidedArrayList<>();
         mBoundObjectives = new HashSet<>();
+
+        mIsActive = true;
+
+        mIsAutoDelete = false;
+
+        mLastUpdate       = LocalDateTime.MIN; //FAR PAST, A LONG LONG TIME AGO.
+        mProduceFrequency = Duration.ZERO;     //Default
+        mInstantCount     = 0;
     }
 
     public void attachToChainView(RecyclerView recyclerView, ObjectiveSchedulerCache schedulerCache)
@@ -63,7 +86,7 @@ public class ObjectiveChain implements PoolElement
     //Adds an objective to the chain
     public void addObjectiveToChain(ScheduledObjective objective)
     {
-        mObjectives.addLast(objective);
+        mObjectives.addBack(objective);
         mBoundObjectives.add(objective.getId());
 
         if(mChainViewHolder != null)
@@ -76,7 +99,7 @@ public class ObjectiveChain implements PoolElement
     //Adds an objective to the front of the chain
     public void addObjectiveToChainFront(ScheduledObjective objective)
     {
-        mObjectives.addFirst(objective);
+        mObjectives.addFront(objective);
         mBoundObjectives.add(objective.getId());
 
         if(mChainViewHolder != null)
@@ -115,28 +138,6 @@ public class ObjectiveChain implements PoolElement
     }
 
     @Override
-    public String getName()
-    {
-        return mName;
-    }
-
-    @Override
-    public String getDescription()
-    {
-        return mDescription;
-    }
-
-    public void setName(String chainName)
-    {
-        mName = chainName;
-    }
-
-    public void setDescription(String chainDescription)
-    {
-        mDescription = chainDescription;
-    }
-
-    @Override
     public JSONObject toJSON()
     {
         JSONObject result = new JSONObject();
@@ -149,6 +150,16 @@ public class ObjectiveChain implements PoolElement
             result.put("Description", mDescription);
 
             result.put("IsActive", Boolean.toString(mIsActive));
+
+            result.put("IsAutoDelete", Boolean.toString(mIsAutoDelete));
+
+            result.put("ProduceFrequency", Long.toString(mProduceFrequency.toMinutes()));
+
+            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss:nnnnnnnnn");
+            String lastUpdateString = dateTimeFormatter.format(mLastUpdate);
+            result.put("LastUpdate", lastUpdateString);
+
+            result.put("InstantCount", mInstantCount);
 
             JSONArray objectivesArray = new JSONArray();
             for(ScheduledObjective objective: mObjectives)
@@ -174,10 +185,124 @@ public class ObjectiveChain implements PoolElement
         return result;
     }
 
-    @SuppressWarnings("unused")
-    public int getObjectiveCount()
+    @Override
+    public boolean isAvailable(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime)
     {
-        return mObjectives.size();
+        if(isPaused())
+        {
+            return false;
+        }
+
+        if(!mProduceFrequency.isZero() && mInstantCount == 0 && !mLastUpdate.plus(mProduceFrequency).isBefore(referenceTime))
+        {
+            return false;
+        }
+
+        for(Long boundId: mBoundObjectives)
+        {
+            if(blockingObjectiveIds.contains(boundId))
+            {
+                return false;
+            }
+        }
+
+        if(mObjectives.isEmpty())
+        {
+            return false;
+        }
+        else
+        {
+            ScheduledObjective firstObjective = mObjectives.getFront();
+            return firstObjective.isAvailable(blockingObjectiveIds, referenceTime);
+        }
+    }
+
+    @Override
+    public EnlistedObjective obtainEnlistedObjective(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime, int dayStartHour)
+    {
+        if(!isAvailable(blockingObjectiveIds, referenceTime))
+        {
+            return null;
+        }
+
+        ScheduledObjective firstChainObjective = mObjectives.getFront();
+
+        EnlistedObjective enlistedObjective = firstChainObjective.obtainEnlistedObjective(blockingObjectiveIds, referenceTime, dayStartHour);
+        if(enlistedObjective == null)
+        {
+            return null;
+        }
+
+        if(!firstChainObjective.isValid())
+        {
+            mObjectives.removeFront();
+        }
+
+        if(mChainViewHolder != null)
+        {
+            mChainViewHolder.notifyItemRemoved(0);
+            mChainViewHolder.notifyItemRangeChanged(0, mObjectives.size() - 1);
+        }
+
+        if(!mProduceFrequency.isZero() && mInstantCount > 0)
+        {
+            mInstantCount--;
+        }
+        else if(!mProduceFrequency.isZero())
+        {
+            mLastUpdate = referenceTime;
+        }
+
+        return enlistedObjective;
+    }
+
+    @Override
+    public void updateDayStart(LocalDateTime referenceTime, int oldStartHour, int newStartHour)
+    {
+        for(ScheduledObjective objective: mObjectives)
+        {
+            objective.updateDayStart(referenceTime, oldStartHour, newStartHour);
+        }
+    }
+
+    @Override
+    public boolean isRelatedToObjective(long objectiveId)
+    {
+        return containedObjective(objectiveId);
+    }
+
+    @Override
+    public boolean mergeRelatedObjective(ScheduledObjective objective)
+    {
+        if(!isRelatedToObjective(objective.getId()))
+        {
+            return false;
+        }
+
+        putBack(objective);
+        return true;
+    }
+
+    @Override
+    public ObjectiveChain getRelatedChainById(long chainId)
+    {
+        if(chainId == getId())
+        {
+            return this;
+        }
+
+        return null;
+    }
+
+    @Override
+    public ObjectiveChain getChainForObjectiveById(long objectiveId)
+    {
+        if(containedObjective(objectiveId))
+        {
+            return this;
+        }
+
+        return null;
     }
 
     public ScheduledObjective getFirstObjective()
@@ -187,10 +312,11 @@ public class ObjectiveChain implements PoolElement
             return null;
         }
 
-        return mObjectives.getFirst();
+        return mObjectives.getFront();
     }
 
-    public long getMaxObjectiveId()
+    @Override
+    public long getMaxRelatedObjectiveId()
     {
         long maxId = -1;
         for(ScheduledObjective objective: mObjectives)
@@ -213,6 +339,12 @@ public class ObjectiveChain implements PoolElement
         return maxId;
     }
 
+    @Override
+    public long getMaxRelatedChainId()
+    {
+        return getId();
+    }
+
     public boolean containedObjective(long objectiveId)
     {
         for(Long historicId: mBoundObjectives)
@@ -226,13 +358,15 @@ public class ObjectiveChain implements PoolElement
         return false;
     }
 
-    public ScheduledObjective getObjectiveById(long objectiveId)
+    @Override
+    public ScheduledObjective getRelatedObjectiveById(long objectiveId)
     {
         for(ScheduledObjective objective: mObjectives)
         {
-            if(objective.getId() == objectiveId)
+            ScheduledObjective relatedObjective = objective.getRelatedObjectiveById(objectiveId);
+            if(relatedObjective != null)
             {
-                return objective;
+                return relatedObjective;
             }
         }
 
@@ -243,15 +377,20 @@ public class ObjectiveChain implements PoolElement
     {
         if(!mObjectives.isEmpty())
         {
-            ScheduledObjective firstObjective = mObjectives.getFirst();
+            ScheduledObjective firstObjective = mObjectives.getFront();
             if(firstObjective.getId() == objective.getId())
             {
                 firstObjective.rescheduleUnregulated(objective.getScheduledEnlistDate());
             }
             else
             {
-                mObjectives.addFirst(objective);
+                mObjectives.addFront(objective);
                 mBoundObjectives.add(objective.getId()); //Just in case
+            }
+
+            if(!mProduceFrequency.isZero())
+            {
+                mInstantCount++;
             }
 
             return true;
@@ -277,6 +416,39 @@ public class ObjectiveChain implements PoolElement
     }
 
     @Override
+    public String getName()
+    {
+        return mName;
+    }
+
+    @Override
+    public String getDescription()
+    {
+        return mDescription;
+    }
+
+    @SuppressWarnings("unused")
+    public int getObjectiveCount()
+    {
+        return mObjectives.size();
+    }
+
+    public void setName(String chainName)
+    {
+        mName = chainName;
+    }
+
+    public void setDescription(String chainDescription)
+    {
+        mDescription = chainDescription;
+    }
+
+    public void setProduceFrequency(Duration produceFrequency)
+    {
+        mProduceFrequency = produceFrequency;
+    }
+
+    @Override
     public boolean isPaused()
     {
         return !mIsActive;
@@ -288,37 +460,15 @@ public class ObjectiveChain implements PoolElement
         mIsActive = !paused;
     }
 
-    @Override
-    public boolean isValid()
+    public void setAutoDelete(boolean autoDelete)
     {
-        return true;
+        mIsAutoDelete = autoDelete;
     }
 
     @Override
-    public boolean isAvailable(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime)
+    public boolean isValid()
     {
-        if(isPaused())
-        {
-            return false;
-        }
-
-        for(Long boundId: mBoundObjectives)
-        {
-            if(blockingObjectiveIds.contains(boundId))
-            {
-                return false;
-            }
-        }
-
-        if(mObjectives.isEmpty())
-        {
-            return false;
-        }
-        else
-        {
-            ScheduledObjective firstObjective = mObjectives.getFirst();
-            return firstObjective.isAvailable(blockingObjectiveIds, referenceTime);
-        }
+        return !mIsAutoDelete || (mBoundObjectives.isEmpty() || !mObjectives.isEmpty()); //Don't delete newly created chains (they have 0 bound objectives)
     }
 
     @Override
@@ -327,34 +477,16 @@ public class ObjectiveChain implements PoolElement
         return "ObjectiveChain";
     }
 
-    @Override
-    public EnlistedObjective obtainEnlistedObjective(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime)
+    //Only to be used for JSON loading, consider it private
+    void setLastUpdate(LocalDateTime lastUpdate)
     {
-        if(!isAvailable(blockingObjectiveIds, referenceTime))
-        {
-            return null;
-        }
+        mLastUpdate = lastUpdate;
+    }
 
-        ScheduledObjective firstChainObjective = mObjectives.getFirst();
-
-        EnlistedObjective enlistedObjective = firstChainObjective.obtainEnlistedObjective(blockingObjectiveIds, referenceTime);
-        if(enlistedObjective == null)
-        {
-            return null;
-        }
-
-        if(!firstChainObjective.isValid())
-        {
-            mObjectives.removeFirst();
-        }
-
-        if(mChainViewHolder != null)
-        {
-            mChainViewHolder.notifyItemRemoved(0);
-            mChainViewHolder.notifyItemRangeChanged(0, mObjectives.size() - 1);
-        }
-
-        return enlistedObjective;
+    //Only to be used for JSON loading, consider it private
+    void setInstantCount(int instantCount)
+    {
+        mInstantCount = instantCount;
     }
 
     private class ChainViewHolder extends RecyclerView.Adapter<ChainElementViewHolder>

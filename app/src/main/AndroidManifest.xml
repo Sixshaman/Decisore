@@ -11,14 +11,18 @@
             android:supportsRtl="true"
             android:theme="@style/AppTheme">
         <activity
-                android:name="com.sixshaman.decisore.scheduler.SchedulerActivity"
+                android:name=".options.SettingsActivity"
+                android:label="@string/title_activity_settings">
+        </activity>
+        <activity
+                android:name=".scheduler.SchedulerActivity"
                 android:label="@string/title_activity_objective_scheduler"
                 android:theme="@style/AppTheme.NoActionBar">
         </activity>
-        <activity android:name="com.sixshaman.decisore.archive.ArchiveActivity">
+        <activity android:name=".archive.ArchiveActivity">
         </activity>
         <activity
-                android:name="com.sixshaman.decisore.list.ListActivity"
+                android:name=".list.ListActivity"
                 android:label="@string/app_name"
                 android:theme="@style/AppTheme">
             <intent-filter>
