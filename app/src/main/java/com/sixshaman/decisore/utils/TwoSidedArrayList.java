@@ -7,106 +7,134 @@ public class TwoSidedArrayList<T> extends AbstractList<T> implements List<T>, Ra
 {
     private static final int INITIAL_CAPACITY = 16;
 
-    private int dataBegin;
-    private int pastDataEnd;
+    private int freeIndexFront; //Always points to a free element and never to the same one as freeIndexBack
+    private int freeIndexBack;  //Always points to a free element and never to the same one as freeIndexFront
 
     private Object[] data;
 
     TwoSidedArrayList()
     {
-        dataBegin   = 0;
-        pastDataEnd = 1 % (INITIAL_CAPACITY + 1);
+        freeIndexFront = 0;
+        freeIndexBack  = 1;
 
         data = new Object[INITIAL_CAPACITY];
     }
 
     TwoSidedArrayList(Collection<? extends T> c)
     {
-        int capacity = Math.max(c.size(), 1);
+        int capacity = c.size() + 2;
         data         = new Object[capacity];
 
         Iterator<? extends T> it = c.iterator();
 
-        int pos = 0;
+        int pos = 1; //One free space, because freeIndexFront should always point out onto a free space
         while(it.hasNext())
         {
             data[pos++] = it.next();
         }
 
-        dataBegin   = 0;
-        pastDataEnd = (pos + 1) % (capacity + 1);
+        freeIndexFront = 0;
+        freeIndexBack  = capacity - 1;
     }
 
     TwoSidedArrayList(int initialCapacity)
     {
-        int capacity = Math.max(initialCapacity, 1);
+        int capacity = Math.max(initialCapacity, 2);
         data         = new Object[capacity];
 
-        dataBegin   = 0;
-        pastDataEnd = 1 % (capacity + 1);
+        freeIndexFront = 0;
+        freeIndexBack  = 1;
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public T get(int index)
     {
-        int realIndex = (dataBegin + index) % data.length;
+        if(isEmpty())
+        {
+            return null;
+        }
+
+        int realIndex = (freeIndexFront + index + 1) % data.length;
         return (T)data[realIndex];
     }
 
     @Override
     public int size()
     {
-        return (data.length + pastDataEnd - dataBegin) % data.length;
+        return (data.length + freeIndexBack - freeIndexFront - 1) % data.length;
     }
 
     public void addFront(T element)
     {
-        if(dataBegin == pastDataEnd)
+        if(freeIndexFront == freeIndexBack)
         {
             reallocate();
         }
 
-        dataBegin = (data.length + dataBegin - 1) % data.length;
-        data[dataBegin] = element;
+        data[freeIndexFront] = element;
+        freeIndexFront = (data.length + freeIndexFront - 1) % data.length;
     }
 
     public void addBack(T element)
     {
-        if(dataBegin == pastDataEnd)
+        if(freeIndexFront == freeIndexBack)
         {
             reallocate();
         }
 
-        pastDataEnd = (pastDataEnd + 1) % (data.length + 1);
-        data[pastDataEnd] = element;
+        data[freeIndexBack] = element;
+        freeIndexBack = (freeIndexBack + 1) % data.length;
     }
 
+    @SuppressWarnings("unchecked")
     public T removeFront()
     {
+        if(isEmpty())
+        {
+            return null;
+        }
 
+        T element = (T)data[freeIndexFront];
+        freeIndexFront = (freeIndexFront + 1) % data.length;
+
+        return element;
     }
 
+    @SuppressWarnings("unchecked")
     public T removeBack()
     {
+        if(isEmpty())
+        {
+            return null;
+        }
 
+        T element = (T)data[freeIndexBack];
+        freeIndexBack = (data.length + freeIndexBack - 1) % data.length;
+
+        return element;
+    }
+
+    public boolean isEmpty()
+    {
+        return (freeIndexFront + 1) % data.length == freeIndexBack;
     }
 
     private void reallocate()
     {
         int capacity     = data.length;
-        int newCapacity  = capacity * 2;
+        int newCapacity  = capacity * 2 + 2;
         Object[] newData = new Object[newCapacity];
 
         int currentDataSize = size();
         for(int i = 0; i < currentDataSize; i++)
         {
-            int pos = (i + dataBegin) % capacity;
-            newData[i] = data[pos];
+            int pos = (freeIndexFront + i + 1) % capacity;
+            newData[i + 1] = data[pos];
         }
 
-        dataBegin   = 0;
-        pastDataEnd = currentDataSize;
+        freeIndexFront = 0;
+        freeIndexBack  = currentDataSize + 1;
 
         data = newData;
     }
