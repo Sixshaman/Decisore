@@ -21,7 +21,7 @@
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <include layout="@layout/content_task_list"/>
+    <include layout="@layout/content_objective_list"/>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/addNewObjective"
@@ -31,6 +31,7 @@
             android:layout_margin="@dimen/fab_margin"
             android:tint="@color/colorAccent"
             android:backgroundTint="@color/colorPrimary"
+            android:contentDescription="@null"
             app:srcCompat="@android:drawable/ic_input_add"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

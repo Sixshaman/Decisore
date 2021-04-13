@@ -3,9 +3,9 @@
     <string name="title_activity_objective_list">Today objectives</string>
     <string name="title_activity_objective_archive">Finished objectives</string>
     <string name="title_activity_objective_list_append">today objectives</string>
-    <string name="placeholderTask">Objective</string>
-    <string name="taskName">Name</string>
-    <string name="taskDescription">Description</string>
+    <string name="placeholderObjective">Objective</string>
+    <string name="objectiveName">Name</string>
+    <string name="objectiveDescription">Description</string>
     <string name="newObjectiveDialogName">New objective</string>
     <string name="newChainDialogName">New chain</string>
     <string name="editChainDialogName">Edit chain</string>
@@ -37,7 +37,7 @@
     <string name="menu_pause_element">Pause</string>
     <string name="menu_unpause_element">Unpause</string>
 
-    <string name="invalidObjectiveName">Invalid task name</string>
+    <string name="invalidObjectiveName">Invalid objective name</string>
     <string name="invalidChainName">Invalid chain name</string>
     <string name="invalidPoolName">Invalid pool name</string>
     <string name="openArchive">Objective archive</string>

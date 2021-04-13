@@ -21,6 +21,6 @@
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <include layout="@layout/content_task_scheduler"/>
+    <include layout="@layout/content_objective_scheduler"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
