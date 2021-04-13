@@ -15,7 +15,7 @@
             android:inputType="text"
             android:ems="10"
             android:id="@+id/editNewPoolName"
-            android:hint="@string/taskName"
+            android:hint="@string/objectiveName"
             android:autofillHints=""
             android:importantForAutofill="no"
             app:layout_constraintStart_toStartOf="parent"
@@ -32,7 +32,7 @@
             android:id="@+id/editNewPoolDescription"
             android:layout_marginTop="8dp"
             android:autofillHints=""
-            android:hint="@string/taskDescription"
+            android:hint="@string/objectiveDescription"
             app:layout_constraintTop_toBottomOf="@id/editNewPoolName"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"/>

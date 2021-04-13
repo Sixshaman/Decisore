@@ -21,6 +21,6 @@
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <include layout="@layout/content_task_archive"/>
+    <include layout="@layout/content_objective_archive"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

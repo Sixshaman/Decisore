@@ -17,7 +17,7 @@
             app:layout_constraintBottom_toBottomOf="@+id/textPoolElementName"/>
 
     <TextView android:id="@+id/textPoolElementName"
-              android:text="@string/placeholderTask"
+              android:text="@string/placeholderObjective"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
               android:textColor="@android:color/black"
