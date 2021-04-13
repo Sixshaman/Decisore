@@ -10,6 +10,7 @@ import com.sixshaman.decisore.list.EnlistedObjective;
 import com.sixshaman.decisore.scheduler.ObjectiveSchedulerCache;
 import com.sixshaman.decisore.scheduler.pool.PoolElement;
 import com.sixshaman.decisore.scheduler.objective.ScheduledObjective;
+import com.sixshaman.decisore.utils.TwoSidedArrayList;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -49,7 +50,7 @@ public class ObjectiveChain implements PoolElement
     private int mInstantCount;
 
     //The objectives that this chain will provide one-by-one. Since Java doesn't have any non-deque Queue implementation, we will use ArrayDeque
-    private final LinkedList<ScheduledObjective> mObjectives;
+    private final TwoSidedArrayList<ScheduledObjective> mObjectives;
 
     //The list of ids of all objectives once provided by the chain
     final HashSet<Long> mBoundObjectives;
@@ -62,7 +63,7 @@ public class ObjectiveChain implements PoolElement
         mName        = name;
         mDescription = description;
 
-        mObjectives      = new LinkedList<>();
+        mObjectives      = new TwoSidedArrayList<>();
         mBoundObjectives = new HashSet<>();
 
         mIsActive = true;
@@ -85,7 +86,7 @@ public class ObjectiveChain implements PoolElement
     //Adds an objective to the chain
     public void addObjectiveToChain(ScheduledObjective objective)
     {
-        mObjectives.addLast(objective);
+        mObjectives.addBack(objective);
         mBoundObjectives.add(objective.getId());
 
         if(mChainViewHolder != null)
@@ -98,7 +99,7 @@ public class ObjectiveChain implements PoolElement
     //Adds an objective to the front of the chain
     public void addObjectiveToChainFront(ScheduledObjective objective)
     {
-        mObjectives.addFirst(objective);
+        mObjectives.addFront(objective);
         mBoundObjectives.add(objective.getId());
 
         if(mChainViewHolder != null)
@@ -211,7 +212,7 @@ public class ObjectiveChain implements PoolElement
         }
         else
         {
-            ScheduledObjective firstObjective = mObjectives.getFirst();
+            ScheduledObjective firstObjective = mObjectives.getFront();
             return firstObjective.isAvailable(blockingObjectiveIds, referenceTime);
         }
     }
@@ -224,7 +225,7 @@ public class ObjectiveChain implements PoolElement
             return null;
         }
 
-        ScheduledObjective firstChainObjective = mObjectives.getFirst();
+        ScheduledObjective firstChainObjective = mObjectives.getFront();
 
         EnlistedObjective enlistedObjective = firstChainObjective.obtainEnlistedObjective(blockingObjectiveIds, referenceTime, dayStartHour);
         if(enlistedObjective == null)
@@ -234,7 +235,7 @@ public class ObjectiveChain implements PoolElement
 
         if(!firstChainObjective.isValid())
         {
-            mObjectives.removeFirst();
+            mObjectives.removeFront();
         }
 
         if(mChainViewHolder != null)
@@ -311,7 +312,7 @@ public class ObjectiveChain implements PoolElement
             return null;
         }
 
-        return mObjectives.getFirst();
+        return mObjectives.getFront();
     }
 
     @Override
@@ -376,14 +377,14 @@ public class ObjectiveChain implements PoolElement
     {
         if(!mObjectives.isEmpty())
         {
-            ScheduledObjective firstObjective = mObjectives.getFirst();
+            ScheduledObjective firstObjective = mObjectives.getFront();
             if(firstObjective.getId() == objective.getId())
             {
                 firstObjective.rescheduleUnregulated(objective.getScheduledEnlistDate());
             }
             else
             {
-                mObjectives.addFirst(objective);
+                mObjectives.addFront(objective);
                 mBoundObjectives.add(objective.getId()); //Just in case
             }
 
