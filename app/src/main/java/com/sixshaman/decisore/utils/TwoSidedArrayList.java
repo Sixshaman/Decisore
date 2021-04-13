@@ -12,7 +12,7 @@ public class TwoSidedArrayList<T> extends AbstractList<T> implements List<T>, Ra
 
     private Object[] data;
 
-    TwoSidedArrayList()
+    public TwoSidedArrayList()
     {
         freeIndexFront = 0;
         freeIndexBack  = 1;
@@ -88,6 +88,29 @@ public class TwoSidedArrayList<T> extends AbstractList<T> implements List<T>, Ra
     }
 
     @SuppressWarnings("unchecked")
+    public T getFront()
+    {
+        if(isEmpty())
+        {
+            return null;
+        }
+
+        int elementIndex = (freeIndexFront + 1) % data.length;
+        return (T)data[elementIndex];
+    }
+
+    @SuppressWarnings("unchecked")
+    public T getBack()
+    {
+        if(isEmpty())
+        {
+            return null;
+        }
+
+        int elementIndex = (data.length + freeIndexBack - 1) % data.length;
+        return (T)data[elementIndex];
+    }
+
     public T removeFront()
     {
         if(isEmpty())
@@ -95,13 +118,12 @@ public class TwoSidedArrayList<T> extends AbstractList<T> implements List<T>, Ra
             return null;
         }
 
-        T element = (T)data[freeIndexFront];
+        T element = getFront();
         freeIndexFront = (freeIndexFront + 1) % data.length;
 
         return element;
     }
 
-    @SuppressWarnings("unchecked")
     public T removeBack()
     {
         if(isEmpty())
@@ -109,7 +131,7 @@ public class TwoSidedArrayList<T> extends AbstractList<T> implements List<T>, Ra
             return null;
         }
 
-        T element = (T)data[freeIndexBack];
+        T element = getBack();
         freeIndexBack = (data.length + freeIndexBack - 1) % data.length;
 
         return element;
