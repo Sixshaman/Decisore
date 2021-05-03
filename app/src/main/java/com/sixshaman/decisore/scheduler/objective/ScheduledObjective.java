@@ -204,7 +204,7 @@ public class ScheduledObjective implements PoolElement
     @Override
     public EnlistedObjective obtainEnlistedObjective(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime, int dayStartHour)
     {
-        if(!isAvailable(blockingObjectiveIds, referenceTime))
+        if(!isAvailable(blockingObjectiveIds, referenceTime, dayStartHour))
         {
             return null;
         }
@@ -289,7 +289,7 @@ public class ScheduledObjective implements PoolElement
     }
 
     @Override
-    public boolean isAvailable(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime)
+    public boolean isAvailable(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime, int dayStartHour)
     {
         return !isPaused() && referenceTime.isAfter(getScheduledEnlistDate()) && !blockingObjectiveIds.contains(mId);
     }

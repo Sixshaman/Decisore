@@ -22,6 +22,7 @@ import org.json.JSONObject;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -247,7 +248,7 @@ public class ObjectivePool implements SchedulerElement
         }
 
         //Only add the objective to the list if the previous objective from the pool is finished (i.e. isn't in blockingObjectiveIds)
-        if(!isAvailable(blockingObjectiveIds, referenceTime))
+        if(!isAvailable(blockingObjectiveIds, referenceTime, dayStartHour))
         {
             return null;
         }
@@ -256,7 +257,7 @@ public class ObjectivePool implements SchedulerElement
         ArrayList<Integer> availableSourceIndices = new ArrayList<>();
         for(int i = 0; i < mObjectiveSources.size(); i++)
         {
-            if(mObjectiveSources.get(i).isAvailable(blockingObjectiveIds, referenceTime))
+            if(mObjectiveSources.get(i).isAvailable(blockingObjectiveIds, referenceTime, dayStartHour))
             {
                 availableSourceIndices.add(i);
             }
@@ -419,9 +420,10 @@ public class ObjectivePool implements SchedulerElement
     }
 
     @Override
-    public boolean isAvailable(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime)
+    public boolean isAvailable(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime, int dayStartHour)
     {
-        if(!mProduceFrequency.isZero() && !mLastUpdate.plus(mProduceFrequency).isBefore(referenceTime))
+        LocalDateTime nextUpdate = mLastUpdate.minusHours(dayStartHour).truncatedTo(ChronoUnit.DAYS).plusHours(dayStartHour).plus(mProduceFrequency).minusHours(dayStartHour).truncatedTo(ChronoUnit.DAYS).plusHours(dayStartHour);
+        if(!mProduceFrequency.isZero() && !nextUpdate.isBefore(referenceTime))
         {
             return false;
         }

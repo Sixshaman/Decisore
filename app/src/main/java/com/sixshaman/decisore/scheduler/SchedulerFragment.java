@@ -169,6 +169,7 @@ public class SchedulerFragment extends Fragment
     private void addObjective(View view)
     {
         NewObjectiveDialogFragment newObjectiveDialogFragment = new NewObjectiveDialogFragment();
+        newObjectiveDialogFragment.setTomorrowDefault(true);
         newObjectiveDialogFragment.setSchedulerCache(mSchedulerCache);
 
         newObjectiveDialogFragment.setOnAfterObjectiveCreatedListener(objectiveId ->

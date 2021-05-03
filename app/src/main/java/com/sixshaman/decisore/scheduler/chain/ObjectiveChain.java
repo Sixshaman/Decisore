@@ -18,6 +18,7 @@ import org.json.JSONObject;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 public class ObjectiveChain implements PoolElement
@@ -186,16 +187,20 @@ public class ObjectiveChain implements PoolElement
     }
 
     @Override
-    public boolean isAvailable(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime)
+    public boolean isAvailable(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime, int dayStartHour)
     {
         if(isPaused())
         {
             return false;
         }
 
-        if(!mProduceFrequency.isZero() && mInstantCount == 0 && !mLastUpdate.plus(mProduceFrequency).isBefore(referenceTime))
+        if(!mLastUpdate.equals(LocalDateTime.MIN))
         {
-            return false;
+            LocalDateTime nextUpdate = mLastUpdate.minusHours(dayStartHour).truncatedTo(ChronoUnit.DAYS).plusHours(dayStartHour).plus(mProduceFrequency).minusHours(dayStartHour).truncatedTo(ChronoUnit.DAYS).plusHours(dayStartHour);
+            if(!mProduceFrequency.isZero() && mInstantCount == 0 && !nextUpdate.isBefore(referenceTime))
+            {
+                return false;
+            }
         }
 
         for(Long boundId: mBoundObjectives)
@@ -213,14 +218,14 @@ public class ObjectiveChain implements PoolElement
         else
         {
             ScheduledObjective firstObjective = mObjectives.getFront();
-            return firstObjective.isAvailable(blockingObjectiveIds, referenceTime);
+            return firstObjective.isAvailable(blockingObjectiveIds, referenceTime, dayStartHour);
         }
     }
 
     @Override
     public EnlistedObjective obtainEnlistedObjective(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime, int dayStartHour)
     {
-        if(!isAvailable(blockingObjectiveIds, referenceTime))
+        if(!isAvailable(blockingObjectiveIds, referenceTime, dayStartHour))
         {
             return null;
         }
