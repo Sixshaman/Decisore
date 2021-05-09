@@ -262,7 +262,7 @@ public class ObjectiveChain implements PoolElement
         {
             if(mIsUnstoppable)
             {
-                if(mLastUpdate.equals(LocalDateTime.MIN)) //This is the first objective produced by the chain
+                if(mLastUpdate.equals(LocalDateTime.MIN)) //This is the first objective produced by the chain (after making it periodic)
                 {
                     mLastUpdate = enlistedObjective.getCreatedDate();
                 }
