@@ -61,8 +61,9 @@ public class NewChainDialogFragment extends DialogFragment
             final EditText editTextName        = resultDialog.getValue().findViewById(R.id.editNewChainName);
             final EditText editEditDescription = resultDialog.getValue().findViewById(R.id.editNewChainDescription);
 
-            final Spinner  frequencySpinner   = resultDialog.getValue().findViewById(R.id.spinnerChainFrequency);
-            final CheckBox autoDeleteCheckbox = resultDialog.getValue().findViewById(R.id.checkboxAutoDelete);
+            final Spinner  frequencySpinner    = resultDialog.getValue().findViewById(R.id.spinnerChainFrequency);
+            final CheckBox autoDeleteCheckbox  = resultDialog.getValue().findViewById(R.id.checkboxAutoDelete);
+            final CheckBox unstoppableCheckbox = resultDialog.getValue().findViewById(R.id.checkboxChainUnstoppable);
 
             String nameText        = editTextName.getEditableText().toString();
             String descriptionText = editEditDescription.getEditableText().toString();
@@ -94,7 +95,8 @@ public class NewChainDialogFragment extends DialogFragment
                 }
             }
 
-            boolean useAutoDelete = autoDeleteCheckbox.isChecked();
+            boolean useAutoDelete  = autoDeleteCheckbox.isChecked();
+            boolean useUnstoppable = unstoppableCheckbox.isChecked();
             if(nameText.isEmpty())
             {
                 Toast toast = Toast.makeText(activity, R.string.invalidChainName, Toast.LENGTH_SHORT);
@@ -107,7 +109,7 @@ public class NewChainDialogFragment extends DialogFragment
                 TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
                 transactionDispatcher.setSchedulerCache(mSchedulerCache);
 
-                transactionDispatcher.addChainTransaction(mPoolIdToAddTo, configFolder, nameText, descriptionText, chainProduceFrequency, useAutoDelete);
+                transactionDispatcher.addChainTransaction(mPoolIdToAddTo, configFolder, nameText, descriptionText, chainProduceFrequency, useAutoDelete, useUnstoppable);
             }
         });
 

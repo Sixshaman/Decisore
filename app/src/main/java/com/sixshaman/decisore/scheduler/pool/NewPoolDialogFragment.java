@@ -6,6 +6,7 @@ import android.app.Dialog;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
@@ -52,6 +53,8 @@ public class NewPoolDialogFragment extends DialogFragment
 
             final Spinner frequencySpinner = resultDialog.getValue().findViewById(R.id.spinnerPoolFrequency);
 
+            final CheckBox unstoppableCheckbox = resultDialog.getValue().findViewById(R.id.checkboxPoolUnstoppable);
+
             String nameText        = editTextName.getEditableText().toString();
             String descriptionText = editEditDescription.getEditableText().toString();
 
@@ -82,6 +85,7 @@ public class NewPoolDialogFragment extends DialogFragment
                 }
             }
 
+            boolean isUnstoppable = unstoppableCheckbox.isChecked();
             if(nameText.isEmpty())
             {
                 Toast toast = Toast.makeText(activity, R.string.invalidPoolName, Toast.LENGTH_SHORT);
@@ -94,7 +98,7 @@ public class NewPoolDialogFragment extends DialogFragment
                 TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
                 transactionDispatcher.setSchedulerCache(mSchedulerCache);
 
-                transactionDispatcher.addPoolTransaction(configFolder, nameText, descriptionText, poolProduceFrequency);
+                transactionDispatcher.addPoolTransaction(configFolder, nameText, descriptionText, poolProduceFrequency, isUnstoppable);
             }
         });
 

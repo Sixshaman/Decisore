@@ -70,4 +70,21 @@
             app:layout_constraintTop_toBottomOf="@id/spinnerChainFrequency"
             app:layout_constraintStart_toStartOf="@id/spinnerChainFrequency"/>
 
+    <TextView
+            android:text="@string/chainUnstoppable"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:singleLine="true"
+            android:layout_marginTop="0dp"
+            android:id="@+id/textViewUnstoppable"
+            app:layout_constraintBaseline_toBaselineOf="@id/checkboxChainUnstoppable"
+            app:layout_constraintStart_toStartOf="@id/editNewChainDescription"/>
+
+    <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/checkboxChainUnstoppable"
+            app:layout_constraintTop_toBottomOf="@id/checkboxAutoDelete"
+            app:layout_constraintStart_toStartOf="@id/checkboxAutoDelete"/>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

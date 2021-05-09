@@ -41,6 +41,9 @@ public class ObjectiveChain implements PoolElement
     //Does this chain get deleted immediately after finishing every objective?
     private boolean mIsAutoDelete;
 
+    //Can this chain produce objectives that are supposed to be finished yesterday and earlier?
+    private boolean mIsUnstoppable;
+
     //The minimum frequency at which the chain can provide objectives (0 specifies the "instant" chain)
     private Duration mProduceFrequency;
 
@@ -69,7 +72,8 @@ public class ObjectiveChain implements PoolElement
 
         mIsActive = true;
 
-        mIsAutoDelete = false;
+        mIsAutoDelete  = false;
+        mIsUnstoppable = false;
 
         mLastUpdate       = LocalDateTime.MIN; //FAR PAST, A LONG LONG TIME AGO.
         mProduceFrequency = Duration.ZERO;     //Default
@@ -152,7 +156,8 @@ public class ObjectiveChain implements PoolElement
 
             result.put("IsActive", Boolean.toString(mIsActive));
 
-            result.put("IsAutoDelete", Boolean.toString(mIsAutoDelete));
+            result.put("IsAutoDelete",  Boolean.toString(mIsAutoDelete));
+            result.put("IsUnstoppable", Boolean.toString(mIsUnstoppable));
 
             result.put("ProduceFrequency", Long.toString(mProduceFrequency.toMinutes()));
 
@@ -255,7 +260,21 @@ public class ObjectiveChain implements PoolElement
         }
         else if(!mProduceFrequency.isZero())
         {
-            mLastUpdate = referenceTime;
+            if(mIsUnstoppable)
+            {
+                if(mLastUpdate.equals(LocalDateTime.MIN)) //This is the first objective produced by the chain
+                {
+                    mLastUpdate = enlistedObjective.getCreatedDate();
+                }
+                else
+                {
+                    mLastUpdate = mLastUpdate.minusHours(dayStartHour).truncatedTo(ChronoUnit.DAYS).plusHours(dayStartHour).plusHours(mProduceFrequency.toHours()).minusHours(dayStartHour).truncatedTo(ChronoUnit.DAYS).plusHours(dayStartHour);
+                }
+            }
+            else
+            {
+                mLastUpdate = referenceTime;
+            }
         }
 
         return enlistedObjective;
@@ -468,6 +487,11 @@ public class ObjectiveChain implements PoolElement
     public void setAutoDelete(boolean autoDelete)
     {
         mIsAutoDelete = autoDelete;
+    }
+
+    public void setUnstoppable(boolean unstoppable)
+    {
+        mIsUnstoppable = unstoppable;
     }
 
     @Override

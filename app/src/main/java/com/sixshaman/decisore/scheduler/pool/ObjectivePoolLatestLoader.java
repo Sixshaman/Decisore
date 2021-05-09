@@ -43,11 +43,15 @@ public class ObjectivePoolLatestLoader implements ObjectivePoolLoader
             String produceFrequencyString = jsonObject.optString("ProduceFrequency");
             String lastProducedDateString = jsonObject.optString("LastUpdate");
 
+            String isUnstoppableString = jsonObject.optString("IsUnstoppable");
+
             ObjectivePool objectivePool = new ObjectivePool(id, name, description);
             objectivePool.setLastProvidedObjectiveId(lastId);
 
             String isActiveString = jsonObject.optString("IsActive");
             objectivePool.setPaused(!isActiveString.isEmpty() && isActiveString.equalsIgnoreCase("false"));
+
+            objectivePool.setUnstoppable(!isUnstoppableString.isEmpty() && isUnstoppableString.equalsIgnoreCase("true"));
 
             JSONArray sourcesJsonArray = jsonObject.getJSONArray("Sources");
             for(int i = 0; i < sourcesJsonArray.length(); i++)

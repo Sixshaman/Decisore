@@ -238,7 +238,7 @@ public class ObjectiveSchedulerCache
     }
 
     //Creates a new objective chain
-    public long addObjectiveChain(long poolIdToAddTo, String name, String description, Duration produceFrequency, boolean useAutoDelete)
+    public long addObjectiveChain(long poolIdToAddTo, String name, String description, Duration produceFrequency, boolean autoDelete, boolean unstoppable)
     {
         ObjectivePool poolToAddTo = null;
         if(poolIdToAddTo != -1)
@@ -253,7 +253,8 @@ public class ObjectiveSchedulerCache
         long chainId = getMaxChainId() + 1;
         ObjectiveChain chain = new ObjectiveChain(chainId, name, description);
         chain.setProduceFrequency(produceFrequency);
-        chain.setAutoDelete(useAutoDelete);
+        chain.setAutoDelete(autoDelete);
+        chain.setUnstoppable(unstoppable);
 
         if(poolToAddTo == null)
         {
@@ -278,12 +279,13 @@ public class ObjectiveSchedulerCache
     }
 
     //Creates a new objective pool
-    public void addObjectivePool(String name, String description, Duration produceFrequency)
+    public void addObjectivePool(String name, String description, Duration produceFrequency, boolean unstoppable)
     {
         long poolId = getMaxPoolId() + 1;
 
         ObjectivePool pool = new ObjectivePool(poolId, name, description);
         pool.setProduceFrequency(produceFrequency);
+        pool.setUnstoppable(unstoppable);
 
         mSchedulerElements.add(pool);
 
