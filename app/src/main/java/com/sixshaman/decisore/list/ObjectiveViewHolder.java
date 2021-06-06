@@ -244,6 +244,7 @@ class ObjectiveViewHolder extends RecyclerView.ViewHolder implements View.OnCrea
 
                 String configFolder = Objects.requireNonNull(view.getContext().getExternalFilesDir("/app")).getAbsolutePath();
                 transactionDispatcher.deleteObjectiveFromListTransaction(configFolder, objective);
+                transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now(), dayStartTime);
             });
             alertDialogBuilder.setNegativeButton("No", (dialogInterface, i) ->
             {
