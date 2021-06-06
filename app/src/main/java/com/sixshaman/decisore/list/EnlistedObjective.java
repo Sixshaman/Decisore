@@ -155,19 +155,14 @@ public class EnlistedObjective implements Comparable<Long>
             e.printStackTrace();
         }
 
-        EnlistedObjective task;
         if(id != -1 && !name.isEmpty() && createdDate != null && addedDate != null)
         {
-            task = new EnlistedObjective(id, createdDate, addedDate, name, description, taskTags);
-        }
-        else
-        {
-            return null; //Can't create even a basic objective
+            EnlistedObjective objective = new EnlistedObjective(id, createdDate, addedDate, name, description, taskTags);
+            objective.setCharm(charm);
+            return objective;
         }
 
-        task.setCharm(charm);
-
-        return task;
+        return null; //Can't create even a basic objective
     }
 
     public ArchivedObjective toArchived(LocalDateTime finishDate)
