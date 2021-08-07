@@ -23,7 +23,7 @@
                 android:layout_above="@+id/fab_add_chain"
                 android:layout_alignEnd="@+id/mainFabButton"
                 android:contentDescription="@null"
-                android:backgroundTint="@color/colorAccentTransparent"/>
+                android:backgroundTint="@color/colorIconTransparent"/>
 
         <ImageButton
                 style="@style/AdditionalTheme"
@@ -36,7 +36,7 @@
                 android:contentDescription="@null"
                 android:layout_above="@+id/fab_add_objective"
                 android:layout_alignEnd="@id/mainFabButton"
-                android:backgroundTint="@color/colorAccentTransparent"/>
+                android:backgroundTint="@color/colorIconTransparent"/>
 
         <ImageButton
                 style="@style/AdditionalTheme"
@@ -49,7 +49,7 @@
                 android:contentDescription="@null"
                 android:layout_above="@+id/mainFabButton"
                 android:layout_alignEnd="@id/mainFabButton"
-                android:backgroundTint="@color/colorAccentTransparent"/>
+                android:backgroundTint="@color/colorIconTransparent"/>
 
         <ImageButton
                 style="@style/FloatingActionButtonSpeedDial"

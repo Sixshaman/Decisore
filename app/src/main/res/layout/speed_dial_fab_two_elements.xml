@@ -23,7 +23,7 @@
                 android:contentDescription="@null"
                 android:layout_above="@+id/fab_add_objective_to_pool"
                 android:layout_alignEnd="@id/poolFabButton"
-                android:backgroundTint="@color/colorAccentTransparent"/>
+                android:backgroundTint="@color/colorIconTransparent"/>
 
         <ImageButton
                 style="@style/AdditionalTheme"
@@ -36,7 +36,7 @@
                 android:contentDescription="@null"
                 android:layout_above="@id/poolFabButton"
                 android:layout_alignEnd="@id/poolFabButton"
-                android:backgroundTint="@color/colorAccentTransparent"/>
+                android:backgroundTint="@color/colorIconTransparent"/>
 
         <ImageButton
                 style="@style/FloatingActionButtonSpeedDial"

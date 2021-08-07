@@ -13,7 +13,7 @@
 
     <path
             android:pathData="M 32 22 H 76 V 86 H 32 Z"
-            android:fillColor="@color/colorAccent"/>
+            android:fillColor="@color/colorIcon"/>
 
     <path
             android:pathData="M 37 54 H 71 V 55 H 37 Z"
