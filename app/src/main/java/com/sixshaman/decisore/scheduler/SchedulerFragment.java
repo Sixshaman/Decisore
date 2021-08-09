@@ -40,6 +40,9 @@ public class SchedulerFragment extends Fragment
     private float mFabPoolOffset;
     private float mFabChainOffset;
     private float mFabObjectiveOffset;
+    private float mFabPoolTextOffset;
+    private float mFabChainTextOffset;
+    private float mFabObjectiveTextOffset;
 
     public SchedulerFragment()
     {
@@ -108,9 +111,13 @@ public class SchedulerFragment extends Fragment
 
         final ViewGroup fabContainer = mFragmentView.findViewById(R.id.fab_container);
 
-        final View fabAddPool      = mFragmentView.findViewById(R.id.fab_add_pool);
-        final View fabAddChain     = mFragmentView.findViewById(R.id.fab_add_chain);
-        final View fabAddObjective = mFragmentView.findViewById(R.id.fab_add_objective);
+        final View fabAddPool      = mFragmentView.findViewById(R.id.fab_add_pool_layout);
+        final View fabAddChain     = mFragmentView.findViewById(R.id.fab_add_chain_layout);
+        final View fabAddObjective = mFragmentView.findViewById(R.id.fab_add_objective_layout);
+
+        final View fabAddPoolText      = mFragmentView.findViewById(R.id.fab_add_pool_text);
+        final View fabAddChainText     = mFragmentView.findViewById(R.id.fab_add_chain_text);
+        final View fabAddObjectiveText = mFragmentView.findViewById(R.id.fab_add_objective_text);
 
         final ImageButton fabSpeedDial = mFragmentView.findViewById(R.id.mainFabButton);
         fabSpeedDial.setOnClickListener(fabView ->
@@ -118,11 +125,11 @@ public class SchedulerFragment extends Fragment
             mFabExpanded = !mFabExpanded;
             if(mFabExpanded)
             {
-                expandFab(fabSpeedDial, fabAddPool, fabAddChain, fabAddObjective);
+                expandFab(fabSpeedDial, fabAddPool, fabAddChain, fabAddObjective, fabAddPoolText, fabAddChainText, fabAddObjectiveText);
             }
             else
             {
-                collapseFab(fabSpeedDial, fabAddPool, fabAddChain, fabAddObjective);
+                collapseFab(fabSpeedDial, fabAddPool, fabAddChain, fabAddObjective, fabAddPoolText, fabAddChainText, fabAddObjectiveText);
             }
         });
 
@@ -141,9 +148,17 @@ public class SchedulerFragment extends Fragment
                 mFabChainOffset     = fabSpeedDial.getY() - fabAddChain.getY();
                 mFabObjectiveOffset = fabSpeedDial.getY() - fabAddObjective.getY();
 
+                mFabPoolTextOffset      = fabSpeedDial.getX() - fabAddPoolText.getX();
+                mFabChainTextOffset     = fabSpeedDial.getX() - fabAddChainText.getX();
+                mFabObjectiveTextOffset = fabSpeedDial.getX() - fabAddObjectiveText.getX();
+
                 fabAddPool.setTranslationY(mFabPoolOffset);
                 fabAddChain.setTranslationY(mFabChainOffset);
                 fabAddObjective.setTranslationY(mFabObjectiveOffset);
+
+                fabAddPoolText.setTranslationX(mFabPoolTextOffset);
+                fabAddChainText.setTranslationX(mFabChainTextOffset);
+                fabAddObjectiveText.setTranslationX(mFabObjectiveTextOffset);
 
                 return true;
             }
@@ -188,27 +203,33 @@ public class SchedulerFragment extends Fragment
         newObjectiveDialogFragment.show(getParentFragmentManager(), getString(R.string.newObjectiveDialogName));
     }
 
-    private void collapseFab(final ImageButton fab, final View fabAddPool, final View fabAddChain, final View fabAddObjective)
+    private void collapseFab(final ImageButton fab, final View fabAddPool, final View fabAddChain, final View fabAddObjective, final View fabAddPoolText, final View fabAddChainText, final View fabAddObjectiveText)
     {
         fab.setImageResource(R.drawable.animated_cross);
 
         AnimatorSet animatorSet = new AnimatorSet();
-        animatorSet.playTogether(createCollapseAnimator(fabAddPool,      mFabPoolOffset),
-                                 createCollapseAnimator(fabAddChain,     mFabChainOffset),
-                                 createCollapseAnimator(fabAddObjective, mFabObjectiveOffset));
+        animatorSet.playTogether(createCollapseAnimator(fabAddPool,              mFabPoolOffset),
+                                 createCollapseAnimator(fabAddChain,             mFabChainOffset),
+                                 createCollapseAnimator(fabAddObjective,         mFabObjectiveOffset),
+                                 createCollapseTextAnimator(fabAddPoolText,      mFabPoolTextOffset),
+                                 createCollapseTextAnimator(fabAddChainText,     mFabChainTextOffset),
+                                 createCollapseTextAnimator(fabAddObjectiveText, mFabObjectiveTextOffset));
         animatorSet.start();
 
         animateSpeedDialFab(fab);
     }
 
-    private void expandFab(final ImageButton fab, final View fabAddPool, final View fabAddChain, final View fabAddObjective)
+    private void expandFab(final ImageButton fab, final View fabAddPool, final View fabAddChain, final View fabAddObjective, final View fabAddPoolText, final View fabAddChainText, final View fabAddObjectiveText)
     {
         fab.setImageResource(R.drawable.animated_plus);
 
         AnimatorSet animatorSet = new AnimatorSet();
-        animatorSet.playTogether(createExpandAnimator(fabAddPool,      mFabPoolOffset),
-                                 createExpandAnimator(fabAddChain,     mFabChainOffset),
-                                 createExpandAnimator(fabAddObjective, mFabObjectiveOffset));
+        animatorSet.playTogether(createExpandAnimator(fabAddPool,              mFabPoolOffset),
+                                 createExpandAnimator(fabAddChain,             mFabChainOffset),
+                                 createExpandAnimator(fabAddObjective,         mFabObjectiveOffset),
+                                 createExpandTextAnimator(fabAddPoolText,      mFabPoolTextOffset),
+                                 createExpandTextAnimator(fabAddChainText,     mFabChainTextOffset),
+                                 createExpandTextAnimator(fabAddObjectiveText, mFabObjectiveTextOffset));
         animatorSet.start();
 
         animateSpeedDialFab(fab);
@@ -219,9 +240,19 @@ public class SchedulerFragment extends Fragment
         return ObjectAnimator.ofFloat(view, "translationY", 0, offset).setDuration(getResources().getInteger(android.R.integer.config_mediumAnimTime));
     }
 
+    private Animator createCollapseTextAnimator(View view, float offset)
+    {
+        return ObjectAnimator.ofFloat(view, "translationX", 0, offset).setDuration(getResources().getInteger(android.R.integer.config_mediumAnimTime));
+    }
+
     private Animator createExpandAnimator(View view, float offset)
     {
         return ObjectAnimator.ofFloat(view, "translationY", offset, 0).setDuration(getResources().getInteger(android.R.integer.config_mediumAnimTime));
+    }
+
+    private Animator createExpandTextAnimator(View view, float offset)
+    {
+        return ObjectAnimator.ofFloat(view, "translationX", offset, 0).setDuration(getResources().getInteger(android.R.integer.config_mediumAnimTime));
     }
 
     private void animateSpeedDialFab(ImageButton fab)

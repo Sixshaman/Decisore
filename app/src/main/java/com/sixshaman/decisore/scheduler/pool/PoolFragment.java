@@ -9,6 +9,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.ViewTreeObserver;
 import android.widget.ImageButton;
+import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.preference.PreferenceManager;
@@ -46,6 +47,8 @@ public class PoolFragment extends Fragment
     //Dynamic offset to speed dial fab elements
     private float mFabChainOffset;
     private float mFabObjectiveOffset;
+    private float mFabChainTextOffset;
+    private float mFabObjectiveTextOffset;
 
     public PoolFragment()
     {
@@ -117,8 +120,11 @@ public class PoolFragment extends Fragment
 
             final ViewGroup fabContainer = mFragmentView.findViewById(R.id.pool_fab_container);
 
-            final View fabAddChain     = mFragmentView.findViewById(R.id.fab_add_chain_to_pool);
-            final View fabAddObjective = mFragmentView.findViewById(R.id.fab_add_objective_to_pool);
+            final View fabAddChain     = mFragmentView.findViewById(R.id.fab_add_chain_to_pool_layout);
+            final View fabAddObjective = mFragmentView.findViewById(R.id.fab_add_objective_to_pool_layout);
+
+            final View fabAddChainText     = mFragmentView.findViewById(R.id.fab_add_chain_to_pool_text);
+            final View fabAddObjectiveText = mFragmentView.findViewById(R.id.fab_add_objective_to_pool_text);
 
             final ImageButton fabSpeedDial = mFragmentView.findViewById(R.id.poolFabButton);
             fabSpeedDial.setOnClickListener(fabView ->
@@ -126,11 +132,11 @@ public class PoolFragment extends Fragment
                 mFabExpanded = !mFabExpanded;
                 if(mFabExpanded)
                 {
-                    expandFab(fabSpeedDial, fabAddChain, fabAddObjective);
+                    expandFab(fabSpeedDial, fabAddChain, fabAddObjective, fabAddChainText, fabAddObjectiveText);
                 }
                 else
                 {
-                    collapseFab(fabSpeedDial, fabAddChain, fabAddObjective);
+                    collapseFab(fabSpeedDial, fabAddChain, fabAddObjective, fabAddChainText, fabAddObjectiveText);
                 }
             });
 
@@ -147,8 +153,14 @@ public class PoolFragment extends Fragment
                     mFabChainOffset     = fabSpeedDial.getY() - fabAddChain.getY();
                     mFabObjectiveOffset = fabSpeedDial.getY() - fabAddObjective.getY();
 
+                    mFabChainTextOffset     = fabSpeedDial.getX() - fabAddChainText.getX();
+                    mFabObjectiveTextOffset = fabSpeedDial.getX() - fabAddObjectiveText.getX();
+
                     fabAddChain.setTranslationY(mFabChainOffset);
                     fabAddObjective.setTranslationY(mFabObjectiveOffset);
+
+                    fabAddChainText.setTranslationX(mFabChainTextOffset);
+                    fabAddObjectiveText.setTranslationX(mFabObjectiveTextOffset);
 
                     return true;
                 }
@@ -174,25 +186,29 @@ public class PoolFragment extends Fragment
         newObjectiveDialogFragment.show(getParentFragmentManager(), getString(R.string.newObjectiveDialogName));
     }
 
-    private void collapseFab(final ImageButton fab, final View fabAddChain, final View fabAddObjective)
+    private void collapseFab(final ImageButton fab, final View fabAddChain, final View fabAddObjective, final View fabAddChainText, final View fabAddObjectiveText)
     {
         fab.setImageResource(R.drawable.animated_cross);
 
         AnimatorSet animatorSet = new AnimatorSet();
-        animatorSet.playTogether(createCollapseAnimator(fabAddChain,     mFabChainOffset),
-                                 createCollapseAnimator(fabAddObjective, mFabObjectiveOffset));
+        animatorSet.playTogether(createCollapseAnimator(fabAddChain,             mFabChainOffset),
+                                 createCollapseAnimator(fabAddObjective,         mFabObjectiveOffset),
+                                 createCollapseTextAnimator(fabAddChainText,     mFabChainTextOffset),
+                                 createCollapseTextAnimator(fabAddObjectiveText, mFabObjectiveTextOffset));
         animatorSet.start();
 
         animateSpeedDialFab(fab);
     }
 
-    private void expandFab(final ImageButton fab, final View fabAddChain, final View fabAddObjective)
+    private void expandFab(final ImageButton fab, final View fabAddChain, final View fabAddObjective, final View fabAddChainText, final View fabAddObjectiveText)
     {
         fab.setImageResource(R.drawable.animated_plus);
 
         AnimatorSet animatorSet = new AnimatorSet();
-        animatorSet.playTogether(createExpandAnimator(fabAddChain,     mFabChainOffset),
-                                 createExpandAnimator(fabAddObjective, mFabObjectiveOffset));
+        animatorSet.playTogether(createExpandAnimator(fabAddChain,             mFabChainOffset),
+                                 createExpandAnimator(fabAddObjective,         mFabObjectiveOffset),
+                                 createExpandTextAnimator(fabAddChainText,     mFabChainTextOffset),
+                                 createExpandTextAnimator(fabAddObjectiveText, mFabObjectiveTextOffset));
         animatorSet.start();
 
         animateSpeedDialFab(fab);
@@ -203,9 +219,19 @@ public class PoolFragment extends Fragment
         return ObjectAnimator.ofFloat(view, "translationY", 0, offset).setDuration(getResources().getInteger(android.R.integer.config_mediumAnimTime));
     }
 
+    private Animator createCollapseTextAnimator(View view, float offset)
+    {
+        return ObjectAnimator.ofFloat(view, "translationX", 0, offset).setDuration(getResources().getInteger(android.R.integer.config_mediumAnimTime));
+    }
+
     private Animator createExpandAnimator(View view, float offset)
     {
         return ObjectAnimator.ofFloat(view, "translationY", offset, 0).setDuration(getResources().getInteger(android.R.integer.config_mediumAnimTime));
+    }
+
+    private Animator createExpandTextAnimator(View view, float offset)
+    {
+        return ObjectAnimator.ofFloat(view, "translationX", offset, 0).setDuration(getResources().getInteger(android.R.integer.config_mediumAnimTime));
     }
 
     private void animateSpeedDialFab(ImageButton fab)

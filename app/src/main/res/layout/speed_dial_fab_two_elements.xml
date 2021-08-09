@@ -12,31 +12,55 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintRight_toRightOf="parent">
 
-        <ImageButton
-                style="@style/AdditionalTheme"
-                android:id="@+id/fab_add_chain_to_pool"
-                android:src="@drawable/ic_scheduler_chain"
-                android:scaleType="centerInside"
-                android:padding="0dp"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:contentDescription="@null"
-                android:layout_above="@+id/fab_add_objective_to_pool"
-                android:layout_alignEnd="@id/poolFabButton"
-                android:backgroundTint="@color/colorIconTransparent"/>
+        <LinearLayout android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:id="@+id/fab_add_chain_to_pool_layout"
+                      android:layout_above="@id/fab_add_objective_to_pool_layout"
+                      android:layout_alignEnd="@id/poolFabButton">
 
-        <ImageButton
-                style="@style/AdditionalTheme"
-                android:id="@+id/fab_add_objective_to_pool"
-                android:src="@drawable/ic_scheduler_objective"
-                android:scaleType="centerInside"
-                android:padding="0dp"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:contentDescription="@null"
-                android:layout_above="@id/poolFabButton"
-                android:layout_alignEnd="@id/poolFabButton"
-                android:backgroundTint="@color/colorIconTransparent"/>
+            <TextView android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:layout_gravity="center_vertical"
+                      android:id="@+id/fab_add_chain_to_pool_text"
+                      android:text="@string/button_objective_chain"/>
+
+            <ImageButton
+                    style="@style/AdditionalTheme"
+                    android:id="@+id/fab_add_chain_to_pool"
+                    android:src="@drawable/ic_scheduler_chain"
+                    android:scaleType="centerInside"
+                    android:padding="0dp"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:contentDescription="@null"
+                    android:backgroundTint="@color/colorIconTransparent"/>
+
+        </LinearLayout>
+
+        <LinearLayout android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:id="@+id/fab_add_objective_to_pool_layout"
+                      android:layout_above="@+id/poolFabButton"
+                      android:layout_alignEnd="@+id/poolFabButton">
+
+            <TextView android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:layout_gravity="center_vertical"
+                      android:id="@+id/fab_add_objective_to_pool_text"
+                      android:text="@string/button_objective"/>
+
+            <ImageButton
+                    style="@style/AdditionalTheme"
+                    android:id="@+id/fab_add_objective_to_pool"
+                    android:src="@drawable/ic_scheduler_objective"
+                    android:scaleType="centerInside"
+                    android:padding="0dp"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:contentDescription="@null"
+                    android:backgroundTint="@color/colorIconTransparent"/>
+
+        </LinearLayout>
 
         <ImageButton
                 style="@style/FloatingActionButtonSpeedDial"
@@ -52,5 +76,6 @@
                 android:layout_marginEnd="16dp"
                 android:layout_alignParentBottom="true"
                 android:layout_alignParentEnd="true"/>
+
     </RelativeLayout>
 </merge>

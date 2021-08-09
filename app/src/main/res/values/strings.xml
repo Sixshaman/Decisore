@@ -64,5 +64,8 @@
     <string name="show_objective_count">Show current objective count</string>
     <string name="chainUnstoppable">Unstoppable</string>
     <string name="poolUnstoppable">Unstoppable</string>
+    <string name="button_objective_pool">Objective pool</string>
+    <string name="button_objective_chain">Objective chain</string>
+    <string name="button_objective">Objective</string>
 
 </resources>
