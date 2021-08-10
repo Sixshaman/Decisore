@@ -54,7 +54,7 @@
             app:layout_constraintEnd_toEndOf="@id/editNewChainDescription"/>
 
     <TextView
-            android:text="@string/chainAutoDelete"
+            android:text="@string/chainPoolAutoDelete"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:singleLine="true"

@@ -17,7 +17,7 @@
     <string name="objectiveRepeats">Repeats:</string>
     <string name="objectiveOccasional">Occasional</string>
     <string name="chainPoolFrequency">Frequency:</string>
-    <string name="chainAutoDelete">Auto delete</string>
+    <string name="chainPoolAutoDelete">Auto delete</string>
     <string name="createObjective">DO IT, MOTHERFUCKER!</string>
     <string name="createChain">DO IT, MOTHERFUCKER!</string>
     <string name="createPool">DO IT, MOTHERFUCKER!</string>
