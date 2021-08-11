@@ -126,6 +126,9 @@ public class PoolFragment extends Fragment
             final View fabAddChainText     = mFragmentView.findViewById(R.id.fab_add_chain_to_pool_text);
             final View fabAddObjectiveText = mFragmentView.findViewById(R.id.fab_add_objective_to_pool_text);
 
+            final View fabAddChainButton     = mFragmentView.findViewById(R.id.fab_add_chain_to_pool);
+            final View fabAddObjectiveButton = mFragmentView.findViewById(R.id.fab_add_objective_to_pool);
+
             final ImageButton fabSpeedDial = mFragmentView.findViewById(R.id.poolFabButton);
             fabSpeedDial.setOnClickListener(fabView ->
             {
@@ -142,6 +145,9 @@ public class PoolFragment extends Fragment
 
             fabAddChain.setOnClickListener(this::addObjectiveChain);
             fabAddObjective.setOnClickListener(this::addObjective);
+
+            fabAddChainButton.setOnClickListener(this::addObjectiveChain);
+            fabAddObjectiveButton.setOnClickListener(this::addObjective);
 
             fabContainer.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener()
             {

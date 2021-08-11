@@ -56,7 +56,10 @@ public class ObjectivePool implements SchedulerElement
     private long mLastProvidedObjectiveId;
 
     //The flag that shows that the pool is active (i.e. not paused)
-    boolean mIsActive;
+    private boolean mIsActive;
+
+    //Does this pool get deleted immediately after finishing every objective?
+    private boolean mIsAutoDelete;
 
     //Can this pool produce objectives that are supposed to be finished yesterday and earlier, even when it's unavailable ?
     private boolean mIsUnstoppable;
@@ -75,6 +78,7 @@ public class ObjectivePool implements SchedulerElement
 
         mIsActive = true;
 
+        mIsAutoDelete  = false;
         mIsUnstoppable = false;
 
         mLastUpdate       = LocalDateTime.MIN;
@@ -210,6 +214,7 @@ public class ObjectivePool implements SchedulerElement
 
             result.put("IsActive", Boolean.toString(mIsActive));
 
+            result.put("IsAutoDelete",  Boolean.toString(mIsAutoDelete));
             result.put("IsUnstoppable", Boolean.toString(mIsUnstoppable));
 
             result.put("ProduceFrequency", Long.toString(mProduceFrequency.toMinutes()));
@@ -475,7 +480,7 @@ public class ObjectivePool implements SchedulerElement
     @Override
     public boolean isValid()
     {
-        return true;
+        return !mIsAutoDelete || !mObjectiveSources.isEmpty() || (mLastProvidedObjectiveId == -1); //Do not allow to delete a pool that was just created
     }
 
     @Override
@@ -521,6 +526,11 @@ public class ObjectivePool implements SchedulerElement
     public void setProduceFrequency(Duration produceFrequency)
     {
         mProduceFrequency = produceFrequency;
+    }
+
+    public void setAutoDelete(boolean autoDelete)
+    {
+        mIsAutoDelete = autoDelete;
     }
 
     public void setUnstoppable(boolean unstoppable)

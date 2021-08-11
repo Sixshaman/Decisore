@@ -279,12 +279,13 @@ public class ObjectiveSchedulerCache
     }
 
     //Creates a new objective pool
-    public void addObjectivePool(String name, String description, Duration produceFrequency, boolean unstoppable)
+    public void addObjectivePool(String name, String description, Duration produceFrequency, boolean autoDelete, boolean unstoppable)
     {
         long poolId = getMaxPoolId() + 1;
 
         ObjectivePool pool = new ObjectivePool(poolId, name, description);
         pool.setProduceFrequency(produceFrequency);
+        pool.setAutoDelete(autoDelete);
         pool.setUnstoppable(unstoppable);
 
         mSchedulerElements.add(pool);

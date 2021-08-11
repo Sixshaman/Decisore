@@ -44,14 +44,14 @@ public class TransactionDispatcher
     }
 
     @SuppressWarnings("UnusedReturnValue")
-    public synchronized boolean addPoolTransaction(String configFolder, String poolName, String poolDescription, Duration produceFrequency, boolean unstoppable)
+    public synchronized boolean addPoolTransaction(String configFolder, String poolName, String poolDescription, Duration produceFrequency, boolean autoDelete, boolean unstoppable)
     {
         String schedulerFilePath = configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME;
 
         invalidateSchedulerCache(schedulerFilePath);
 
         LockedWriteFile schedulerWriteFile = new LockedWriteFile(schedulerFilePath);
-        mSchedulerCache.addObjectivePool(poolName, poolDescription, produceFrequency, unstoppable);
+        mSchedulerCache.addObjectivePool(poolName, poolDescription, produceFrequency, autoDelete, unstoppable);
 
         if(mSchedulerCache.flush(schedulerWriteFile))
         {

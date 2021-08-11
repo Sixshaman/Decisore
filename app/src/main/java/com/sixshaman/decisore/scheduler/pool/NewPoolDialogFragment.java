@@ -51,8 +51,8 @@ public class NewPoolDialogFragment extends DialogFragment
             final EditText editTextName        = resultDialog.getValue().findViewById(R.id.editNewPoolName);
             final EditText editEditDescription = resultDialog.getValue().findViewById(R.id.editNewPoolDescription);
 
-            final Spinner frequencySpinner = resultDialog.getValue().findViewById(R.id.spinnerPoolFrequency);
-
+            final Spinner  frequencySpinner    = resultDialog.getValue().findViewById(R.id.spinnerPoolFrequency);
+            final CheckBox autoDeleteCheckbox  = resultDialog.getValue().findViewById(R.id.checkboxAutoDeletePool);
             final CheckBox unstoppableCheckbox = resultDialog.getValue().findViewById(R.id.checkboxPoolUnstoppable);
 
             String nameText        = editTextName.getEditableText().toString();
@@ -85,6 +85,7 @@ public class NewPoolDialogFragment extends DialogFragment
                 }
             }
 
+            boolean isAutoDelete  = autoDeleteCheckbox.isChecked();
             boolean isUnstoppable = unstoppableCheckbox.isChecked();
             if(nameText.isEmpty())
             {
@@ -98,7 +99,7 @@ public class NewPoolDialogFragment extends DialogFragment
                 TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
                 transactionDispatcher.setSchedulerCache(mSchedulerCache);
 
-                transactionDispatcher.addPoolTransaction(configFolder, nameText, descriptionText, poolProduceFrequency, isUnstoppable);
+                transactionDispatcher.addPoolTransaction(configFolder, nameText, descriptionText, poolProduceFrequency, isAutoDelete, isUnstoppable);
             }
         });
 
