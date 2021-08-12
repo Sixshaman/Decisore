@@ -8,6 +8,8 @@
     <androidx.recyclerview.widget.RecyclerView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:paddingBottom="64dp"
+            android:clipToPadding="false"
             android:id="@+id/objectiveSchedulerView"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"

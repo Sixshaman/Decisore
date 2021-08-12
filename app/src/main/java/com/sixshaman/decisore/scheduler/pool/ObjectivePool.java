@@ -22,6 +22,7 @@ import org.json.JSONObject;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -55,7 +56,13 @@ public class ObjectivePool implements SchedulerElement
     private long mLastProvidedObjectiveId;
 
     //The flag that shows that the pool is active (i.e. not paused)
-    boolean mIsActive;
+    private boolean mIsActive;
+
+    //Does this pool get deleted immediately after finishing every objective?
+    private boolean mIsAutoDelete;
+
+    //Can this pool produce objectives that are supposed to be finished yesterday and earlier, even when it's unavailable ?
+    private boolean mIsUnstoppable;
 
     //Constructs a new objective pool
     public ObjectivePool(long id, String name, String description)
@@ -70,6 +77,9 @@ public class ObjectivePool implements SchedulerElement
         mLastProvidedObjectiveId = -1;
 
         mIsActive = true;
+
+        mIsAutoDelete  = false;
+        mIsUnstoppable = false;
 
         mLastUpdate       = LocalDateTime.MIN;
         mProduceFrequency = Duration.ZERO;
@@ -204,6 +214,9 @@ public class ObjectivePool implements SchedulerElement
 
             result.put("IsActive", Boolean.toString(mIsActive));
 
+            result.put("IsAutoDelete",  Boolean.toString(mIsAutoDelete));
+            result.put("IsUnstoppable", Boolean.toString(mIsUnstoppable));
+
             result.put("ProduceFrequency", Long.toString(mProduceFrequency.toMinutes()));
 
             DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss:nnnnnnnnn");
@@ -247,7 +260,7 @@ public class ObjectivePool implements SchedulerElement
         }
 
         //Only add the objective to the list if the previous objective from the pool is finished (i.e. isn't in blockingObjectiveIds)
-        if(!isAvailable(blockingObjectiveIds, referenceTime))
+        if(!isAvailable(blockingObjectiveIds, referenceTime, dayStartHour))
         {
             return null;
         }
@@ -256,7 +269,7 @@ public class ObjectivePool implements SchedulerElement
         ArrayList<Integer> availableSourceIndices = new ArrayList<>();
         for(int i = 0; i < mObjectiveSources.size(); i++)
         {
-            if(mObjectiveSources.get(i).isAvailable(blockingObjectiveIds, referenceTime))
+            if(mObjectiveSources.get(i).isAvailable(blockingObjectiveIds, referenceTime, dayStartHour))
             {
                 availableSourceIndices.add(i);
             }
@@ -283,7 +296,21 @@ public class ObjectivePool implements SchedulerElement
 
             if(!mProduceFrequency.isZero())
             {
-                mLastUpdate = referenceTime;
+                if(mIsUnstoppable)
+                {
+                    if(mLastUpdate.equals(LocalDateTime.MIN)) //This is the first objective produced by the pool
+                    {
+                        mLastUpdate = resultObjective.getCreatedDate();
+                    }
+                    else
+                    {
+                        mLastUpdate = mLastUpdate.minusHours(dayStartHour).truncatedTo(ChronoUnit.DAYS).plusHours(dayStartHour).plusHours(mProduceFrequency.toHours()).minusHours(dayStartHour).truncatedTo(ChronoUnit.DAYS).plusHours(dayStartHour);
+                    }
+                }
+                else
+                {
+                    mLastUpdate = referenceTime;
+                }
             }
         }
 
@@ -419,11 +446,15 @@ public class ObjectivePool implements SchedulerElement
     }
 
     @Override
-    public boolean isAvailable(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime)
+    public boolean isAvailable(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime, int dayStartHour)
     {
-        if(!mProduceFrequency.isZero() && !mLastUpdate.plus(mProduceFrequency).isBefore(referenceTime))
+        if(!mLastUpdate.equals(LocalDateTime.MIN))
         {
-            return false;
+            LocalDateTime nextUpdate = mLastUpdate.minusHours(dayStartHour).truncatedTo(ChronoUnit.DAYS).plusHours(dayStartHour).plus(mProduceFrequency).minusHours(dayStartHour).truncatedTo(ChronoUnit.DAYS).plusHours(dayStartHour);
+            if (!mProduceFrequency.isZero() && !nextUpdate.isBefore(referenceTime))
+            {
+                return false;
+            }
         }
 
         return !blockingObjectiveIds.contains(mLastProvidedObjectiveId);
@@ -449,7 +480,7 @@ public class ObjectivePool implements SchedulerElement
     @Override
     public boolean isValid()
     {
-        return true;
+        return !mIsAutoDelete || !mObjectiveSources.isEmpty() || (mLastProvidedObjectiveId == -1); //Do not allow to delete a pool that was just created
     }
 
     @Override
@@ -495,6 +526,16 @@ public class ObjectivePool implements SchedulerElement
     public void setProduceFrequency(Duration produceFrequency)
     {
         mProduceFrequency = produceFrequency;
+    }
+
+    public void setAutoDelete(boolean autoDelete)
+    {
+        mIsAutoDelete = autoDelete;
+    }
+
+    public void setUnstoppable(boolean unstoppable)
+    {
+        mIsUnstoppable = unstoppable;
     }
 
     //Only to be used for JSON loading, consider it private

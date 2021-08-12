@@ -60,6 +60,28 @@ public class TwoSidedArrayList<T> extends AbstractList<T> implements List<T>, Ra
     }
 
     @Override
+    @SuppressWarnings("unchecked")
+    public T remove(int index)
+    {
+        if(isEmpty())
+        {
+            return null;
+        }
+
+        int realIndex = (freeIndexFront + index + 1) % data.length;
+        T returnValue = (T)data[realIndex];
+
+        freeIndexBack = (freeIndexBack + data.length - 1) % data.length;
+        for(int i = realIndex; i < freeIndexBack; i = (i + 1) % data.length)
+        {
+            int nextIndex = (i + 1) % data.length;
+            data[i] = data[nextIndex];
+        }
+
+        return returnValue;
+    }
+
+    @Override
     public int size()
     {
         return (data.length + freeIndexBack - freeIndexFront - 1) % data.length;

@@ -18,6 +18,7 @@ import org.json.JSONObject;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 public class ObjectiveChain implements PoolElement
@@ -39,6 +40,9 @@ public class ObjectiveChain implements PoolElement
 
     //Does this chain get deleted immediately after finishing every objective?
     private boolean mIsAutoDelete;
+
+    //Can this chain produce objectives that are supposed to be finished yesterday and earlier?
+    private boolean mIsUnstoppable;
 
     //The minimum frequency at which the chain can provide objectives (0 specifies the "instant" chain)
     private Duration mProduceFrequency;
@@ -68,7 +72,8 @@ public class ObjectiveChain implements PoolElement
 
         mIsActive = true;
 
-        mIsAutoDelete = false;
+        mIsAutoDelete  = false;
+        mIsUnstoppable = false;
 
         mLastUpdate       = LocalDateTime.MIN; //FAR PAST, A LONG LONG TIME AGO.
         mProduceFrequency = Duration.ZERO;     //Default
@@ -151,7 +156,8 @@ public class ObjectiveChain implements PoolElement
 
             result.put("IsActive", Boolean.toString(mIsActive));
 
-            result.put("IsAutoDelete", Boolean.toString(mIsAutoDelete));
+            result.put("IsAutoDelete",  Boolean.toString(mIsAutoDelete));
+            result.put("IsUnstoppable", Boolean.toString(mIsUnstoppable));
 
             result.put("ProduceFrequency", Long.toString(mProduceFrequency.toMinutes()));
 
@@ -186,16 +192,20 @@ public class ObjectiveChain implements PoolElement
     }
 
     @Override
-    public boolean isAvailable(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime)
+    public boolean isAvailable(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime, int dayStartHour)
     {
         if(isPaused())
         {
             return false;
         }
 
-        if(!mProduceFrequency.isZero() && mInstantCount == 0 && !mLastUpdate.plus(mProduceFrequency).isBefore(referenceTime))
+        if(!mLastUpdate.equals(LocalDateTime.MIN))
         {
-            return false;
+            LocalDateTime nextUpdate = mLastUpdate.minusHours(dayStartHour).truncatedTo(ChronoUnit.DAYS).plusHours(dayStartHour).plus(mProduceFrequency).minusHours(dayStartHour).truncatedTo(ChronoUnit.DAYS).plusHours(dayStartHour);
+            if(!mProduceFrequency.isZero() && mInstantCount == 0 && !nextUpdate.isBefore(referenceTime))
+            {
+                return false;
+            }
         }
 
         for(Long boundId: mBoundObjectives)
@@ -213,14 +223,14 @@ public class ObjectiveChain implements PoolElement
         else
         {
             ScheduledObjective firstObjective = mObjectives.getFront();
-            return firstObjective.isAvailable(blockingObjectiveIds, referenceTime);
+            return firstObjective.isAvailable(blockingObjectiveIds, referenceTime, dayStartHour);
         }
     }
 
     @Override
     public EnlistedObjective obtainEnlistedObjective(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime, int dayStartHour)
     {
-        if(!isAvailable(blockingObjectiveIds, referenceTime))
+        if(!isAvailable(blockingObjectiveIds, referenceTime, dayStartHour))
         {
             return null;
         }
@@ -250,7 +260,21 @@ public class ObjectiveChain implements PoolElement
         }
         else if(!mProduceFrequency.isZero())
         {
-            mLastUpdate = referenceTime;
+            if(mIsUnstoppable)
+            {
+                if(mLastUpdate.equals(LocalDateTime.MIN)) //This is the first objective produced by the chain (after making it periodic)
+                {
+                    mLastUpdate = enlistedObjective.getCreatedDate();
+                }
+                else
+                {
+                    mLastUpdate = mLastUpdate.minusHours(dayStartHour).truncatedTo(ChronoUnit.DAYS).plusHours(dayStartHour).plusHours(mProduceFrequency.toHours()).minusHours(dayStartHour).truncatedTo(ChronoUnit.DAYS).plusHours(dayStartHour);
+                }
+            }
+            else
+            {
+                mLastUpdate = referenceTime;
+            }
         }
 
         return enlistedObjective;
@@ -463,6 +487,11 @@ public class ObjectiveChain implements PoolElement
     public void setAutoDelete(boolean autoDelete)
     {
         mIsAutoDelete = autoDelete;
+    }
+
+    public void setUnstoppable(boolean unstoppable)
+    {
+        mIsUnstoppable = unstoppable;
     }
 
     @Override

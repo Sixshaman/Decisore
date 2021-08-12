@@ -6,27 +6,37 @@
                                                    android:padding="10dp"
                                                    android:id="@+id/layoutObjectiveView">
 
-    <TextView android:id="@+id/textObjectiveName"
-              android:text="@string/placeholderObjective"
-              android:layout_width="wrap_content"
-              android:layout_height="wrap_content"
-              android:textColor="@android:color/black"
-              android:textSize="26sp"
-              app:layout_constraintStart_toStartOf="parent"
-              app:layout_constraintTop_toTopOf="parent"
-              app:layout_constraintBottom_toBottomOf="parent"/>
+    <LinearLayout android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  app:layout_constraintStart_toStartOf="parent"
+                  app:layout_constraintTop_toTopOf="parent"
+                  app:layout_constraintBottom_toBottomOf="parent"
+                  app:layout_constraintRight_toRightOf="parent">
 
-    <CheckBox
-            android:text=""
-            android:buttonTint="@color/colorPrimary"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/checkBoxObjectiveDone"
-            android:gravity="center"
-            android:scaleX="1.5"
-            android:scaleY="1.5"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"/>
+        <TextView android:id="@+id/textObjectiveName"
+                  android:text="@string/placeholderObjective"
+                  android:layout_width="0dp"
+                  android:layout_height="wrap_content"
+                  android:textColor="@android:color/black"
+                  android:textSize="26sp"
+                  android:layout_weight="3"
+                  app:layout_constraintStart_toStartOf="parent"
+                  app:layout_constraintTop_toTopOf="parent"
+                  app:layout_constraintBottom_toBottomOf="parent"
+                  app:layout_constraintRight_toLeftOf="@id/checkBoxObjectiveDone"/>
+
+        <CheckBox
+                android:text=""
+                android:buttonTint="@color/colorPrimary"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:id="@+id/checkBoxObjectiveDone"
+                android:scaleX="1.5"
+                android:scaleY="1.5"/>
+
+    </LinearLayout>
+
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

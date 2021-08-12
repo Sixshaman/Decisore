@@ -25,7 +25,8 @@ public class ObjectiveChainLatestLoader implements ObjectiveChainLoader
 
             String isActiveString = jsonObject.optString("IsActive");
 
-            String isAutoDeleteString = jsonObject.optString("IsAutoDelete");
+            String isAutoDeleteString  = jsonObject.optString("IsAutoDelete");
+            String isUnstoppableString = jsonObject.optString("IsUnstoppable");
 
             String produceFrequencyString = jsonObject.optString("ProduceFrequency");
             String lastProducedDateString = jsonObject.optString("LastUpdate");
@@ -60,8 +61,9 @@ public class ObjectiveChainLatestLoader implements ObjectiveChainLoader
                 }
             }
 
-            objectiveChain.setPaused(!isActiveString.isEmpty() && isActiveString.equalsIgnoreCase("false"));
-            objectiveChain.setAutoDelete(!isAutoDeleteString.isEmpty() && isAutoDeleteString.equalsIgnoreCase("true"));
+            objectiveChain.setPaused(!isActiveString.isEmpty()           && isActiveString.equalsIgnoreCase("false"));
+            objectiveChain.setAutoDelete(!isAutoDeleteString.isEmpty()   && isAutoDeleteString.equalsIgnoreCase("true"));
+            objectiveChain.setUnstoppable(!isUnstoppableString.isEmpty() && isUnstoppableString.equalsIgnoreCase("true"));
 
             if(!produceFrequencyString.isEmpty())
             {

@@ -12,44 +12,79 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintRight_toRightOf="parent">
 
-        <ImageButton
-                style="@style/AdditionalTheme"
-                android:id="@+id/fab_add_pool"
-                android:src="@drawable/ic_scheduler_pool"
-                android:scaleType="centerInside"
-                android:padding="0dp"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_above="@+id/fab_add_chain"
-                android:layout_alignEnd="@+id/mainFabButton"
-                android:contentDescription="@null"
-                android:backgroundTint="@color/colorAccentTransparent"/>
+        <LinearLayout android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:id="@+id/fab_add_pool_layout"
+                      android:layout_above="@+id/fab_add_chain_layout"
+                      android:layout_alignEnd="@+id/mainFabButton">
 
-        <ImageButton
-                style="@style/AdditionalTheme"
-                android:id="@+id/fab_add_chain"
-                android:src="@drawable/ic_scheduler_chain"
-                android:scaleType="centerInside"
-                android:padding="0dp"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:contentDescription="@null"
-                android:layout_above="@+id/fab_add_objective"
-                android:layout_alignEnd="@id/mainFabButton"
-                android:backgroundTint="@color/colorAccentTransparent"/>
+            <TextView android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:layout_gravity="center_vertical"
+                      android:id="@+id/fab_add_pool_text"
+                      android:text="@string/button_objective_pool"/>
 
-        <ImageButton
-                style="@style/AdditionalTheme"
-                android:id="@+id/fab_add_objective"
-                android:src="@drawable/ic_scheduler_objective"
-                android:scaleType="centerInside"
-                android:padding="0dp"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:contentDescription="@null"
-                android:layout_above="@+id/mainFabButton"
-                android:layout_alignEnd="@id/mainFabButton"
-                android:backgroundTint="@color/colorAccentTransparent"/>
+            <ImageButton
+                    style="@style/AdditionalTheme"
+                    android:id="@+id/fab_add_pool"
+                    android:src="@drawable/ic_scheduler_pool"
+                    android:scaleType="centerInside"
+                    android:padding="0dp"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:contentDescription="@null"
+                    android:backgroundTint="@color/colorIconTransparent"/>
+        </LinearLayout>
+
+        <LinearLayout android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:id="@+id/fab_add_chain_layout"
+                      android:layout_above="@+id/fab_add_objective_layout"
+                      android:layout_alignEnd="@+id/mainFabButton">
+
+            <TextView android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:layout_gravity="center_vertical"
+                      android:id="@+id/fab_add_chain_text"
+                      android:text="@string/button_objective_chain"/>
+
+            <ImageButton
+                    style="@style/AdditionalTheme"
+                    android:id="@+id/fab_add_chain"
+                    android:src="@drawable/ic_scheduler_chain"
+                    android:scaleType="centerInside"
+                    android:padding="0dp"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:contentDescription="@null"
+                    android:backgroundTint="@color/colorIconTransparent"/>
+
+        </LinearLayout>
+
+        <LinearLayout android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:id="@+id/fab_add_objective_layout"
+                      android:layout_above="@+id/mainFabButton"
+                      android:layout_alignEnd="@+id/mainFabButton">
+
+            <TextView android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:layout_gravity="center_vertical"
+                      android:id="@+id/fab_add_objective_text"
+                      android:text="@string/button_objective"/>
+
+            <ImageButton
+                    style="@style/AdditionalTheme"
+                    android:id="@+id/fab_add_objective"
+                    android:src="@drawable/ic_scheduler_objective"
+                    android:scaleType="centerInside"
+                    android:padding="0dp"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:contentDescription="@null"
+                    android:backgroundTint="@color/colorIconTransparent"/>
+
+        </LinearLayout>
 
         <ImageButton
                 style="@style/FloatingActionButtonSpeedDial"

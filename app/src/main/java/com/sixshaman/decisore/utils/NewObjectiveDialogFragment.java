@@ -31,6 +31,7 @@ public class NewObjectiveDialogFragment extends DialogFragment
     private long    mPoolIdToAddTo;
     private long    mChainIdToAddTo;
     private boolean mAddToChainBeginning;
+    private boolean mTomorrowDefault;
 
     private ObjectiveSchedulerCache mSchedulerCache;
     private ObjectiveListCache      mListCache;
@@ -45,6 +46,8 @@ public class NewObjectiveDialogFragment extends DialogFragment
 
         mBeforeObjectiveCreatedListener = ()          -> {};
         mAfterObjectiveCreatedListener  = objectiveId -> {};
+
+        mTomorrowDefault = false;
     }
 
     public void setSchedulerCache(ObjectiveSchedulerCache schedulerCache)
@@ -78,6 +81,11 @@ public class NewObjectiveDialogFragment extends DialogFragment
         mAfterObjectiveCreatedListener = listener;
     }
 
+    public void setTomorrowDefault(boolean tomorrowDefault)
+    {
+        mTomorrowDefault = tomorrowDefault;
+    }
+
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState)
@@ -89,7 +97,7 @@ public class NewObjectiveDialogFragment extends DialogFragment
         AlertDialog.Builder builder = new AlertDialog.Builder(activity);
         LayoutInflater inflater = Objects.requireNonNull(activity).getLayoutInflater();
 
-        builder.setView(inflater.inflate(R.layout.layout_dialog_new_objective, null));
+        builder.setView(View.inflate(activity, R.layout.layout_dialog_new_objective, null));
         builder.setTitle(R.string.newObjectiveDialogName);
 
         LocalDateTime objectiveCreateDate = LocalDateTime.now();
@@ -242,7 +250,7 @@ public class NewObjectiveDialogFragment extends DialogFragment
             scheduleSpinner.setAdapter(customTextAdapter);
 
             //Default selection
-            if(objectiveCreateDate.getHour() >= dayEndTime)
+            if(objectiveCreateDate.getHour() >= dayEndTime || mTomorrowDefault)
             {
                 scheduleSpinner.setSelection(1);
             }
@@ -300,7 +308,8 @@ public class NewObjectiveDialogFragment extends DialogFragment
 
         DateSpinnerCustomTextAdapter(Context context)
         {
-            super(context, R.layout.layout_spinner_item, context.getResources().getStringArray(R.array.objectiveScheduleTypes));
+            super(context, android.R.layout.simple_spinner_item, context.getResources().getStringArray(R.array.objectiveScheduleTypes));
+            setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         }
 
         void setCustomText(String text)
@@ -316,7 +325,7 @@ public class NewObjectiveDialogFragment extends DialogFragment
             View view = super.getView(position, convertView, parent);
             if(position == 3) //Custom
             {
-                TextView textView = view.findViewById(R.id.spinnerTextView);
+                TextView textView = view.findViewById(android.R.id.text1); //Looks kinda hacky, but apparently there's no other way
                 textView.setText(mCustomText);
             }
 

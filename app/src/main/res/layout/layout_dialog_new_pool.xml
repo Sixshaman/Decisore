@@ -43,8 +43,10 @@
             android:layout_height="wrap_content"
             android:id="@+id/textViewPoolFrequency"
             android:layout_marginTop="0dp"
+            android:textSize="16sp"
             app:layout_constraintTop_toBottomOf="@id/editNewPoolDescription"
             app:layout_constraintStart_toStartOf="@id/editNewPoolDescription"/>
+
     <Spinner
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -52,5 +54,40 @@
             android:entries="@array/produceFrequencyTypes"
             app:layout_constraintTop_toBottomOf="@id/editNewPoolDescription"
             app:layout_constraintEnd_toEndOf="@id/editNewPoolDescription"/>
+
+    <TextView
+            android:text="@string/chainPoolAutoDelete"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:singleLine="true"
+            android:layout_marginTop="0dp"
+            android:id="@+id/textViewAutoDeletePool"
+            app:layout_constraintBaseline_toBaselineOf="@id/checkboxAutoDeletePool"
+            app:layout_constraintStart_toStartOf="@id/editNewPoolDescription"/>
+
+    <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/checkboxAutoDeletePool"
+            app:layout_constraintTop_toBottomOf="@id/spinnerPoolFrequency"
+            app:layout_constraintStart_toStartOf="@id/spinnerPoolFrequency"/>
+
+    <TextView
+            android:text="@string/poolUnstoppable"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:singleLine="true"
+            android:layout_marginTop="0dp"
+            android:id="@+id/textViewUnstoppable"
+            android:textSize="16sp"
+            app:layout_constraintBaseline_toBaselineOf="@id/checkboxPoolUnstoppable"
+            app:layout_constraintStart_toStartOf="@id/editNewPoolDescription"/>
+
+    <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/checkboxPoolUnstoppable"
+            app:layout_constraintTop_toBottomOf="@id/checkboxAutoDeletePool"
+            app:layout_constraintStart_toStartOf="@id/spinnerPoolFrequency"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

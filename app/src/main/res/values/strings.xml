@@ -17,7 +17,7 @@
     <string name="objectiveRepeats">Repeats:</string>
     <string name="objectiveOccasional">Occasional</string>
     <string name="chainPoolFrequency">Frequency:</string>
-    <string name="chainAutoDelete">Auto delete</string>
+    <string name="chainPoolAutoDelete">Auto delete</string>
     <string name="createObjective">DO IT, MOTHERFUCKER!</string>
     <string name="createChain">DO IT, MOTHERFUCKER!</string>
     <string name="createPool">DO IT, MOTHERFUCKER!</string>
@@ -62,5 +62,10 @@
     <string name="day_start">Day start time</string>
     <string name="day_end_schedule_now">New objective threshold</string>
     <string name="show_objective_count">Show current objective count</string>
+    <string name="chainUnstoppable">Unstoppable</string>
+    <string name="poolUnstoppable">Unstoppable</string>
+    <string name="button_objective_pool">Objective pool</string>
+    <string name="button_objective_chain">Objective chain</string>
+    <string name="button_objective">Objective</string>
 
 </resources>

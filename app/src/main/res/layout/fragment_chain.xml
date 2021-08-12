@@ -8,6 +8,8 @@
     <androidx.recyclerview.widget.RecyclerView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:paddingBottom="64dp"
+            android:clipToPadding="false"
             android:id="@+id/objectiveChainView"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -20,10 +22,11 @@
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|end"
             android:layout_margin="@dimen/fab_margin"
-            android:tint="@color/colorAccent"
+            android:tint="@color/colorIcon"
             android:backgroundTint="@color/colorPrimary"
             android:layout_alignParentBottom="true"
             android:layout_alignParentEnd="true"
-            app:srcCompat="@android:drawable/ic_input_add"/>
+            app:srcCompat="@android:drawable/ic_input_add"
+            android:contentDescription="@null"/>
 
 </RelativeLayout>

@@ -13,7 +13,7 @@
 
     <path
             android:pathData="M 61 21.7 L 70.9 31.6 L 54 48.5 L 44.1 38.6 Z"
-            android:fillColor="@color/colorAccent"/>
+            android:fillColor="@color/colorIcon"/>
 
     <path
             android:pathData="M 54 44 L 64.6 54.6 L 47 72.2 L 36.4 61.6 Z"
@@ -21,7 +21,7 @@
 
     <path
             android:pathData="M 54 44.7 L 63.9 54.6 L 47 71.5 L 37.1 61.6 Z"
-            android:fillColor="@color/colorAccent"/>
+            android:fillColor="@color/colorIcon"/>
 
     <path
             android:pathData="M 47 67 L 57.6 77.6 L 40 95.2 L 29.4 84.6 Z"
@@ -29,6 +29,6 @@
 
     <path
             android:pathData="M 47 67.7 L 56.9 77.6 L 40 94.5 L 30.1 84.6 Z"
-            android:fillColor="@color/colorAccent"/>
+            android:fillColor="@color/colorIcon"/>
 
 </vector>

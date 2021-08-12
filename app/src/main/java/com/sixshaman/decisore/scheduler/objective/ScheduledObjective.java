@@ -140,7 +140,7 @@ public class ScheduledObjective implements PoolElement
             return;
         }
 
-        mRegularScheduledAddDate = mRegularScheduledAddDate.plusDays(mRepeatDuration.toDays()).minusHours(dayStartTime).truncatedTo(ChronoUnit.DAYS).plusHours(dayStartTime);
+        mRegularScheduledAddDate = mRegularScheduledAddDate.minusHours(dayStartTime).truncatedTo(ChronoUnit.DAYS).plusHours(dayStartTime);
 
         while(mRegularScheduledAddDate.isBefore(referenceTime)) //Simulate the passing of time
         {
@@ -152,18 +152,15 @@ public class ScheduledObjective implements PoolElement
             else //Occasional objectives are repeated using normal distribution
             {
                 hoursToAdd = RandomUtils.getInstance().getRandomGauss(mRepeatDuration.toHours(), mRepeatProbability);
-                if(hoursToAdd < 1)
-                {
-                    //Clamp the value just in case
-                    hoursToAdd = 1;
-                }
             }
 
+            hoursToAdd = Math.max(hoursToAdd, 24); //Never add less than a day
             mRegularScheduledAddDate = mRegularScheduledAddDate.plusHours(hoursToAdd);
         }
 
         //Day starts at 6AM
-        mScheduledAddDate = mRegularScheduledAddDate.truncatedTo(ChronoUnit.DAYS).plusHours(dayStartTime);
+        mRegularScheduledAddDate = mRegularScheduledAddDate.minusHours(dayStartTime).truncatedTo(ChronoUnit.DAYS).plusHours(dayStartTime);
+        mScheduledAddDate        = mRegularScheduledAddDate;
     }
 
     //Reschedules the objective to the new enlist date (possibly out-of-order)
@@ -204,8 +201,14 @@ public class ScheduledObjective implements PoolElement
     @Override
     public EnlistedObjective obtainEnlistedObjective(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime, int dayStartHour)
     {
-        if(!isAvailable(blockingObjectiveIds, referenceTime))
+        if(!isAvailable(blockingObjectiveIds, referenceTime, dayStartHour))
         {
+            if(isRepeatable() && blockingObjectiveIds.contains(getId()))
+            {
+                //Need to reschedule the objective so that next time no new objective gets added
+                reschedule(referenceTime, dayStartHour);
+            }
+
             return null;
         }
 
@@ -289,7 +292,7 @@ public class ScheduledObjective implements PoolElement
     }
 
     @Override
-    public boolean isAvailable(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime)
+    public boolean isAvailable(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime, int dayStartHour)
     {
         return !isPaused() && referenceTime.isAfter(getScheduledEnlistDate()) && !blockingObjectiveIds.contains(mId);
     }
