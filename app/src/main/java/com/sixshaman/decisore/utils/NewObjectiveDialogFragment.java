@@ -308,7 +308,8 @@ public class NewObjectiveDialogFragment extends DialogFragment
 
         DateSpinnerCustomTextAdapter(Context context)
         {
-            super(context, R.layout.layout_spinner_item, context.getResources().getStringArray(R.array.objectiveScheduleTypes));
+            super(context, android.R.layout.simple_spinner_item, context.getResources().getStringArray(R.array.objectiveScheduleTypes));
+            setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         }
 
         void setCustomText(String text)
@@ -324,7 +325,7 @@ public class NewObjectiveDialogFragment extends DialogFragment
             View view = super.getView(position, convertView, parent);
             if(position == 3) //Custom
             {
-                TextView textView = view.findViewById(R.id.spinnerTextView);
+                TextView textView = view.findViewById(android.R.id.text1); //Looks kinda hacky, but apparently there's no other way
                 textView.setText(mCustomText);
             }
 
