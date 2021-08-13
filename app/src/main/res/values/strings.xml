@@ -45,7 +45,7 @@
     <string name="openOptions">Options</string>
     <string name="unixStartDate" tools:ignore="TypographyDashes">1970-01-01</string>
     <string name="dateParseErrorISO8601">Error parsing date. Enter the date in ISO 8601 format</string>
-    <string name="doItTomorrowPrinciple">It\'s too late to schedule for today. Do it tomorrow.</string>
+    <string name="do_it_tomorrow_principle">It\'s too late to schedule for today. Do it tomorrow.</string>
     <string name="frequencyParseError">Please enter the correct frequency in days</string>
     <string name="repeat_interval">Repeat every:</string>
     <string name="approx_frequency">Approx frequency:</string>
@@ -67,5 +67,22 @@
     <string name="button_objective_pool">Objective pool</string>
     <string name="button_objective_chain">Objective chain</string>
     <string name="button_objective">Objective</string>
+    <string name="placeholder_period">1</string>
+    <string name="choose_period">Choose the period</string>
+
+    <plurals name="plural_days">
+        <item quantity="one">Day</item>
+        <item quantity="other">Days</item>
+    </plurals>
+
+    <plurals name="plural_weeks">
+        <item quantity="one">Week</item>
+        <item quantity="other">Weeks</item>
+    </plurals>
+
+    <plurals name="plural_months">
+        <item quantity="one">Month</item>
+        <item quantity="other">Months</item>
+    </plurals>
 
 </resources>

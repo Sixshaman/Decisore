@@ -1,24 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <string-array name="objectiveScheduleTypes">
+    <string-array name="objective_schedule_types">
         <item>Now</item>
         <item>Tomorrow</item>
         <item>In a week</item>
         <item tools:ignore="TypographyEllipsis">Custom...</item>
     </string-array>
 
-    <string-array name="objectiveRepeatTypes">
+    <string-array name="objective_repeat_types">
         <item>1</item>
         <item>∞</item>
     </string-array>
 
-    <string-array name="objectiveIntervalTypes">
+    <string-array name="objective_interval_types">
         <item>Day</item>
         <item>Week</item>
         <item>Month</item>
+        <item tools:ignore="TypographyEllipsis">Custom...</item>
     </string-array>
 
-    <string-array name="produceFrequencyTypes">
+    <string-array name="objective_period_values">
+        <item>Days</item>
+        <item>Weeks</item>
+        <item>Months</item>
+    </string-array>
+
+    <string-array name="produce_frequency_types">
         <item>Instant</item>
         <item>Daily</item>
         <item>Weekly</item>
