@@ -3,12 +3,15 @@ package com.sixshaman.decisore.utils;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.Context;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.*;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 import com.sixshaman.decisore.R;
 
@@ -109,20 +112,53 @@ public class CustomPeriodDialogFragment extends DialogFragment
                 spinnerPeriodType.setSelection(0);
             }
 
-            editTextCount.addTextChangedListener(new PeriodInputListener(resultDialog.getValue()));
-            spinnerPeriodType.setOnItemSelectedListener(new PeriodTypeChangedListener(resultDialog.getValue()));
+            String[] spinnerItems = getResources().getStringArray(R.array.objective_period_values);
+            spinnerItems[0] = getResources().getQuantityString(R.plurals.plural_days,   mInitialDays);
+            spinnerItems[1] = getResources().getQuantityString(R.plurals.plural_weeks,  mInitialDays);
+            spinnerItems[2] = getResources().getQuantityString(R.plurals.plural_months, mInitialDays);
+
+            PluralSpinnerAdapter spinnerAdapter = new PluralSpinnerAdapter(getContext());
+            spinnerPeriodType.setAdapter(spinnerAdapter);
+
+            final TextWatcherStopper textWatcherStopper = new TextWatcherStopper();
+            editTextCount.addTextChangedListener(new PeriodInputListener(resultDialog.getValue(), textWatcherStopper));
+            spinnerPeriodType.setOnItemSelectedListener(new PeriodTypeChangedListener(resultDialog.getValue(), textWatcherStopper));
         });
 
         return resultDialog.getValue();
+    }
+
+    private static class TextWatcherStopper //Recursive call fix
+    {
+        private boolean mStopped;
+
+        TextWatcherStopper()
+        {
+            mStopped = false;
+        }
+
+        boolean isStopped()
+        {
+            return mStopped;
+        }
+
+        void setStopped(boolean stopped)
+        {
+            mStopped = stopped;
+        }
     }
 
     private class PeriodInputListener implements TextWatcher
     {
         private final AlertDialog mResultDialog;
 
-        PeriodInputListener(final AlertDialog resultDialog)
+        private final TextWatcherStopper mStopper;
+
+        PeriodInputListener(final AlertDialog resultDialog, TextWatcherStopper stopper)
         {
             mResultDialog = resultDialog;
+
+            mStopper = stopper;
         }
 
         @Override
@@ -134,8 +170,19 @@ public class CustomPeriodDialogFragment extends DialogFragment
         @Override
         public void onTextChanged(CharSequence s, int start, int before, int count)
         {
+            if(mStopper.isStopped())
+            {
+                return;
+            }
+
             final EditText editTextCount     = mResultDialog.findViewById(R.id.edit_objective_period);
             final Spinner  spinnerPeriodType = mResultDialog.findViewById(R.id.spinner_period_type);
+
+            if(!editTextCount.hasFocus())
+            {
+                //Do not do anything if the text is changed programmatically
+                return;
+            }
 
             int period = 0;
             try
@@ -146,14 +193,11 @@ public class CustomPeriodDialogFragment extends DialogFragment
             {
             }
 
-            String[] spinnerItems = getResources().getStringArray(R.array.objective_period_values);
-            spinnerItems[0] = getResources().getQuantityString(R.plurals.plural_days,   period);
-            spinnerItems[1] = getResources().getQuantityString(R.plurals.plural_weeks,  period);
-            spinnerItems[2] = getResources().getQuantityString(R.plurals.plural_months, period);
-
-            ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, spinnerItems);
-            spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            spinnerPeriodType.setAdapter(spinnerAdapter);
+            SpinnerAdapter spinnerAdapter = spinnerPeriodType.getAdapter();
+            if(spinnerAdapter instanceof PluralSpinnerAdapter)
+            {
+                ((PluralSpinnerAdapter)spinnerAdapter).setPeriod(period);
+            }
 
             int periodTypeIndex = spinnerPeriodType.getSelectedItemPosition();
 
@@ -204,9 +248,13 @@ public class CustomPeriodDialogFragment extends DialogFragment
 
         private final AlertDialog mResultDialog;
 
-        PeriodTypeChangedListener(final AlertDialog resultDialog)
+        private final TextWatcherStopper mCountEditTextWatcherStopper;
+
+        PeriodTypeChangedListener(final AlertDialog resultDialog, TextWatcherStopper stopper)
         {
             mResultDialog = resultDialog;
+
+            mCountEditTextWatcherStopper = stopper;
 
             final Spinner spinnerPeriodType = mResultDialog.findViewById(R.id.spinner_period_type);
 
@@ -281,16 +329,64 @@ public class CustomPeriodDialogFragment extends DialogFragment
                 }
             }
 
-            int periodNew = Math.max(period / mPrevPeriodMultiply, 1);
-            periodNew = periodNew * periodMultiply;
+            int periodNew = period * mPrevPeriodMultiply;
+            periodNew = Math.max(periodNew / periodMultiply, 1);
 
+            PluralSpinnerAdapter spinnerAdapter = (PluralSpinnerAdapter)parent.getAdapter();
+            spinnerAdapter.setPeriod(periodNew);
+
+            mCountEditTextWatcherStopper.setStopped(true);
             editTextCount.setText(String.format(editTextCount.getTextLocale(), "%d", periodNew));
+            mCountEditTextWatcherStopper.setStopped(false);
+
             mPrevPeriodMultiply = periodMultiply;
         }
 
         @Override
         public void onNothingSelected(AdapterView<?> parent)
         {
+        }
+    }
+
+    private class PluralSpinnerAdapter extends ArrayAdapter<String>
+    {
+        private int mPeriod;
+
+        PluralSpinnerAdapter(Context context)
+        {
+            super(context, android.R.layout.simple_spinner_item, context.getResources().getStringArray(R.array.objective_period_values));
+            setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+            mPeriod = 1;
+        }
+
+        void setPeriod(int period)
+        {
+            mPeriod = period;
+            notifyDataSetChanged();
+        }
+
+        @NonNull
+        @Override
+        public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent)
+        {
+            View view = super.getView(position, convertView, parent);
+            TextView textView = view.findViewById(android.R.id.text1);
+
+            if(position == 0) //Day(s)
+            {
+                textView.setText(getResources().getQuantityString(R.plurals.plural_days, mPeriod));
+            }
+            else if(position == 1) //Week(s)
+            {
+                textView.setText(getResources().getQuantityString(R.plurals.plural_weeks, mPeriod));
+            }
+            else if(position == 2) //Month(s)
+            {
+                textView.setText(getResources().getQuantityString(R.plurals.plural_months, mPeriod));
+            }
+
+            return view;
         }
     }
 

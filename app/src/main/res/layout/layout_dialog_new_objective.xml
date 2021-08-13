@@ -98,7 +98,7 @@
                 android:textSize="16sp"
                 android:id="@+id/text_view_repeat_interval"/>
 
-        <Spinner
+        <com.sixshaman.decisore.utils.AlwaysItemSelectedSpinner
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_row="5"

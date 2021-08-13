@@ -351,11 +351,11 @@ public class NewObjectiveDialogFragment extends DialogFragment
                         int periodInMonths = newPeriodDays / 30;
                         if(newPeriodDays == periodInMonths * 30) //Exact amount of months
                         {
-                            customTextAdapter.setCustomText(newPeriodDays + " " + getResources().getQuantityString(R.plurals.plural_months, periodInMonths));
+                            customTextAdapter.setCustomText(periodInMonths + " " + getResources().getQuantityString(R.plurals.plural_months, periodInMonths));
                         }
                         else if(newPeriodDays == periodInWeeks * 7) //Exact amount of weeks
                         {
-                            customTextAdapter.setCustomText(newPeriodDays + " " + getResources().getQuantityString(R.plurals.plural_weeks, periodInWeeks));
+                            customTextAdapter.setCustomText(periodInWeeks + " " + getResources().getQuantityString(R.plurals.plural_weeks, periodInWeeks));
                         }
                         else
                         {
