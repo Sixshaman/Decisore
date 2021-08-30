@@ -85,10 +85,10 @@ public class SchedulerFragment extends Fragment
             mSchedulerCache.invalidate(schedulerFile);
             schedulerFile.close();
 
-            TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
+            TransactionDispatcher transactionDispatcher = new TransactionDispatcher(configFolder);
             transactionDispatcher.setSchedulerCache(mSchedulerCache);
 
-            transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now(), dayStartTime);
+            transactionDispatcher.updateObjectiveListTransaction(LocalDateTime.now(), dayStartTime);
         }
         catch(IOException e)
         {
@@ -201,11 +201,12 @@ public class SchedulerFragment extends Fragment
             String dayStartTimeString = sharedPreferences.getString("day_start_time", "6");
             int dayStartTime = ParseUtils.parseInt(dayStartTimeString, 6);
 
-            TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
+            String configFolder = Objects.requireNonNull(mFragmentView.getContext().getExternalFilesDir("/app")).getAbsolutePath();
+
+            TransactionDispatcher transactionDispatcher = new TransactionDispatcher(configFolder);
             transactionDispatcher.setSchedulerCache(mSchedulerCache);
 
-            String configFolder = Objects.requireNonNull(mFragmentView.getContext().getExternalFilesDir("/app")).getAbsolutePath();
-            transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now(), dayStartTime);
+            transactionDispatcher.updateObjectiveListTransaction(LocalDateTime.now(), dayStartTime);
         });
 
         newObjectiveDialogFragment.show(getParentFragmentManager(), getString(R.string.newObjectiveDialogName));

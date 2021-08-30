@@ -88,11 +88,12 @@ class ObjectiveViewHolder extends RecyclerView.ViewHolder implements View.OnCrea
             enlistDateTime = enlistDateTime.plusDays(1).truncatedTo(ChronoUnit.DAYS);
             enlistDateTime = enlistDateTime.plusHours(dayStartTime);
 
-            TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
+            String configFolder = Objects.requireNonNull(view.getContext().getExternalFilesDir("/app")).getAbsolutePath();
+
+            TransactionDispatcher transactionDispatcher = new TransactionDispatcher(configFolder);
             transactionDispatcher.setListCache(mObjectiveListCache);
 
-            String configFolder = Objects.requireNonNull(view.getContext().getExternalFilesDir("/app")).getAbsolutePath();
-            transactionDispatcher.rescheduleEnlistedObjectiveTransaction(configFolder, mObjectiveListCache.getObjective(mObjectiveId), enlistDateTime);
+            transactionDispatcher.rescheduleEnlistedObjectiveTransaction(mObjectiveListCache.getObjective(mObjectiveId), enlistDateTime);
 
             return true;
         });
@@ -105,11 +106,12 @@ class ObjectiveViewHolder extends RecyclerView.ViewHolder implements View.OnCrea
                 //Java numerates months from 0, not from 1
                 LocalDateTime dateTime = LocalDateTime.of(year, month + 1, day, dayStartTime, 0, 0);
 
-                TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
+                String configFolder = Objects.requireNonNull(view.getContext().getExternalFilesDir("/app")).getAbsolutePath();
+
+                TransactionDispatcher transactionDispatcher = new TransactionDispatcher(configFolder);
                 transactionDispatcher.setListCache(mObjectiveListCache);
 
-                String configFolder = Objects.requireNonNull(view.getContext().getExternalFilesDir("/app")).getAbsolutePath();
-                transactionDispatcher.rescheduleEnlistedObjectiveTransaction(configFolder, mObjectiveListCache.getObjective(mObjectiveId), dateTime);
+                transactionDispatcher.rescheduleEnlistedObjectiveTransaction(mObjectiveListCache.getObjective(mObjectiveId), dateTime);
             });
 
             datePickerDialog.show();
@@ -141,28 +143,28 @@ class ObjectiveViewHolder extends RecyclerView.ViewHolder implements View.OnCrea
             NewObjectiveDialogFragment newObjectiveDialogFragment = new NewObjectiveDialogFragment();
             newObjectiveDialogFragment.setOnBeforeObjectiveCreatedListener(() ->
             {
-                TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
+                TransactionDispatcher transactionDispatcher = new TransactionDispatcher(configFolder);
                 transactionDispatcher.setSchedulerCache(objectiveSchedulerCache);
                 transactionDispatcher.setListCache(mObjectiveListCache);
 
                 EnlistedObjective oldObjective = mObjectiveListCache.getObjective(mObjectiveId);
-                long chainId = transactionDispatcher.rechainEnlistedObjective(configFolder, oldObjective);
+                long chainId = transactionDispatcher.rechainEnlistedObjective(oldObjective);
 
                 addedChainIdHolder.setValue(chainId);
             });
 
             newObjectiveDialogFragment.setOnAfterObjectiveCreatedListener(objectiveId ->
             {
-                TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
+                TransactionDispatcher transactionDispatcher = new TransactionDispatcher(configFolder);
                 transactionDispatcher.setSchedulerCache(objectiveSchedulerCache);
                 transactionDispatcher.setListCache(mObjectiveListCache);
 
                 if(addedChainIdHolder.getValue() != -1)
                 {
-                    transactionDispatcher.bindObjectiveToChain(configFolder, addedChainIdHolder.getValue(), objectiveId);
+                    transactionDispatcher.bindObjectiveToChain(addedChainIdHolder.getValue(), objectiveId);
                 }
 
-                transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now(), dayStartTime);
+                transactionDispatcher.updateObjectiveListTransaction(LocalDateTime.now(), dayStartTime);
             });
 
             newObjectiveDialogFragment.setSchedulerCache(objectiveSchedulerCache);
@@ -195,7 +197,7 @@ class ObjectiveViewHolder extends RecyclerView.ViewHolder implements View.OnCrea
                 return false;
             }
 
-            TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
+            TransactionDispatcher transactionDispatcher = new TransactionDispatcher(configFolder);
             transactionDispatcher.setSchedulerCache(objectiveSchedulerCache);
             transactionDispatcher.setListCache(mObjectiveListCache);
 
@@ -210,7 +212,7 @@ class ObjectiveViewHolder extends RecyclerView.ViewHolder implements View.OnCrea
             //IS ALREADY NON-ACTIVE AT THIS POINT
             newObjectiveDialogFragment.setOnBeforeObjectiveCreatedListener(() ->
             {
-                long touchedChainId = transactionDispatcher.touchChainWithObjective(configFolder, mObjectiveId);
+                long touchedChainId = transactionDispatcher.touchChainWithObjective(mObjectiveId);
                 newObjectiveDialogFragment.setChainIdToAddTo(touchedChainId, true);
             });
 
@@ -239,12 +241,13 @@ class ObjectiveViewHolder extends RecyclerView.ViewHolder implements View.OnCrea
             alertDialogBuilder.setMessage(view.getContext().getString(R.string.deleteObjectiveAreYouSure) + " " + objective.getName() + "?");
             alertDialogBuilder.setPositiveButton("Yes", (dialogInterface, i) ->
             {
-                TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
+                String configFolder = Objects.requireNonNull(view.getContext().getExternalFilesDir("/app")).getAbsolutePath();
+
+                TransactionDispatcher transactionDispatcher = new TransactionDispatcher(configFolder);
                 transactionDispatcher.setListCache(mObjectiveListCache);
 
-                String configFolder = Objects.requireNonNull(view.getContext().getExternalFilesDir("/app")).getAbsolutePath();
-                transactionDispatcher.deleteObjectiveFromListTransaction(configFolder, objective);
-                transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now(), dayStartTime);
+                transactionDispatcher.deleteObjectiveFromListTransaction(objective);
+                transactionDispatcher.updateObjectiveListTransaction(LocalDateTime.now(), dayStartTime);
             });
             alertDialogBuilder.setNegativeButton("No", (dialogInterface, i) ->
             {

@@ -106,10 +106,10 @@ public class NewChainDialogFragment extends DialogFragment
             {
                 String configFolder = Objects.requireNonNull(activity.getExternalFilesDir("/app")).getAbsolutePath();
 
-                TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
+                TransactionDispatcher transactionDispatcher = new TransactionDispatcher(configFolder);
                 transactionDispatcher.setSchedulerCache(mSchedulerCache);
 
-                transactionDispatcher.addChainTransaction(mPoolIdToAddTo, configFolder, nameText, descriptionText, chainProduceFrequency, useAutoDelete, useUnstoppable);
+                transactionDispatcher.addChainTransaction(mPoolIdToAddTo, nameText, descriptionText, chainProduceFrequency, useAutoDelete, useUnstoppable);
             }
         });
 

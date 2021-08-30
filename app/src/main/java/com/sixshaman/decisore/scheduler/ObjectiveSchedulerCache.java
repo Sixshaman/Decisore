@@ -49,12 +49,20 @@ import java.util.Objects;
 //The class to schedule all deferred objectives. The model for the scheduler UI
 public class ObjectiveSchedulerCache
 {
+    public enum InvalidateResult
+    {
+        INVALIDATE_OK,          //Success
+        INVALIDATE_VERSION_1_1, //Old version, need to recalculate ids
+        INVALIDATE_ERROR        //Unknown error
+    }
+
     public static final String SCHEDULER_FILENAME = "TaskScheduler.json";
 
     static final int SCHEDULER_VERSION_1_0 = 1000;
     static final int SCHEDULER_VERSION_1_1 = 1001;
+    static final int SCHEDULER_VERSION_1_2 = 1001;
 
-    static final int SCHEDULER_VERSION_CURRENT = SCHEDULER_VERSION_1_1;
+    static final int SCHEDULER_VERSION_CURRENT = SCHEDULER_VERSION_1_2;
 
     //The list of all the scheduler elements
     private ArrayList<SchedulerElement> mSchedulerElements;
@@ -128,7 +136,7 @@ public class ObjectiveSchedulerCache
     }
 
     //Loads objectives from JSON config file
-    public void invalidate(LockedReadFile schedulerReadFile)
+    public InvalidateResult invalidate(LockedReadFile schedulerReadFile)
     {
         mSchedulerElements.clear();
 
@@ -182,8 +190,6 @@ public class ObjectiveSchedulerCache
                             ScheduledObjective objective = objectiveLatestLoader.fromJSON(elementData);
                             mSchedulerElements.add(objective);
                             break;
-                        default:
-                            return;
                     }
                 }
             }
@@ -191,17 +197,24 @@ public class ObjectiveSchedulerCache
             {
                 mSchedulerElements = SchedulerOldVersionLoader.loadSchedulerElementsOld(this, jsonObject, version);
             }
+
+            if(version <= SCHEDULER_VERSION_1_1)
+            {
+                return InvalidateResult.INVALIDATE_VERSION_1_1;
+            }
         }
         catch(JSONException e)
         {
             e.printStackTrace();
-            return;
+            return InvalidateResult.INVALIDATE_ERROR;
         }
 
         if(mSchedulerViewHolder != null)
         {
             mSchedulerViewHolder.notifyDataSetChanged();
         }
+
+        return InvalidateResult.INVALIDATE_OK;
     }
 
     //Saves scheduled objectives in JSON config file

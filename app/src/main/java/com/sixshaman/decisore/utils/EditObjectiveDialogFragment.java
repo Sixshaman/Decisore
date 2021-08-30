@@ -90,11 +90,11 @@ public class EditObjectiveDialogFragment extends DialogFragment
 
                 String configFolder = Objects.requireNonNull(activity.getExternalFilesDir("/app")).getAbsolutePath();
 
-                TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
+                TransactionDispatcher transactionDispatcher = new TransactionDispatcher(configFolder);
                 transactionDispatcher.setSchedulerCache(mSchedulerCache);
                 transactionDispatcher.setListCache(mListCache);
 
-                transactionDispatcher.editObjectiveTransaction(configFolder, mObjectiveId, nameText, descriptionText, mEditInScheduler, mEditInList);
+                transactionDispatcher.editObjectiveTransaction(mObjectiveId, nameText, descriptionText, mEditInScheduler, mEditInList);
             }
         });
 

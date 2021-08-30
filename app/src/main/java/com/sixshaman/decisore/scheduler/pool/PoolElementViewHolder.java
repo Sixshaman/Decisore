@@ -123,17 +123,17 @@ public class PoolElementViewHolder extends RecyclerView.ViewHolder implements Vi
             String dayStartTimeString = sharedPreferences.getString("day_start_time", "6");
             int dayStartTime = ParseUtils.parseInt(dayStartTimeString, 6);
 
-            TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
-            transactionDispatcher.setSchedulerCache(mObjectiveSchedulerCache);
-
             String configFolder = Objects.requireNonNull(view.getContext().getExternalFilesDir("/app")).getAbsolutePath();
+
+            TransactionDispatcher transactionDispatcher = new TransactionDispatcher(configFolder);
+            transactionDispatcher.setSchedulerCache(mObjectiveSchedulerCache);
 
             MenuItem rescheduleNowItem = contextMenu.add(menuIndex, MENU_RESCHEDULE_OBJECTIVE_NOW, Menu.NONE, R.string.menu_schedule_for_now);
             rescheduleNowItem.setOnMenuItemClickListener(menuItem ->
             {
                 LocalDateTime enlistDateTime = LocalDateTime.now();
 
-                transactionDispatcher.rescheduleScheduledObjectiveTransaction(configFolder, scheduledObjective.getId(), enlistDateTime);
+                transactionDispatcher.rescheduleScheduledObjectiveTransaction(scheduledObjective.getId(), enlistDateTime);
                 return true;
             });
 
@@ -146,8 +146,8 @@ public class PoolElementViewHolder extends RecyclerView.ViewHolder implements Vi
                     //Java numerates months from 0, not from 1
                     LocalDateTime dateTime = LocalDateTime.of(year, month + 1, day, dayStartTime, 0, 0);
 
-                    transactionDispatcher.rescheduleScheduledObjectiveTransaction(configFolder, scheduledObjective.getId(), dateTime);
-                    transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now(), dayStartTime);
+                    transactionDispatcher.rescheduleScheduledObjectiveTransaction(scheduledObjective.getId(), dateTime);
+                    transactionDispatcher.updateObjectiveListTransaction(LocalDateTime.now(), dayStartTime);
                 });
 
                 datePickerDialog.show();
@@ -159,7 +159,7 @@ public class PoolElementViewHolder extends RecyclerView.ViewHolder implements Vi
                 MenuItem pauseItem = contextMenu.add(menuIndex++, MENU_PAUSE_ELEMENT, Menu.NONE, pauseString);
                 pauseItem.setOnMenuItemClickListener(menuItem ->
                 {
-                    transactionDispatcher.flipPauseObjective(configFolder, scheduledObjective.getId());
+                    transactionDispatcher.flipPauseObjective(scheduledObjective.getId());
                     return true;
                 });
             }
@@ -176,12 +176,12 @@ public class PoolElementViewHolder extends RecyclerView.ViewHolder implements Vi
             MenuItem pauseItem = contextMenu.add(menuIndex++, MENU_PAUSE_ELEMENT, Menu.NONE, pauseString);
             pauseItem.setOnMenuItemClickListener(menuItem ->
             {
-                TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
-                transactionDispatcher.setSchedulerCache(mObjectiveSchedulerCache);
-
                 String configFolder = Objects.requireNonNull(view.getContext().getExternalFilesDir("/app")).getAbsolutePath();
 
-                transactionDispatcher.flipPauseChain(configFolder, objectiveChain.getId());
+                TransactionDispatcher transactionDispatcher = new TransactionDispatcher(configFolder);
+                transactionDispatcher.setSchedulerCache(mObjectiveSchedulerCache);
+
+                transactionDispatcher.flipPauseChain(objectiveChain.getId());
                 return true;
             });
 
@@ -227,20 +227,20 @@ public class PoolElementViewHolder extends RecyclerView.ViewHolder implements Vi
             alertDialogBuilder.setMessage(view.getContext().getString(R.string.deleteObjectiveAreYouSure) + " " + mPoolElement.getName() + "?");
             alertDialogBuilder.setPositiveButton("Yes", (dialogInterface, i) ->
             {
-                TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
-                transactionDispatcher.setSchedulerCache(mObjectiveSchedulerCache);
-
                 String configFolder = Objects.requireNonNull(view.getContext().getExternalFilesDir("/app")).getAbsolutePath();
+
+                TransactionDispatcher transactionDispatcher = new TransactionDispatcher(configFolder);
+                transactionDispatcher.setSchedulerCache(mObjectiveSchedulerCache);
 
                 if(mPoolElement instanceof ObjectiveChain)
                 {
                     ObjectiveChain objectiveChain = (ObjectiveChain)mPoolElement;
-                    transactionDispatcher.deleteChainTransaction(configFolder, objectiveChain);
+                    transactionDispatcher.deleteChainTransaction(objectiveChain);
                 }
                 else if(mPoolElement instanceof ScheduledObjective)
                 {
                     ScheduledObjective scheduledObjective = (ScheduledObjective)mPoolElement;
-                    transactionDispatcher.deleteObjectiveFromSchedulerTransaction(configFolder, scheduledObjective);
+                    transactionDispatcher.deleteObjectiveFromSchedulerTransaction(scheduledObjective);
                 }
             });
 

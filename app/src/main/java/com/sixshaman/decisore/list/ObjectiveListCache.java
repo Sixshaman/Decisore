@@ -21,6 +21,16 @@ import java.util.*;
 
 public class ObjectiveListCache
 {
+    public enum InvalidateResult
+    {
+        INVALIDATE_OK,          //Success
+        INVALIDATE_VERSION_1_0, //Old version, need to recalculate ids
+        INVALIDATE_ERROR        //Unknown error
+    }
+
+    static final int LIST_VERSION_1_0 = 1000;
+    static final int LIST_VERSION_1_1 = 1001;
+
     public static final String LIST_FILENAME = "TaskList.json";
 
     //All objectives to be done for today, sorted by ids. Or tomorrow. Or within a year. It's up to the user to decide
@@ -189,7 +199,7 @@ public class ObjectiveListCache
     }
 
     //Loads objective from JSON config file
-    public void invalidate(LockedReadFile listReadFile)
+    public InvalidateResult invalidate(LockedReadFile listReadFile)
     {
         ArrayList<EnlistedObjective> enlistedObjectives = new ArrayList<>();
 
@@ -197,6 +207,8 @@ public class ObjectiveListCache
         {
             String fileContents = listReadFile.read();
             JSONObject jsonObject = new JSONObject(fileContents);
+
+            int version = jsonObject.optInt("VERSION", LIST_VERSION_1_0);
 
             JSONArray objectivesJsonArray = jsonObject.getJSONArray("TASKS");
             for(int i = 0; i < objectivesJsonArray.length(); i++)
@@ -211,14 +223,19 @@ public class ObjectiveListCache
                     }
                 }
             }
+
+            mEnlistedObjectives = enlistedObjectives;
+
+            if(version <= LIST_VERSION_1_0)
+            {
+                return InvalidateResult.INVALIDATE_VERSION_1_0;
+            }
         }
         catch(JSONException e)
         {
             e.printStackTrace();
-            return;
+            return InvalidateResult.INVALIDATE_ERROR;
         }
-
-        mEnlistedObjectives = enlistedObjectives;
 
         mEnlistedObjectives.sort(Comparator.comparingLong(EnlistedObjective::getId));
 
@@ -232,6 +249,7 @@ public class ObjectiveListCache
             mObjectiveCountListener.onListObjectiveCountChanged(mEnlistedObjectives.size());
         }
 
+        return InvalidateResult.INVALIDATE_OK;
     }
 
     //Saves objectives to JSON config file
@@ -311,19 +329,19 @@ public class ObjectiveListCache
 
             objectiveViewHolder.mCheckbox.setOnClickListener(view ->
             {
-                String configFolder = Objects.requireNonNull(mContext.getExternalFilesDir("/app")).getAbsolutePath();
-
                 EnlistedObjective objectiveToRemove = mEnlistedObjectives.get(position);
 
                 SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(Objects.requireNonNull(view.getContext()).getApplicationContext());
                 String dayStartTimeString = sharedPreferences.getString("day_start_time", "6");
                 int dayStartTime = ParseUtils.parseInt(dayStartTimeString, 6);
 
-                TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
+                String configFolder = Objects.requireNonNull(mContext.getExternalFilesDir("/app")).getAbsolutePath();
+
+                TransactionDispatcher transactionDispatcher = new TransactionDispatcher(configFolder);
                 transactionDispatcher.setListCache(ObjectiveListCache.this);
 
-                transactionDispatcher.finishObjectiveTransaction(configFolder, objectiveToRemove, LocalDateTime.now());
-                transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now(), dayStartTime);
+                transactionDispatcher.finishObjectiveTransaction(objectiveToRemove, LocalDateTime.now());
+                transactionDispatcher.updateObjectiveListTransaction(LocalDateTime.now(), dayStartTime);
             });
 
             objectiveViewHolder.mCheckbox.setChecked(false);
