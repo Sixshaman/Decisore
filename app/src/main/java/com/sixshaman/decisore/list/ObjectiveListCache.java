@@ -209,6 +209,10 @@ public class ObjectiveListCache
             JSONObject jsonObject = new JSONObject(fileContents);
 
             int version = jsonObject.optInt("VERSION", LIST_VERSION_1_0);
+            if(version <= LIST_VERSION_1_0)
+            {
+                return InvalidateResult.INVALIDATE_VERSION_1_0;
+            }
 
             JSONArray objectivesJsonArray = jsonObject.getJSONArray("TASKS");
             for(int i = 0; i < objectivesJsonArray.length(); i++)
@@ -225,11 +229,6 @@ public class ObjectiveListCache
             }
 
             mEnlistedObjectives = enlistedObjectives;
-
-            if(version <= LIST_VERSION_1_0)
-            {
-                return InvalidateResult.INVALIDATE_VERSION_1_0;
-            }
         }
         catch(JSONException e)
         {

@@ -3,7 +3,9 @@ package com.sixshaman.decisore.utils;
 import com.sixshaman.decisore.archive.ArchivedObjective;
 import com.sixshaman.decisore.archive.ObjectiveArchiveCache;
 import com.sixshaman.decisore.list.EnlistedObjective;
+import com.sixshaman.decisore.list.List10To11Converter;
 import com.sixshaman.decisore.list.ObjectiveListCache;
+import com.sixshaman.decisore.scheduler.Scheduler11To12Converter;
 import com.sixshaman.decisore.scheduler.chain.ObjectiveChain;
 import com.sixshaman.decisore.scheduler.pool.ObjectivePool;
 import com.sixshaman.decisore.scheduler.objective.ScheduledObjective;
@@ -13,6 +15,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class TransactionDispatcher
 {
@@ -825,6 +828,50 @@ public class TransactionDispatcher
 
     private synchronized void revalidateIds()
     {
-        
+        List10To11Converter      listOldIdConverter      = new List10To11Converter(mListFilePath);
+        Scheduler11To12Converter schedulerOldIdConverter = new Scheduler11To12Converter(mSchedulerFilePath);
+
+        ArrayList<Long> poolIds               = schedulerOldIdConverter.gatherPoolIds();
+        ArrayList<Long> chainIds              = schedulerOldIdConverter.gatherChainIds();
+        ArrayList<Long> scheduledObjectiveIds = schedulerOldIdConverter.gatherObjectiveIds();
+        ArrayList<Long> enlistedObjectiveIds  = listOldIdConverter.gatherObjectiveIds();
+
+        HashMap<Long, Long> poolPatchedIdMap      = new HashMap<>();
+        HashMap<Long, Long> chainPatchedIdMap     = new HashMap<>();
+        HashMap<Long, Long> objectivePatchedIdMap = new HashMap<>();
+
+        long newIdCounter = 0;
+
+        for(long oldPoolId: poolIds)
+        {
+            poolPatchedIdMap.put(oldPoolId, newIdCounter);
+            newIdCounter++;
+        }
+
+        for(long oldChainId: chainIds)
+        {
+            chainPatchedIdMap.put(oldChainId, newIdCounter);
+            newIdCounter++;
+        }
+
+        for(long oldObjectiveId: scheduledObjectiveIds)
+        {
+            objectivePatchedIdMap.put(oldObjectiveId, newIdCounter);
+            newIdCounter++;
+        }
+
+        for(long oldObjectiveId: enlistedObjectiveIds)
+        {
+            if(!objectivePatchedIdMap.containsKey(oldObjectiveId))
+            {
+                objectivePatchedIdMap.put(oldObjectiveId, newIdCounter);
+                newIdCounter++;
+            }
+        }
+
+        listOldIdConverter.patchIds(objectivePatchedIdMap);
+        schedulerOldIdConverter.patchIds(objectivePatchedIdMap, chainPatchedIdMap, poolPatchedIdMap);
+
+        invalidateCaches(true, true, false);
     }
 }

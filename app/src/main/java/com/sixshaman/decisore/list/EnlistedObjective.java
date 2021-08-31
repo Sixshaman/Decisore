@@ -15,13 +15,13 @@ import java.util.ArrayList;
 
 public class EnlistedObjective implements Comparable<Long>
 {
-    private static final String JSON_OBJECTIVE_ID = "Id";
-    private static final String JSON_OBJECTIVE_NAME = "Name";
+    private static final String JSON_OBJECTIVE_ID          = "Id";
+    private static final String JSON_OBJECTIVE_NAME        = "Name";
     private static final String JSON_OBJECTIVE_DESCRIPTION = "Description";
-    private static final String JSON_OBJECTIVE_TAGS = "Tags";
+    private static final String JSON_OBJECTIVE_TAGS        = "Tags";
     private static final String JSON_OBJECTIVE_CREATE_DATE = "DateCreated";
-    private static final String JSON_OBJECTIVE_ADD_DATE = "DateAdded";
-    private static final String JSON_OBJECTIVE_CHARM = "Charm";
+    private static final String JSON_OBJECTIVE_ADD_DATE    = "DateAdded";
+    private static final String JSON_OBJECTIVE_CHARM       = "Charm";
 
     //The objective ID
     private final long mId;
