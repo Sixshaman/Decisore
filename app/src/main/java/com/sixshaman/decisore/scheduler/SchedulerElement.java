@@ -29,7 +29,7 @@ public interface SchedulerElement
 
     boolean isAvailable(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime, int dayStartHour);
 
-    EnlistedObjective obtainEnlistedObjective(final HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime, int dayStartHour);
+    EnlistedObjective obtainEnlistedObjective(final HashSet<Long> ignoredObjectiveIds, LocalDateTime referenceTime, int dayStartHour);
 
     void updateDayStart(LocalDateTime referenceTime, int oldStartHour, int newStartHour);
 
@@ -41,6 +41,6 @@ public interface SchedulerElement
     ObjectiveChain     getRelatedChainById(long chainId);
     ObjectiveChain     getChainForObjectiveById(long objectiveId);
 
-    long getMaxRelatedObjectiveId();
-    long getMaxRelatedChainId();
+    //Returns the largest id of any related element (itself, or contained objectives, or contained chains)
+    long getLargestRelatedId();
 }

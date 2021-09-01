@@ -42,7 +42,7 @@ public class ObjectivePool10Loader implements ObjectivePoolLoader
                 return null;
             }
 
-            long poolId = mSchedulerCache.getMaxPoolId() + 1;
+            long poolId = mSchedulerCache.getLargestUsedId() + 1;
             ObjectivePool objectivePool = new ObjectivePool(poolId, name, description);
 
             String isActiveString = jsonObject.optString("IsActive");

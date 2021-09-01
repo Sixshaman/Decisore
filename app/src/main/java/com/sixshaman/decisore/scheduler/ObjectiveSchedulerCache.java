@@ -112,14 +112,14 @@ public class ObjectiveSchedulerCache
     }
 
     //Updates the objective scheduler. Returns the list of objectives ready to-do
-    public ArrayList<EnlistedObjective> dumpReadyObjectives(final HashSet<Long> blockingObjectiveIds, LocalDateTime enlistDateTime, int dayStartHour)
+    public ArrayList<EnlistedObjective> dumpReadyObjectives(final HashSet<Long> ignoredObjectiveIds, LocalDateTime enlistDateTime, int dayStartHour)
     {
         ArrayList<EnlistedObjective> result = new ArrayList<>();
 
         ArrayList<SchedulerElement> changedElements = new ArrayList<>(); //Rebuild objective source list after each update event
         for(SchedulerElement element: mSchedulerElements)
         {
-            EnlistedObjective enlistedObjective = element.obtainEnlistedObjective(blockingObjectiveIds, enlistDateTime, dayStartHour);
+            EnlistedObjective enlistedObjective = element.obtainEnlistedObjective(ignoredObjectiveIds, enlistDateTime, dayStartHour);
             if(enlistedObjective != null)
             {
                 result.add(enlistedObjective);
@@ -250,8 +250,23 @@ public class ObjectiveSchedulerCache
         return true;
     }
 
-    //Creates a new objective chain
-    public long addObjectiveChain(long poolIdToAddTo, String name, String description, Duration produceFrequency, boolean autoDelete, boolean unstoppable)
+    //Creates a new objective pool
+    @SuppressWarnings("UnusedReturnValue")
+    public boolean addObjectivePool(ObjectivePool objectivePool)
+    {
+        mSchedulerElements.add(objectivePool);
+
+        if(mSchedulerViewHolder != null)
+        {
+            mSchedulerViewHolder.notifyItemInserted(mSchedulerElements.size() - 1);
+            mSchedulerViewHolder.notifyItemRangeChanged(mSchedulerElements.size() - 1, mSchedulerViewHolder.getItemCount());
+        }
+
+        return true;
+    }
+
+    //Adds a chain
+    public boolean addObjectiveChain(long poolIdToAddTo, ObjectiveChain objectiveChain)
     {
         ObjectivePool poolToAddTo = null;
         if(poolIdToAddTo != -1)
@@ -259,19 +274,13 @@ public class ObjectiveSchedulerCache
             poolToAddTo = getPoolById(poolIdToAddTo);
             if(poolToAddTo == null)
             {
-                return -1;
+                return false;
             }
         }
 
-        long chainId = getMaxChainId() + 1;
-        ObjectiveChain chain = new ObjectiveChain(chainId, name, description);
-        chain.setProduceFrequency(produceFrequency);
-        chain.setAutoDelete(autoDelete);
-        chain.setUnstoppable(unstoppable);
-
         if(poolToAddTo == null)
         {
-            mSchedulerElements.add(chain);
+            mSchedulerElements.add(objectiveChain);
             if(mSchedulerViewHolder != null)
             {
                 mSchedulerViewHolder.notifyItemInserted(mSchedulerElements.size() - 1);
@@ -280,7 +289,7 @@ public class ObjectiveSchedulerCache
         }
         else
         {
-            poolToAddTo.addObjectiveSource(chain);
+            poolToAddTo.addObjectiveSource(objectiveChain);
             if(mSchedulerViewHolder != null)
             {
                 int index = mSchedulerElements.indexOf(poolToAddTo);
@@ -288,26 +297,7 @@ public class ObjectiveSchedulerCache
             }
         }
 
-        return chainId;
-    }
-
-    //Creates a new objective pool
-    public void addObjectivePool(String name, String description, Duration produceFrequency, boolean autoDelete, boolean unstoppable)
-    {
-        long poolId = getMaxPoolId() + 1;
-
-        ObjectivePool pool = new ObjectivePool(poolId, name, description);
-        pool.setProduceFrequency(produceFrequency);
-        pool.setAutoDelete(autoDelete);
-        pool.setUnstoppable(unstoppable);
-
-        mSchedulerElements.add(pool);
-
-        if(mSchedulerViewHolder != null)
-        {
-            mSchedulerViewHolder.notifyItemInserted(mSchedulerElements.size() - 1);
-            mSchedulerViewHolder.notifyItemRangeChanged(mSchedulerElements.size() - 1, mSchedulerViewHolder.getItemCount());
-        }
+        return true;
     }
 
     //Adds a general task to task pool pool or task chain chain scheduled to be added at deferTime with repeat duration repeatDuration and repeat probability repeatProbability
@@ -415,55 +405,15 @@ public class ObjectiveSchedulerCache
         return true;
     }
 
-    public long getMaxObjectiveId()
+    public long getLargestUsedId()
     {
         long maxId = 0;
         for(SchedulerElement schedulerElement: mSchedulerElements)
         {
-            long elementMaxId = schedulerElement.getMaxRelatedObjectiveId();
+            long elementMaxId = schedulerElement.getLargestRelatedId();
             if(elementMaxId > maxId)
             {
                 maxId = elementMaxId;
-            }
-        }
-
-        return maxId;
-    }
-
-    public long getMaxChainId()
-    {
-        long maxId = 0;
-        for(SchedulerElement schedulerElement: mSchedulerElements)
-        {
-            if(schedulerElement instanceof ScheduledObjective)
-            {
-                continue;
-            }
-
-            long chainMaxId = schedulerElement.getMaxRelatedChainId();
-            if(chainMaxId > maxId)
-            {
-                maxId = chainMaxId;
-            }
-        }
-
-        return maxId;
-    }
-
-    public long getMaxPoolId()
-    {
-        long maxId = 0;
-        for(SchedulerElement schedulerElement: mSchedulerElements)
-        {
-            if(schedulerElement instanceof ObjectivePool)
-            {
-                ObjectivePool objectivePool = (ObjectivePool)schedulerElement;
-
-                long poolId = objectivePool.getId();
-                if(poolId > maxId)
-                {
-                    maxId = poolId;
-                }
             }
         }
 

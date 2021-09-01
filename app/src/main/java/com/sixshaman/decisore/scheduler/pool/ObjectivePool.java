@@ -252,7 +252,7 @@ public class ObjectivePool implements SchedulerElement
 
     //Gets an objective from a random source
     @Override
-    public EnlistedObjective obtainEnlistedObjective(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime, int dayStartHour)
+    public EnlistedObjective obtainEnlistedObjective(HashSet<Long> ignoredObjectiveIds, LocalDateTime referenceTime, int dayStartHour)
     {
         if(!mIsActive)
         {
@@ -260,7 +260,7 @@ public class ObjectivePool implements SchedulerElement
         }
 
         //Only add the objective to the list if the previous objective from the pool is finished (i.e. isn't in blockingObjectiveIds)
-        if(!isAvailable(blockingObjectiveIds, referenceTime, dayStartHour))
+        if(!isAvailable(ignoredObjectiveIds, referenceTime, dayStartHour))
         {
             return null;
         }
@@ -269,7 +269,7 @@ public class ObjectivePool implements SchedulerElement
         ArrayList<Integer> availableSourceIndices = new ArrayList<>();
         for(int i = 0; i < mObjectiveSources.size(); i++)
         {
-            if(mObjectiveSources.get(i).isAvailable(blockingObjectiveIds, referenceTime, dayStartHour))
+            if(mObjectiveSources.get(i).isAvailable(ignoredObjectiveIds, referenceTime, dayStartHour))
             {
                 availableSourceIndices.add(i);
             }
@@ -283,7 +283,7 @@ public class ObjectivePool implements SchedulerElement
         int  randomSourceIndexIndex = (int) RandomUtils.getInstance().getRandomUniform(0, availableSourceIndices.size() - 1);
         PoolElement randomPoolElement = mObjectiveSources.get(availableSourceIndices.get(randomSourceIndexIndex));
 
-        EnlistedObjective resultObjective = randomPoolElement.obtainEnlistedObjective(blockingObjectiveIds, referenceTime, dayStartHour);
+        EnlistedObjective resultObjective = randomPoolElement.obtainEnlistedObjective(ignoredObjectiveIds, referenceTime, dayStartHour);
         if(!randomPoolElement.isValid())
         {
             //Delete finished objectives
@@ -345,33 +345,12 @@ public class ObjectivePool implements SchedulerElement
     }
 
     @Override
-    public long getMaxRelatedObjectiveId()
+    public long getLargestRelatedId()
     {
         long maxId = 0;
         for(PoolElement source: mObjectiveSources)
         {
-            long sourceMaxId = source.getMaxRelatedObjectiveId();
-            if(sourceMaxId > maxId)
-            {
-                maxId = sourceMaxId;
-            }
-        }
-
-        return maxId;
-    }
-
-    @Override
-    public long getMaxRelatedChainId()
-    {
-        long maxId = 0;
-        for(PoolElement source: mObjectiveSources)
-        {
-            if(source instanceof ScheduledObjective)
-            {
-                continue;
-            }
-
-            long sourceMaxId = source.getMaxRelatedChainId();
+            long sourceMaxId = source.getLargestRelatedId();
             if(sourceMaxId > maxId)
             {
                 maxId = sourceMaxId;

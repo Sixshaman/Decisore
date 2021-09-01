@@ -24,7 +24,7 @@ public class ObjectiveChain10Loader implements ObjectiveChainLoader
             String name        = jsonObject.optString("Name");
             String description = jsonObject.optString("Description");
 
-            long chainId = mSchedulerCache.getMaxChainId() + 1;
+            long chainId = mSchedulerCache.getLargestUsedId() + 1;
             ObjectiveChain objectiveChain = new ObjectiveChain(chainId, name, description);
 
             JSONArray objectivesJsonArray = jsonObject.getJSONArray("Tasks");

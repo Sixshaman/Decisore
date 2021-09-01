@@ -228,16 +228,16 @@ public class ObjectiveChain implements PoolElement
     }
 
     @Override
-    public EnlistedObjective obtainEnlistedObjective(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime, int dayStartHour)
+    public EnlistedObjective obtainEnlistedObjective(HashSet<Long> ignoredObjectiveIds, LocalDateTime referenceTime, int dayStartHour)
     {
-        if(!isAvailable(blockingObjectiveIds, referenceTime, dayStartHour))
+        if(!isAvailable(ignoredObjectiveIds, referenceTime, dayStartHour))
         {
             return null;
         }
 
         ScheduledObjective firstChainObjective = mObjectives.getFront();
 
-        EnlistedObjective enlistedObjective = firstChainObjective.obtainEnlistedObjective(blockingObjectiveIds, referenceTime, dayStartHour);
+        EnlistedObjective enlistedObjective = firstChainObjective.obtainEnlistedObjective(ignoredObjectiveIds, referenceTime, dayStartHour);
         if(enlistedObjective == null)
         {
             return null;
@@ -340,12 +340,12 @@ public class ObjectiveChain implements PoolElement
     }
 
     @Override
-    public long getMaxRelatedObjectiveId()
+    public long getLargestRelatedId()
     {
-        long maxId = -1;
+        long maxId = getId();
         for(ScheduledObjective objective: mObjectives)
         {
-            long objectiveId = objective.getId();
+            long objectiveId = objective.getLargestRelatedId();
             if(objectiveId > maxId)
             {
                 maxId = objectiveId;
@@ -361,12 +361,6 @@ public class ObjectiveChain implements PoolElement
         }
 
         return maxId;
-    }
-
-    @Override
-    public long getMaxRelatedChainId()
-    {
-        return getId();
     }
 
     public boolean containedObjective(long objectiveId)
@@ -397,6 +391,7 @@ public class ObjectiveChain implements PoolElement
         return null;
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     public boolean putBack(ScheduledObjective objective)
     {
         if(!mObjectives.isEmpty())

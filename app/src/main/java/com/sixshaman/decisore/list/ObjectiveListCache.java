@@ -31,6 +31,8 @@ public class ObjectiveListCache
     static final int LIST_VERSION_1_0 = 1000;
     static final int LIST_VERSION_1_1 = 1001;
 
+    static final int LIST_VERSION_CURRENT = LIST_VERSION_1_1;
+
     public static final String LIST_FILENAME = "TaskList.json";
 
     //All objectives to be done for today, sorted by ids. Or tomorrow. Or within a year. It's up to the user to decide
@@ -182,13 +184,14 @@ public class ObjectiveListCache
             return null;
         }
 
-        //Special case: since mTasks is sorted by id, then last element having lesser id means the task is not in mTasks. This is a pretty common case.
+        //Special case: since mEnlistedObjectives is sorted by id, the last element having lesser id means the objective is not in mEnlistedObjectives.
+        //This is a pretty common case.
         if(mEnlistedObjectives.get(mEnlistedObjectives.size() - 1).getId() < objectiveId)
         {
             return null;
         }
 
-        //The mTasks list is sorted by id, so find the index with binary search
+        //The mEnlistedObjectives list is sorted by id, so find the index with binary search
         int index = (Collections.binarySearch(mEnlistedObjectives, objectiveId));
         if(index < 0)
         {
@@ -214,7 +217,7 @@ public class ObjectiveListCache
                 return InvalidateResult.INVALIDATE_VERSION_1_0;
             }
 
-            JSONArray objectivesJsonArray = jsonObject.getJSONArray("TASKS");
+            JSONArray objectivesJsonArray = jsonObject.getJSONArray("OBJECTIVES");
             for(int i = 0; i < objectivesJsonArray.length(); i++)
             {
                 JSONObject objectiveObject = objectivesJsonArray.optJSONObject(i);
@@ -259,12 +262,14 @@ public class ObjectiveListCache
             JSONObject jsonObject          = new JSONObject();
             JSONArray  objectivesJsonArray = new JSONArray();
 
+            jsonObject.put("VERSION", LIST_VERSION_CURRENT);
+
             for(EnlistedObjective objective: mEnlistedObjectives)
             {
                 objectivesJsonArray.put(objective.toJSON());
             }
 
-            jsonObject.put("TASKS", objectivesJsonArray);
+            jsonObject.put("OBJECTIVES", objectivesJsonArray);
 
             listWriteFile.write(jsonObject.toString());
         }
@@ -279,7 +284,7 @@ public class ObjectiveListCache
 
     //Returns the largest id for a stored objective
     //Since objectives are sorted by id, it's gonna be the last objective
-    public long getMaxObjectiveId()
+    public long getLargestUsedId()
     {
         if(mEnlistedObjectives.isEmpty())
         {

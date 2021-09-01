@@ -199,11 +199,11 @@ public class ScheduledObjective implements PoolElement
     }
 
     @Override
-    public EnlistedObjective obtainEnlistedObjective(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime, int dayStartHour)
+    public EnlistedObjective obtainEnlistedObjective(HashSet<Long> ignoredObjectiveIds, LocalDateTime referenceTime, int dayStartHour)
     {
-        if(!isAvailable(blockingObjectiveIds, referenceTime, dayStartHour))
+        if(!isAvailable(ignoredObjectiveIds, referenceTime, dayStartHour))
         {
-            if(isRepeatable() && blockingObjectiveIds.contains(getId()))
+            if(isRepeatable() && ignoredObjectiveIds.contains(getId()))
             {
                 //Need to reschedule the objective so that next time no new objective gets added
                 reschedule(referenceTime, dayStartHour);
@@ -279,16 +279,9 @@ public class ScheduledObjective implements PoolElement
     }
 
     @Override
-    public long getMaxRelatedObjectiveId()
+    public long getLargestRelatedId()
     {
         return getId();
-    }
-
-    @Override
-    public long getMaxRelatedChainId()
-    {
-        //There's never a chain related
-        return -1;
     }
 
     @Override

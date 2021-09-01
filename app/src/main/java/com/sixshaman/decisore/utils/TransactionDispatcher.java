@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 
 public class TransactionDispatcher
@@ -57,15 +58,26 @@ public class TransactionDispatcher
     @SuppressWarnings("UnusedReturnValue")
     public synchronized boolean addPoolTransaction(String poolName, String poolDescription, Duration produceFrequency, boolean autoDelete, boolean unstoppable)
     {
-        invalidateCaches(true, false, false);
+        invalidateCaches(true, true, false);
+
+        long maxSchedulerId = mSchedulerCache.getLargestUsedId();
+        long maxListId      = mListCache.getLargestUsedId();
+
+        long poolId = Math.max(maxSchedulerId, maxListId) + 1;
+
+        ObjectivePool pool = new ObjectivePool(poolId, poolName, poolDescription);
+        pool.setProduceFrequency(produceFrequency);
+        pool.setAutoDelete(autoDelete);
+        pool.setUnstoppable(unstoppable);
 
         LockedWriteFile schedulerWriteFile = new LockedWriteFile(mSchedulerFilePath);
-        mSchedulerCache.addObjectivePool(poolName, poolDescription, produceFrequency, autoDelete, unstoppable);
-
-        if(mSchedulerCache.flush(schedulerWriteFile))
+        if(mSchedulerCache.addObjectivePool(pool))
         {
-            schedulerWriteFile.close();
-            return true;
+            if (mSchedulerCache.flush(schedulerWriteFile))
+            {
+                schedulerWriteFile.close();
+                return true;
+            }
         }
 
         schedulerWriteFile.close();
@@ -98,26 +110,35 @@ public class TransactionDispatcher
 
     public synchronized long addChainTransaction(long poolIdToAddTo, String chainName, String chainDescription, Duration produceFrequency, boolean useAutoDelete, boolean useUnstoppable)
     {
-        invalidateCaches(true, false, false);
+        invalidateCaches(true, true, false);
+
+        long maxSchedulerId = mSchedulerCache.getLargestUsedId();
+        long maxListId      = mListCache.getLargestUsedId();
+
+        long chainId = Math.max(maxSchedulerId, maxListId) + 1;
+        ObjectiveChain chain = new ObjectiveChain(chainId, chainName, chainDescription);
+        chain.setProduceFrequency(produceFrequency);
+        chain.setAutoDelete(useAutoDelete);
+        chain.setUnstoppable(useUnstoppable);
 
         LockedWriteFile schedulerWriteFile = new LockedWriteFile(mSchedulerFilePath);
 
-        long newChainId = mSchedulerCache.addObjectiveChain(poolIdToAddTo, chainName, chainDescription, produceFrequency, useAutoDelete, useUnstoppable);
-        if(newChainId != -1)
+        boolean addResult = mSchedulerCache.addObjectiveChain(poolIdToAddTo, chain);
+        if(addResult)
         {
             if(mSchedulerCache.flush(schedulerWriteFile))
             {
                 schedulerWriteFile.close();
                 invalidateCaches(true, false, false);
 
-                return newChainId;
+                return chainId;
             }
         }
 
         schedulerWriteFile.close();
         invalidateCaches(true, false, false);
 
-        return newChainId;
+        return chainId;
     }
 
     @SuppressWarnings("UnusedReturnValue")
@@ -193,8 +214,8 @@ public class TransactionDispatcher
     {
         invalidateCaches(true, true, false);
 
-        long maxSchedulerId = mSchedulerCache.getMaxObjectiveId();
-        long maxListId      = mListCache.getMaxObjectiveId();
+        long maxSchedulerId = mSchedulerCache.getLargestUsedId();
+        long maxListId      = mListCache.getLargestUsedId();
 
         long objectiveId = Math.max(maxListId, maxSchedulerId) + 1;
 
@@ -835,6 +856,11 @@ public class TransactionDispatcher
         ArrayList<Long> chainIds              = schedulerOldIdConverter.gatherChainIds();
         ArrayList<Long> scheduledObjectiveIds = schedulerOldIdConverter.gatherObjectiveIds();
         ArrayList<Long> enlistedObjectiveIds  = listOldIdConverter.gatherObjectiveIds();
+
+        Collections.sort(poolIds);
+        Collections.sort(chainIds);
+        Collections.sort(scheduledObjectiveIds);
+        Collections.sort(enlistedObjectiveIds);
 
         HashMap<Long, Long> poolPatchedIdMap      = new HashMap<>();
         HashMap<Long, Long> chainPatchedIdMap     = new HashMap<>();
