@@ -23,15 +23,9 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.sixshaman.decisore.R;
 import com.sixshaman.decisore.list.EnlistedObjective;
-import com.sixshaman.decisore.scheduler.chain.ChainElementViewHolder;
 import com.sixshaman.decisore.scheduler.chain.ObjectiveChain;
-import com.sixshaman.decisore.scheduler.chain.ObjectiveChainLatestLoader;
 import com.sixshaman.decisore.scheduler.pool.ObjectivePool;
-import com.sixshaman.decisore.scheduler.pool.ObjectivePoolLatestLoader;
-import com.sixshaman.decisore.scheduler.pool.PoolElement;
 import com.sixshaman.decisore.scheduler.objective.ScheduledObjective;
-import com.sixshaman.decisore.scheduler.objective.ScheduledObjectiveLatestLoader;
-import com.sixshaman.decisore.scheduler.pool.PoolElementViewHolder;
 import com.sixshaman.decisore.utils.LockedReadFile;
 import com.sixshaman.decisore.utils.LockedWriteFile;
 import com.sixshaman.decisore.utils.ValueHolder;
@@ -39,12 +33,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Objects;
 
 //The class to schedule all deferred objectives. The model for the scheduler UI
 public class ObjectiveSchedulerCache
@@ -148,10 +139,6 @@ public class ObjectiveSchedulerCache
             int version = jsonObject.optInt("VERSION", SCHEDULER_VERSION_1_0);
             if(version == SCHEDULER_VERSION_CURRENT)
             {
-                ScheduledObjectiveLatestLoader objectiveLatestLoader = new ScheduledObjectiveLatestLoader();
-                ObjectiveChainLatestLoader     chainLatestLoader     = new ObjectiveChainLatestLoader();
-                ObjectivePoolLatestLoader      poolLatestLoader      = new ObjectivePoolLatestLoader();
-
                 JSONArray elementsArray = jsonObject.getJSONArray("ELEMENTS");
 
                 for(int i = 0; i < elementsArray.length(); i++)
@@ -161,44 +148,57 @@ public class ObjectiveSchedulerCache
                     String     elementType = elementObject.getString("Type");
                     JSONObject elementData = elementObject.getJSONObject("Data");
 
-                    switch (elementType)
+                    switch(elementType)
                     {
                         case "ObjectivePool":
-                            ObjectivePool pool = poolLatestLoader.fromJSON(elementData);
-                            mSchedulerElements.add(pool);
-
-                            RecyclerView poolView = mPoolItemViews.get(pool.getId(), null);
-                            if(poolView != null)
+                        {
+                            ObjectivePool pool = ObjectivePool.fromJSON(elementData);
+                            if (pool != null)
                             {
-                                pool.attachToPoolView(poolView, this);
-                            }
+                                mSchedulerElements.add(pool);
 
-                            pool.attachAllChainViews(mChainItemViews, this);
+                                RecyclerView poolView = mPoolItemViews.get(pool.getId(), null);
+                                if(poolView != null)
+                                {
+                                    pool.attachToPoolView(poolView, this);
+                                }
+
+                                pool.attachAllChainViews(mChainItemViews, this);
+                            }
                             break;
+                        }
                         case "ObjectiveChain":
-                            ObjectiveChain chain = chainLatestLoader.fromJSON(elementData);
-                            mSchedulerElements.add(chain);
-
-                            RecyclerView chainView = mChainItemViews.get(chain.getId(), null);
-                            if(chainView != null)
+                        {
+                            ObjectiveChain chain = ObjectiveChain.fromJSON(elementData);
+                            if(chain != null)
                             {
-                                chain.attachToChainView(chainView, this);
-                            }
+                                mSchedulerElements.add(chain);
 
+                                RecyclerView chainView = mChainItemViews.get(chain.getId(), null);
+                                if(chainView != null)
+                                {
+                                    chain.attachToChainView(chainView, this);
+                                }
+                            }
                             break;
+                        }
                         case "ScheduledObjective":
-                            ScheduledObjective objective = objectiveLatestLoader.fromJSON(elementData);
-                            mSchedulerElements.add(objective);
+                        {
+                            ScheduledObjective objective = ScheduledObjective.fromJSON(elementData);
+                            if(objective != null)
+                            {
+                                mSchedulerElements.add(objective);
+                            }
                             break;
+                        }
                     }
                 }
             }
-            else
+            else if(version == SCHEDULER_VERSION_1_0)
             {
-                mSchedulerElements = SchedulerOldVersionLoader.loadSchedulerElementsOld(this, jsonObject, version);
+                return InvalidateResult.INVALIDATE_ERROR; //Not supported anymore
             }
-
-            if(version <= SCHEDULER_VERSION_1_1)
+            else if(version <= SCHEDULER_VERSION_1_1)
             {
                 return InvalidateResult.INVALIDATE_VERSION_1_1;
             }

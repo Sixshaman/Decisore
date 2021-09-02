@@ -8,7 +8,6 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.sixshaman.decisore.R;
 import com.sixshaman.decisore.list.EnlistedObjective;
-import com.sixshaman.decisore.list.ObjectiveListCache;
 import com.sixshaman.decisore.scheduler.chain.ObjectiveChain;
 import com.sixshaman.decisore.scheduler.ObjectiveSchedulerCache;
 import com.sixshaman.decisore.scheduler.objective.ScheduledObjective;
@@ -22,11 +21,10 @@ import org.json.JSONObject;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Objects;
 
 //A pool that can randomly choose from several objective sources
 public class ObjectivePool extends SchedulerElement
@@ -232,6 +230,112 @@ public class ObjectivePool extends SchedulerElement
         }
 
         return result;
+    }
+
+    public static ObjectivePool fromJSON(JSONObject jsonObject)
+    {
+        try
+        {
+            long id       = jsonObject.getLong("Id");
+            long parentId = jsonObject.getLong("ParentId");
+
+            String name        = jsonObject.optString("Name");
+            String description = jsonObject.optString("Description");
+
+            String lastIdString = jsonObject.optString("LastId");
+            Long lastId = null;
+            try
+            {
+                lastId = Long.parseLong(lastIdString);
+            }
+            catch(NumberFormatException e)
+            {
+                e.printStackTrace();
+            }
+
+            if(lastId == null)
+            {
+                return null;
+            }
+
+            String produceFrequencyString = jsonObject.optString("ProduceFrequency");
+            String lastProducedDateString = jsonObject.optString("LastUpdate");
+
+            String isAutoDeleteString  = jsonObject.optString("IsAutoDelete");
+            String isUnstoppableString = jsonObject.optString("IsUnstoppable");
+
+            ObjectivePool objectivePool = new ObjectivePool(id, name, description);
+            objectivePool.setParentId(parentId);
+            objectivePool.setLastProvidedObjectiveId(lastId);
+
+            String isActiveString = jsonObject.optString("IsActive");
+
+            objectivePool.setPaused(!isActiveString.isEmpty()           && isActiveString.equalsIgnoreCase("false"));
+            objectivePool.setAutoDelete(!isAutoDeleteString.isEmpty()   && isAutoDeleteString.equalsIgnoreCase("true"));
+            objectivePool.setUnstoppable(!isUnstoppableString.isEmpty() && isUnstoppableString.equalsIgnoreCase("true"));
+
+            JSONArray sourcesJsonArray = jsonObject.getJSONArray("Sources");
+            for(int i = 0; i < sourcesJsonArray.length(); i++)
+            {
+                JSONObject sourceObject = sourcesJsonArray.optJSONObject(i);
+                if(sourceObject != null)
+                {
+                    String     sourceType = sourceObject.optString("Type");
+                    JSONObject sourceData = sourceObject.optJSONObject("Data");
+
+                    if(sourceData != null)
+                    {
+                        if(sourceType.equals("ObjectiveChain"))
+                        {
+                            ObjectiveChain chain = ObjectiveChain.fromJSON(sourceData);
+                            if(chain != null)
+                            {
+                                objectivePool.addObjectiveSource(chain);
+                            }
+                        }
+                        else if(sourceType.equals("ScheduledObjective"))
+                        {
+                            ScheduledObjective objective = ScheduledObjective.fromJSON(sourceData);
+                            if(objective != null)
+                            {
+                                objectivePool.addObjectiveSource(objective);
+                            }
+                        }
+                    }
+                }
+            }
+
+            if(!produceFrequencyString.isEmpty())
+            {
+                try
+                {
+                    long produceFrequencyMinutes = Long.parseLong(produceFrequencyString);
+                    Duration produceFrequency = Duration.ofMinutes(produceFrequencyMinutes);
+
+                    objectivePool.setProduceFrequency(produceFrequency);
+
+                    if(!lastProducedDateString.isEmpty())
+                    {
+                        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss:nnnnnnnnn");
+                        LocalDateTime lastProducedDate = LocalDateTime.parse(lastProducedDateString, dateTimeFormatter);
+
+                        objectivePool.setLastUpdate(lastProducedDate);
+                    }
+                }
+                catch(NumberFormatException | DateTimeParseException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+
+            return objectivePool;
+        }
+        catch(JSONException e)
+        {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 
     //Gets an objective from a random source
