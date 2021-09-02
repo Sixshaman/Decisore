@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+//Recalculates id based on the fact that chains, pools, and objectives now share a common id s[ace
+//Assigns parent id to each objective
 public class List10To11Converter
 {
     private JSONObject mListJsonObject;

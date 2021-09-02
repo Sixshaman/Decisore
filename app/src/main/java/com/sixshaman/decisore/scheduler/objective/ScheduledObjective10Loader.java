@@ -117,7 +117,7 @@ public class ScheduledObjective10Loader implements ScheduledObjectiveLoader
 
             if(!isActive)
             {
-                objective.pause();
+                objective.setPaused(true);
             }
         }
 

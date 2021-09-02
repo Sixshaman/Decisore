@@ -18,7 +18,8 @@ public class ObjectiveChainLatestLoader implements ObjectiveChainLoader
     {
         try
         {
-            long id = jsonObject.getLong("Id");
+            long id       = jsonObject.getLong("Id");
+            long parentId = jsonObject.optLong("ParentId", -1);
 
             String name        = jsonObject.optString("Name");
             String description = jsonObject.optString("Description");

@@ -52,7 +52,7 @@ public class ObjectiveSchedulerCache
     public enum InvalidateResult
     {
         INVALIDATE_OK,          //Success
-        INVALIDATE_VERSION_1_1, //Old version, need to recalculate ids
+        INVALIDATE_VERSION_1_1, //Old version, need to recalculate ids and parent ids
         INVALIDATE_ERROR        //Unknown error
     }
 
@@ -301,29 +301,24 @@ public class ObjectiveSchedulerCache
     }
 
     //Adds a general task to task pool pool or task chain chain scheduled to be added at deferTime with repeat duration repeatDuration and repeat probability repeatProbability
-    public boolean addObjective(long poolId, long chainId, boolean addToChainBeginning, ScheduledObjective scheduledObjective)
+    public boolean addObjective(ScheduledObjective scheduledObjective, boolean addToChainBeginning)
     {
-        ObjectivePool poolToAddTo = null;
-        if(poolId != -1)
-        {
-            poolToAddTo = getPoolById(poolId);
-            if(poolToAddTo == null)
-            {
-                return false;
-            }
-        }
+        long parentId = scheduledObjective.getParentId();
 
+        ObjectivePool  poolToAddTo  = null;
         ObjectiveChain chainToAddTo = null;
-        if(chainId != -1)
+        if(parentId != -1)
         {
-            chainToAddTo = getChainById(chainId);
-            if(chainToAddTo == null)
+            poolToAddTo  = getPoolById(parentId);
+            chainToAddTo = getChainById(parentId);
+
+            if(poolToAddTo == null && chainToAddTo == null)
             {
                 return false;
             }
         }
 
-        if(poolToAddTo == null && chainToAddTo == null) //Add a single task source
+        if(poolToAddTo == null && chainToAddTo == null) //Add a single objective
         {
             //Neither task chain nor pool is provided
             mSchedulerElements.add(scheduledObjective);
@@ -399,7 +394,7 @@ public class ObjectiveSchedulerCache
         //Simply add the objective if no source contains it
         if(!isAnyRelated)
         {
-            return addObjective(-1, -1, false, objective);
+            return addObjective(objective, false);
         }
 
         return true;

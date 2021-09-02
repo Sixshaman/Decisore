@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 
 public class TransactionDispatcher
 {
@@ -117,6 +118,7 @@ public class TransactionDispatcher
 
         long chainId = Math.max(maxSchedulerId, maxListId) + 1;
         ObjectiveChain chain = new ObjectiveChain(chainId, chainName, chainDescription);
+        chain.setParentId(poolIdToAddTo);
         chain.setProduceFrequency(produceFrequency);
         chain.setAutoDelete(useAutoDelete);
         chain.setUnstoppable(useUnstoppable);
@@ -206,7 +208,7 @@ public class TransactionDispatcher
     }
 
     @SuppressWarnings("UnusedReturnValue")
-    public synchronized long addObjectiveTransaction(long poolId, long chainId, boolean addToChainBeginning,
+    public synchronized long addObjectiveTransaction(long parentId, boolean addToChainBeginning,
                                                      LocalDateTime createDateTime, LocalDateTime enlistDateTime,
                                                      Duration repeatDuration, float repeatProbability,
                                                      String objectiveName, String objectiveDescription, ArrayList<String> objectiveTags,
@@ -223,20 +225,20 @@ public class TransactionDispatcher
 
         EnlistedObjective  enlistedObjectiveToAdd  = null;
         ScheduledObjective scheduledObjectiveToAdd = null;
-        if(!createDateTime.isBefore(enlistDateTime) && repeatDuration == Duration.ZERO && repeatProbability < 0.0001f && chainId == -1 && poolId == -1)
+        if(!createDateTime.isBefore(enlistDateTime) && repeatDuration == Duration.ZERO && repeatProbability < 0.0001f && parentId == -1)
         {
             //One-time objective
-            enlistedObjectiveToAdd = new EnlistedObjective(objectiveId, createDateTime, enlistDateTime,
+            enlistedObjectiveToAdd = new EnlistedObjective(objectiveId, parentId, createDateTime, enlistDateTime,
                                                            objectiveName, objectiveDescription, objectiveTags);
         }
-        else if(!createDateTime.isBefore(enlistDateTime) && chainId == -1 && poolId == -1)
+        else if(!createDateTime.isBefore(enlistDateTime) && parentId == -1)
         {
             //Repeated objective which gets added to the list immediately
             scheduledObjectiveToAdd = new ScheduledObjective(objectiveId, objectiveName, objectiveDescription,
                                                              createDateTime, enlistDateTime, objectiveTags,
                                                              repeatDuration, repeatProbability);
 
-            enlistedObjectiveToAdd = scheduledObjectiveToAdd.obtainEnlistedObjective(mListCache.constructBlockingIds(), enlistDateTime, dayStartHour);
+            enlistedObjectiveToAdd = scheduledObjectiveToAdd.obtainEnlistedObjective(mListCache.constructIdSet(), enlistDateTime, dayStartHour);
         }
         else
         {
@@ -267,9 +269,11 @@ public class TransactionDispatcher
 
         if(correctTransaction && scheduledObjectiveToAdd != null)
         {
+            scheduledObjectiveToAdd.setParentId(parentId);
+
             //1. Lock scheduler file
             LockedWriteFile schedulerWriteFile = new LockedWriteFile(mSchedulerFilePath);
-            if(!mSchedulerCache.addObjective(poolId, chainId, addToChainBeginning, scheduledObjectiveToAdd))
+            if(!mSchedulerCache.addObjective(scheduledObjectiveToAdd, addToChainBeginning))
             {
                 correctTransaction = false;
             }
@@ -430,7 +434,7 @@ public class TransactionDispatcher
         LockedWriteFile listWriteFile      = new LockedWriteFile(mListFilePath);
 
         //3. Prepare the list of objectives to add
-        ArrayList<EnlistedObjective> enlistedObjectives = mSchedulerCache.dumpReadyObjectives(mListCache.constructBlockingIds(), enlistDateTime, dayStartHour);
+        ArrayList<EnlistedObjective> enlistedObjectives = mSchedulerCache.dumpReadyObjectives(mListCache.constructIdSet(), enlistDateTime, dayStartHour);
         if(enlistedObjectives != null)
         {
             //4. Add objectives
@@ -768,7 +772,7 @@ public class TransactionDispatcher
 
     private synchronized void invalidateCaches(boolean invalidateScheduler, boolean invalidateList, boolean invalidateArchive)
     {
-        boolean needToValidateIds = false;
+        boolean needToValidateOldIds = false;
 
         if(invalidateScheduler)
         {
@@ -792,11 +796,11 @@ public class TransactionDispatcher
             if(invalidateResult == ObjectiveSchedulerCache.InvalidateResult.INVALIDATE_VERSION_1_1)
             {
                 //Version 1.2 unifies ids for pools, chains, and objectives
-                needToValidateIds = true;
+                needToValidateOldIds = true;
             }
         }
 
-        if(invalidateList || needToValidateIds)
+        if(invalidateList || needToValidateOldIds)
         {
             if(mListCache == null)
             {
@@ -818,7 +822,7 @@ public class TransactionDispatcher
             if(invalidateResult == ObjectiveListCache.InvalidateResult.INVALIDATE_VERSION_1_0)
             {
                 //Version 1.1 unifies ids for pools, chains, and objectives
-                needToValidateIds = true;
+                needToValidateOldIds = true;
             }
         }
 
@@ -841,7 +845,7 @@ public class TransactionDispatcher
             }
         }
 
-        if(needToValidateIds)
+        if(needToValidateOldIds)
         {
             revalidateIds();
         }
@@ -849,13 +853,13 @@ public class TransactionDispatcher
 
     private synchronized void revalidateIds()
     {
-        List10To11Converter      listOldIdConverter      = new List10To11Converter(mListFilePath);
-        Scheduler11To12Converter schedulerOldIdConverter = new Scheduler11To12Converter(mSchedulerFilePath);
+        List10To11Converter      listConverter      = new List10To11Converter(mListFilePath);
+        Scheduler11To12Converter schedulerConverter = new Scheduler11To12Converter(mSchedulerFilePath);
 
-        ArrayList<Long> poolIds               = schedulerOldIdConverter.gatherPoolIds();
-        ArrayList<Long> chainIds              = schedulerOldIdConverter.gatherChainIds();
-        ArrayList<Long> scheduledObjectiveIds = schedulerOldIdConverter.gatherObjectiveIds();
-        ArrayList<Long> enlistedObjectiveIds  = listOldIdConverter.gatherObjectiveIds();
+        ArrayList<Long> poolIds               = schedulerConverter.gatherPoolIds();
+        ArrayList<Long> chainIds              = schedulerConverter.gatherChainIds();
+        ArrayList<Long> scheduledObjectiveIds = schedulerConverter.gatherObjectiveIds();
+        ArrayList<Long> enlistedObjectiveIds  = listConverter.gatherObjectiveIds();
 
         Collections.sort(poolIds);
         Collections.sort(chainIds);
@@ -895,8 +899,8 @@ public class TransactionDispatcher
             }
         }
 
-        listOldIdConverter.patchIds(objectivePatchedIdMap);
-        schedulerOldIdConverter.patchIds(objectivePatchedIdMap, chainPatchedIdMap, poolPatchedIdMap);
+        listConverter.patchIds(objectivePatchedIdMap);
+        schedulerConverter.patchIds(objectivePatchedIdMap, chainPatchedIdMap, poolPatchedIdMap);
 
         invalidateCaches(true, true, false);
     }

@@ -8,39 +8,102 @@ import org.json.JSONObject;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 
-public interface SchedulerElement
+public abstract class SchedulerElement
 {
-    String getName();
+    //The ID of the element
+    final long mId;
 
-    @SuppressWarnings("unused")
-    String getDescription();
+    //The ID of the parent element
+    long mParentId;
 
-    JSONObject toJSON();
+    //Element name
+    private String mName;
 
-    boolean isPaused();
+    //Element description
+    private String mDescription;
 
-    void setPaused(boolean paused);
+    //Is it active or paused? If paused, the scheduler won't add it to the objective list even after the mScheduledAddDate
+    private boolean mIsActive;
+
+    public SchedulerElement(long id, String name, String description)
+    {
+        mId = id;
+
+        mParentId = -1;
+
+        mName        = name;
+        mDescription = description;
+
+        mIsActive = true;
+    }
+
+    public long getId()
+    {
+        return mId;
+    }
+
+    public long getParentId()
+    {
+        return mParentId;
+    }
+
+    public String getName()
+    {
+        return mName;
+    }
+
+    public String getDescription()
+    {
+        return mDescription;
+    }
+
+    public abstract JSONObject toJSON();
+
+    public boolean isPaused()
+    {
+        return !mIsActive;
+    }
+
+    public void setPaused(boolean paused)
+    {
+        mIsActive = !paused;
+    }
+
+    public void setParentId(long parentId)
+    {
+        mParentId = parentId;
+    }
+
+    public void setName(String name)
+    {
+        mName = name;
+    }
+
+    public void setDescription(String description)
+    {
+        mDescription = description;
+    }
 
     //Returns true if it's valid, invalid elements can't be in scheduler
-    boolean isValid();
+    public abstract boolean isValid();
 
     //Returns the element name(Objective/Chain/Pool)
-    String getElementName();
+    public abstract String getElementName();
 
-    boolean isAvailable(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime, int dayStartHour);
+    public abstract boolean isAvailable(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime, int dayStartHour);
 
-    EnlistedObjective obtainEnlistedObjective(final HashSet<Long> ignoredObjectiveIds, LocalDateTime referenceTime, int dayStartHour);
+    public abstract EnlistedObjective obtainEnlistedObjective(final HashSet<Long> ignoredObjectiveIds, LocalDateTime referenceTime, int dayStartHour);
 
-    void updateDayStart(LocalDateTime referenceTime, int oldStartHour, int newStartHour);
+    public abstract void updateDayStart(LocalDateTime referenceTime, int oldStartHour, int newStartHour);
 
-    boolean isRelatedToObjective(long objectiveId);
+    public abstract boolean isRelatedToObjective(long objectiveId);
 
-    boolean mergeRelatedObjective(ScheduledObjective objective);
+    public abstract boolean mergeRelatedObjective(ScheduledObjective objective);
 
-    ScheduledObjective getRelatedObjectiveById(long objectiveId);
-    ObjectiveChain     getRelatedChainById(long chainId);
-    ObjectiveChain     getChainForObjectiveById(long objectiveId);
+    public abstract ScheduledObjective getRelatedObjectiveById(long objectiveId);
+    public abstract ObjectiveChain     getRelatedChainById(long chainId);
+    public abstract ObjectiveChain     getChainForObjectiveById(long objectiveId);
 
     //Returns the largest id of any related element (itself, or contained objectives, or contained chains)
-    long getLargestRelatedId();
+    public abstract long getLargestRelatedId();
 }

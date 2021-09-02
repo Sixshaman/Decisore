@@ -24,7 +24,7 @@ public class ObjectiveListCache
     public enum InvalidateResult
     {
         INVALIDATE_OK,          //Success
-        INVALIDATE_VERSION_1_0, //Old version, need to recalculate ids
+        INVALIDATE_VERSION_1_0, //Old version, need to recalculate ids and parent ids
         INVALIDATE_ERROR        //Unknown error
     }
 
@@ -301,15 +301,16 @@ public class ObjectiveListCache
         return mEnlistedObjectives.size();
     }
 
-    public HashSet<Long> constructBlockingIds()
+    //Get the set of all ids
+    public HashSet<Long> constructIdSet()
     {
-        HashSet<Long> blockingIds = new HashSet<>();
+        HashSet<Long> ids = new HashSet<>();
         for(EnlistedObjective objective: mEnlistedObjectives)
         {
-            blockingIds.add(objective.getId());
+            ids.add(objective.getId());
         }
 
-        return blockingIds;
+        return ids;
     }
 
     private class ListCacheViewHolder extends RecyclerView.Adapter<ObjectiveViewHolder>

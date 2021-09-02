@@ -15,7 +15,8 @@ public class ScheduledObjectiveLatestLoader implements ScheduledObjectiveLoader
     {
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss:nnnnnnnnn");
 
-        long id = jsonObject.optLong("Id", -1);
+        long id       = jsonObject.optLong("Id", -1);
+        long parentId = jsonObject.optLong("ParentId", -1);
 
         String name        = jsonObject.optString("Name");
         String description = jsonObject.optString("Description");
@@ -116,7 +117,7 @@ public class ScheduledObjectiveLatestLoader implements ScheduledObjectiveLoader
 
             if(!isActive)
             {
-                objective.pause();
+                objective.setPaused(true);
             }
         }
 

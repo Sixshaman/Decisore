@@ -21,22 +21,10 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
-public class ObjectiveChain implements PoolElement
+public class ObjectiveChain extends PoolElement
 {
     //View holder
     private ChainViewHolder mChainViewHolder;
-
-    //Objective chain id
-    private final long mId;
-
-    //Objective chain name
-    private String mName;
-
-    //Objective chain description
-    private String mDescription;
-
-    //Is this chain active?
-    private boolean mIsActive;
 
     //Does this chain get deleted immediately after finishing every objective?
     private boolean mIsAutoDelete;
@@ -62,15 +50,10 @@ public class ObjectiveChain implements PoolElement
     //Creates a new objective chain
     public ObjectiveChain(long id, String name, String description)
     {
-        mId = id;
-
-        mName        = name;
-        mDescription = description;
+        super(id, name, description);
 
         mObjectives      = new TwoSidedArrayList<>();
         mBoundObjectives = new HashSet<>();
-
-        mIsActive = true;
 
         mIsAutoDelete  = false;
         mIsUnstoppable = false;
@@ -149,12 +132,13 @@ public class ObjectiveChain implements PoolElement
 
         try
         {
-            result.put("Id", mId);
+            result.put("Id",       getId());
+            result.put("ParentId", getParentId());
 
-            result.put("Name",        mName);
-            result.put("Description", mDescription);
+            result.put("Name",        getName());
+            result.put("Description", getDescription());
 
-            result.put("IsActive", Boolean.toString(mIsActive));
+            result.put("IsActive", Boolean.toString(!isPaused()));
 
             result.put("IsAutoDelete",  Boolean.toString(mIsAutoDelete));
             result.put("IsUnstoppable", Boolean.toString(mIsUnstoppable));
@@ -429,54 +413,15 @@ public class ObjectiveChain implements PoolElement
         return !mObjectives.isEmpty();
     }
 
-    public long getId()
-    {
-        return mId;
-    }
-
-    @Override
-    public String getName()
-    {
-        return mName;
-    }
-
-    @Override
-    public String getDescription()
-    {
-        return mDescription;
-    }
-
     @SuppressWarnings("unused")
     public int getObjectiveCount()
     {
         return mObjectives.size();
     }
 
-    public void setName(String chainName)
-    {
-        mName = chainName;
-    }
-
-    public void setDescription(String chainDescription)
-    {
-        mDescription = chainDescription;
-    }
-
     public void setProduceFrequency(Duration produceFrequency)
     {
         mProduceFrequency = produceFrequency;
-    }
-
-    @Override
-    public boolean isPaused()
-    {
-        return !mIsActive;
-    }
-
-    @Override
-    public void setPaused(boolean paused)
-    {
-        mIsActive = !paused;
     }
 
     public void setAutoDelete(boolean autoDelete)

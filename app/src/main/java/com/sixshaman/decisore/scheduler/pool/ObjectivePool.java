@@ -29,19 +29,10 @@ import java.util.HashSet;
 import java.util.Objects;
 
 //A pool that can randomly choose from several objective sources
-public class ObjectivePool implements SchedulerElement
+public class ObjectivePool extends SchedulerElement
 {
     ///The view holder of the pool
     private PoolViewHolder mPoolViewHolder;
-
-    //The id of the pool
-    private final long mId;
-
-    //The name of the pool
-    private String mName;
-
-    //The description of the pool
-    private String mDescription;
 
     //The list of all the objective sources the pool can choose from
     private final ArrayList<PoolElement> mObjectiveSources;
@@ -55,9 +46,6 @@ public class ObjectivePool implements SchedulerElement
     //The id of the objective that was most recently provided by this pool.
     private long mLastProvidedObjectiveId;
 
-    //The flag that shows that the pool is active (i.e. not paused)
-    private boolean mIsActive;
-
     //Does this pool get deleted immediately after finishing every objective?
     private boolean mIsAutoDelete;
 
@@ -67,16 +55,11 @@ public class ObjectivePool implements SchedulerElement
     //Constructs a new objective pool
     public ObjectivePool(long id, String name, String description)
     {
-        mId = id;
-
-        mName        = name;
-        mDescription = description;
+        super(id, name, description);
 
         mObjectiveSources = new ArrayList<>();
 
         mLastProvidedObjectiveId = -1;
-
-        mIsActive = true;
 
         mIsAutoDelete  = false;
         mIsUnstoppable = false;
@@ -205,14 +188,15 @@ public class ObjectivePool implements SchedulerElement
 
         try
         {
-            result.put("Id", mId);
+            result.put("Id",       getId());
+            result.put("ParentId", getParentId());
 
-            result.put("Name",        mName);
-            result.put("Description", mDescription);
+            result.put("Name",        getName());
+            result.put("Description", getDescription());
 
             result.put("LastId", Long.toString(mLastProvidedObjectiveId));
 
-            result.put("IsActive", Boolean.toString(mIsActive));
+            result.put("IsActive", Boolean.toString(!isPaused()));
 
             result.put("IsAutoDelete",  Boolean.toString(mIsAutoDelete));
             result.put("IsUnstoppable", Boolean.toString(mIsUnstoppable));
@@ -254,7 +238,7 @@ public class ObjectivePool implements SchedulerElement
     @Override
     public EnlistedObjective obtainEnlistedObjective(HashSet<Long> ignoredObjectiveIds, LocalDateTime referenceTime, int dayStartHour)
     {
-        if(!mIsActive)
+        if(isPaused())
         {
             return null;
         }
@@ -439,49 +423,10 @@ public class ObjectivePool implements SchedulerElement
         return !blockingObjectiveIds.contains(mLastProvidedObjectiveId);
     }
 
-    public long getId()
-    {
-        return mId;
-    }
-
-    @Override
-    public boolean isPaused()
-    {
-        return !mIsActive;
-    }
-
-    @Override
-    public void setPaused(boolean paused)
-    {
-        mIsActive = !paused;
-    }
-
     @Override
     public boolean isValid()
     {
         return !mIsAutoDelete || !mObjectiveSources.isEmpty() || (mLastProvidedObjectiveId == -1); //Do not allow to delete a pool that was just created
-    }
-
-    @Override
-    public String getName()
-    {
-        return mName;
-    }
-
-    @Override
-    public String getDescription()
-    {
-        return mDescription;
-    }
-
-    public void setName(String name)
-    {
-        mName = name;
-    }
-
-    public void setDescription(String description)
-    {
-        mDescription = description;
     }
 
     //Returns the number of objective sources in pool

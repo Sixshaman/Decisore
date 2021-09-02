@@ -20,11 +20,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Objects;
 
-public class ScheduledObjective implements PoolElement
+public class ScheduledObjective extends PoolElement
 {
-    //The objective ID
-    final long mId;
-
     //The date when the objective was created and added to the scheduler
     final LocalDateTime mDateCreated;
 
@@ -34,17 +31,8 @@ public class ScheduledObjective implements PoolElement
     //The date when the objective is regularly added to the main list
     LocalDateTime mRegularScheduledAddDate;
 
-    //The objective name
-    String mName;
-
-    //The objective description
-    String mDescription;
-
     //Objective tags (why not?)
     final ArrayList<String> mTags;
-
-    //Is it active or paused? If paused, the scheduler won't add it to the objective list even after the mScheduledAddDate
-    boolean mIsActive;
 
     //Is it valid?
     boolean mIsValid;
@@ -58,17 +46,13 @@ public class ScheduledObjective implements PoolElement
     //Creates a new active scheduled objective ready to be used by the scheduler
     public ScheduledObjective(long id, String name, String description, LocalDateTime createdDate, LocalDateTime scheduleDate, ArrayList<String> tags, Duration repeatDuration, float repeatProbability)
     {
-        mIsActive = true;
-        mIsValid  = true;
+        super(id, name, description);
 
-        mId = id;
+        mIsValid  = true;
 
         mDateCreated             = createdDate;
         mScheduledAddDate        = scheduleDate;
         mRegularScheduledAddDate = scheduleDate;
-
-        mName        = name;
-        mDescription = description;
 
         mRepeatDuration    = repeatDuration;
         mRepeatProbability = repeatProbability;
@@ -90,10 +74,11 @@ public class ScheduledObjective implements PoolElement
 
         try
         {
-            result.put("Id", Long.toString(mId));
+            result.put("Id",       Long.toString(getId()));
+            result.put("ParentId", Long.toString(getParentId()));
 
-            result.put("Name",        mName);
-            result.put("Description", mDescription);
+            result.put("Name",        getName());
+            result.put("Description", getDescription());
 
             JSONArray jsonTagArray = new JSONArray(mTags);
             result.put("Tags", jsonTagArray);
@@ -118,7 +103,7 @@ public class ScheduledObjective implements PoolElement
                 result.put("DateScheduledRegular", regularScheduledDateString);
             }
 
-            result.put("IsActive", Boolean.toString(mIsActive));
+            result.put("IsActive", Boolean.toString(!isPaused()));
 
             result.put("RepeatDuration",    Long.toString(mRepeatDuration.toMinutes()));
             result.put("RepeatProbability", Float.toString(mRepeatProbability));
@@ -135,7 +120,7 @@ public class ScheduledObjective implements PoolElement
     public void reschedule(LocalDateTime referenceTime, int dayStartTime)
     {
         //Cannot reschedule non-repeated objectives and won't reschedule paused objectives
-        if(mRepeatProbability < 0.0001f || !mIsActive)
+        if(mRepeatProbability < 0.0001f || isPaused())
         {
             return;
         }
@@ -175,18 +160,6 @@ public class ScheduledObjective implements PoolElement
     }
 
     @Override
-    public boolean isPaused()
-    {
-        return !mIsActive;
-    }
-
-    @Override
-    public void setPaused(boolean paused)
-    {
-        mIsActive = !paused;
-    }
-
-    @Override
     public boolean isValid()
     {
         return mIsValid;
@@ -212,7 +185,7 @@ public class ScheduledObjective implements PoolElement
             return null;
         }
 
-        EnlistedObjective enlistedObjective = new EnlistedObjective(mId, mDateCreated, referenceTime, mName, mDescription, mTags);
+        EnlistedObjective enlistedObjective = new EnlistedObjective(getId(), getParentId(), mDateCreated, referenceTime, getName(), getDescription(), mTags);
         if(!isRepeatable())
         {
             mIsValid = false;
@@ -238,7 +211,7 @@ public class ScheduledObjective implements PoolElement
     @Override
     public boolean isRelatedToObjective(long objectiveId)
     {
-        return mId == objectiveId;
+        return getId() == objectiveId;
     }
 
     @Override
@@ -256,7 +229,7 @@ public class ScheduledObjective implements PoolElement
     @Override
     public ScheduledObjective getRelatedObjectiveById(long objectiveId)
     {
-        if(mId == objectiveId)
+        if(isRelatedToObjective(objectiveId))
         {
             return this;
         }
@@ -287,12 +260,7 @@ public class ScheduledObjective implements PoolElement
     @Override
     public boolean isAvailable(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime, int dayStartHour)
     {
-        return !isPaused() && referenceTime.isAfter(getScheduledEnlistDate()) && !blockingObjectiveIds.contains(mId);
-    }
-
-    public long getId()
-    {
-        return mId;
+        return !isPaused() && referenceTime.isAfter(getScheduledEnlistDate()) && !blockingObjectiveIds.contains(getId());
     }
 
     @SuppressWarnings("unused")
@@ -304,41 +272,6 @@ public class ScheduledObjective implements PoolElement
     public LocalDateTime getScheduledEnlistDate()
     {
         return mScheduledAddDate;
-    }
-
-    @Override
-    public String getName()
-    {
-        return mName;
-    }
-
-    @Override
-    public String getDescription()
-    {
-        return mDescription;
-    }
-
-    public void setName(String name)
-    {
-        mName = name;
-    }
-
-    public void setDescription(String description)
-    {
-        mDescription = description;
-    }
-
-    //Pauses the objective so it's not repeated anymore
-    void pause()
-    {
-        mIsActive = false;
-    }
-
-    //Unpauses the objective
-    @SuppressWarnings("unused")
-    void unpause()
-    {
-        mIsActive = false;
     }
 
     @SuppressWarnings("unused")

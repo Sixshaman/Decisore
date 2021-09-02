@@ -5,6 +5,10 @@ import com.sixshaman.decisore.scheduler.SchedulerElement;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 
-public interface PoolElement extends SchedulerElement
+public abstract class PoolElement extends SchedulerElement
 {
+    public PoolElement(long id, String name, String description)
+    {
+        super(id, name, description);
+    }
 }

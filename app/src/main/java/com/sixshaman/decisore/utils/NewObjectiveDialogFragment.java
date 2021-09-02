@@ -27,8 +27,7 @@ import java.util.Objects;
 
 public class NewObjectiveDialogFragment extends DialogFragment
 {
-    private long    mPoolIdToAddTo;
-    private long    mChainIdToAddTo;
+    private long    mParentIdToAddTo;
     private boolean mAddToChainBeginning;
     private boolean mTomorrowDefault;
 
@@ -40,8 +39,7 @@ public class NewObjectiveDialogFragment extends DialogFragment
 
     public NewObjectiveDialogFragment()
     {
-        mPoolIdToAddTo  = -1;
-        mChainIdToAddTo = -1;
+        mParentIdToAddTo = -1;
 
         mBeforeObjectiveCreatedListener = ()          -> {};
         mAfterObjectiveCreatedListener  = objectiveId -> {};
@@ -61,12 +59,12 @@ public class NewObjectiveDialogFragment extends DialogFragment
 
     public void setPoolIdToAddTo(long poolId)
     {
-        mPoolIdToAddTo = poolId;
+        mParentIdToAddTo = poolId;
     }
 
     public void setChainIdToAddTo(long chainId, boolean addToBeginning)
     {
-        mChainIdToAddTo      = chainId;
+        mParentIdToAddTo     = chainId;
         mAddToChainBeginning = addToBeginning;
     }
 
@@ -174,7 +172,7 @@ public class NewObjectiveDialogFragment extends DialogFragment
 
                 mBeforeObjectiveCreatedListener.beforeObjectiveCreated();
 
-                long newObjectiveId = transactionDispatcher.addObjectiveTransaction(mPoolIdToAddTo, mChainIdToAddTo, mAddToChainBeginning,
+                long newObjectiveId = transactionDispatcher.addObjectiveTransaction(mParentIdToAddTo, mAddToChainBeginning,
                                                                                     objectiveCreateDate, objectiveScheduleDate.getValue(),
                                                                                     objectiveRepeatDuration.getValue(), objectiveRepeatProbability,
                                                                                     nameText, descriptionText, new ArrayList<>(), dayStartTime);
