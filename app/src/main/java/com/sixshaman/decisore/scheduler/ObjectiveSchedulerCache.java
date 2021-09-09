@@ -51,7 +51,7 @@ public class ObjectiveSchedulerCache
 
     static final int SCHEDULER_VERSION_1_0 = 1000;
     static final int SCHEDULER_VERSION_1_1 = 1001;
-    static final int SCHEDULER_VERSION_1_2 = 1001;
+    static final int SCHEDULER_VERSION_1_2 = 1002;
 
     static final int SCHEDULER_VERSION_CURRENT = SCHEDULER_VERSION_1_2;
 

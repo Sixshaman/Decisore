@@ -1,6 +1,8 @@
 package com.sixshaman.decisore.scheduler;
 
 import com.sixshaman.decisore.list.ObjectiveListCache;
+import com.sixshaman.decisore.scheduler.chain.ObjectiveChain;
+import com.sixshaman.decisore.scheduler.objective.ScheduledObjective;
 import com.sixshaman.decisore.utils.LockedReadFile;
 import com.sixshaman.decisore.utils.LockedWriteFile;
 import org.json.JSONArray;
@@ -48,11 +50,81 @@ public class Scheduler11To12Converter
                 JSONObject elementObject = elementsArray.getJSONObject(i);
 
                 String elementType = elementObject.getString("Type");
-                if(elementType.equals("ScheduledObjective"))
+                switch (elementType)
                 {
-                    JSONObject objectiveJson = elementObject.getJSONObject("Data");
-                    long id = objectiveJson.getLong("Id");
-                    objectiveIds.add(id);
+                    case "ScheduledObjective":
+                    {
+                        JSONObject objectiveJson = elementObject.getJSONObject("Data");
+                        long id = objectiveJson.getLong("Id");
+                        objectiveIds.add(id);
+                        break;
+                    }
+                    case "ObjectiveChain":
+                    {
+                        JSONObject chainJson = elementObject.getJSONObject("Data");
+
+                        JSONArray objectivesJsonArray = chainJson.getJSONArray("Objectives");
+                        for (int j = 0; j < objectivesJsonArray.length(); j++)
+                        {
+                            JSONObject objectiveJson = objectivesJsonArray.optJSONObject(j);
+                            long id = objectiveJson.getLong("Id");
+                            objectiveIds.add(id);
+                        }
+
+                        JSONArray idHistoryArray = chainJson.getJSONArray("ObjectiveHistory");
+                        for (int j = 0; j < idHistoryArray.length(); j++)
+                        {
+                            long objectiveId = idHistoryArray.optLong(j, -1);
+                            if (objectiveId != -1)
+                            {
+                                objectiveIds.add(objectiveId);
+                            }
+                        }
+
+                        break;
+                    }
+                    case "ObjectivePool":
+                    {
+                        JSONObject poolJson = elementObject.getJSONObject("Data");
+
+                        JSONArray sourcesJsonArray = poolJson.getJSONArray("Sources");
+                        for (int j = 0; j < sourcesJsonArray.length(); j++)
+                        {
+                            JSONObject sourceObject = sourcesJsonArray.getJSONObject(j);
+
+                            String sourceType = sourceObject.optString("Type");
+                            if(sourceType.equals("ScheduledObjective"))
+                            {
+                                JSONObject sourceData = sourceObject.getJSONObject("Data");
+                                long id = sourceData.getLong("Id");
+                                objectiveIds.add(id);
+                            }
+                            else if (sourceType.equals("ObjectiveChain"))
+                            {
+                                JSONObject chainJson = elementObject.getJSONObject("Data");
+
+                                JSONArray objectivesJsonArray = chainJson.getJSONArray("Objectives");
+                                for(int k = 0; k < objectivesJsonArray.length(); k++)
+                                {
+                                    JSONObject objectiveObject = objectivesJsonArray.optJSONObject(k);
+                                    long id = objectiveObject.getLong("Id");
+                                    objectiveIds.add(id);
+                                }
+
+                                JSONArray idHistoryArray = chainJson.getJSONArray("ObjectiveHistory");
+                                for(int k = 0; k < idHistoryArray.length(); k++)
+                                {
+                                    long objectiveId = idHistoryArray.optLong(k, -1);
+                                    if(objectiveId != -1)
+                                    {
+                                        objectiveIds.add(objectiveId);
+                                    }
+                                }
+                            }
+                        }
+
+                        break;
+                    }
                 }
             }
         }
@@ -81,6 +153,24 @@ public class Scheduler11To12Converter
                     long id = chainJson.getLong("Id");
                     chainIds.add(id);
                 }
+                else if(elementType.equals("ObjectivePool"))
+                {
+                    JSONObject poolJson = elementObject.getJSONObject("Data");
+
+                    JSONArray sourcesJsonArray = poolJson.getJSONArray("Sources");
+                    for(int j = 0; j < sourcesJsonArray.length(); j++)
+                    {
+                        JSONObject sourceObject = sourcesJsonArray.getJSONObject(j);
+
+                        String sourceType = sourceObject.optString("Type");
+                        if(sourceType.equals("ObjectiveChain"))
+                        {
+                            JSONObject sourceData = sourceObject.getJSONObject("Data");
+                            long id = sourceData.getLong("Id");
+                            chainIds.add(id);
+                        }
+                    }
+                }
             }
         }
         catch(JSONException e)
@@ -104,8 +194,8 @@ public class Scheduler11To12Converter
                 String elementType = elementObject.getString("Type");
                 if(elementType.equals("ObjectivePool"))
                 {
-                    JSONObject chainJson = elementObject.getJSONObject("Data");
-                    long id = chainJson.getLong("Id");
+                    JSONObject poolJson = elementObject.getJSONObject("Data");
+                    long id = poolJson.getLong("Id");
                     poolIds.add(id);
                 }
             }
