@@ -215,42 +215,113 @@ public class Scheduler11To12Converter
             mShedulerJsonObject.put("VERSION", ObjectiveSchedulerCache.SCHEDULER_VERSION_1_2);
 
             JSONArray elementsArray = mShedulerJsonObject.getJSONArray("ELEMENTS");
-            mShedulerJsonObject.remove("ELEMENTS");
-
-            JSONArray elementsJsonArray = new JSONArray();
             for(int i = 0; i < elementsArray.length(); i++)
             {
-                JSONObject elementObject = new JSONObject();
+                JSONObject elementObject = elementsArray.getJSONObject(i);
 
                 String     elementType = elementObject.getString("Type");
                 JSONObject elementData = elementObject.getJSONObject("Data");
-
                 switch(elementType)
                 {
                     case "ScheduledObjective":
                     {
-                        long oldId = elementData.getLong("Id");
-                        elementData.put("Id", newObjectiveIdMap.get(oldId));
+                        long oldObjectiveId = elementData.getLong("Id");
+                        elementData.put("Id", newObjectiveIdMap.get(oldObjectiveId));
                         break;
                     }
                     case "ObjectiveChain":
                     {
-                        long oldId = elementData.getLong("Id");
-                        elementData.put("Id", newChainIdMap.get(oldId));
+                        long oldChainId = elementData.getLong("Id");
+                        elementData.put("Id", newChainIdMap.get(oldChainId));
+
+                        JSONArray chainObjectives = elementData.getJSONArray("Objectives");
+                        for (int j = 0; j < chainObjectives.length(); j++)
+                        {
+                            JSONObject objectiveJson = chainObjectives.getJSONObject(j);
+                            long oldObjectiveId = objectiveJson.getLong("Id");
+                            objectiveJson.put("Id", newObjectiveIdMap.get(oldObjectiveId));
+
+                            chainObjectives.put(j, objectiveJson);
+                        }
+
+                        JSONArray chainHistory = elementData.getJSONArray("ObjectiveHistory");
+                        for(int j = 0; j < chainHistory.length(); j++)
+                        {
+                            long oldObjectiveId = chainHistory.optLong(j, -1);
+                            if(oldObjectiveId != -1)
+                            {
+                                chainHistory.put(j, newObjectiveIdMap.get(oldObjectiveId));
+                            }
+                        }
+
+                        elementData.put("Objectives", chainObjectives);
+                        elementData.put("ObjectiveHistory", chainHistory);
+
                         break;
                     }
                     case "ObjectivePool":
                     {
-                        long oldId = elementData.getLong("Id");
-                        elementData.put("Id", newPoolIdMap.get(oldId));
+                        long oldPoolId = elementData.getLong("Id");
+                        elementData.put("Id", newPoolIdMap.get(oldPoolId));
+
+                        JSONArray poolSources = elementData.getJSONArray("Sources");
+                        for(int j = 0; j < poolSources.length(); j++)
+                        {
+                            JSONObject sourceJson = poolSources.getJSONObject(j);
+
+                            String     sourceType = sourceJson.getString("Type");
+                            JSONObject sourceData = sourceJson.getJSONObject("Data");
+
+                            if(sourceType.equals("ScheduledObjective"))
+                            {
+                                long oldObjectiveId = sourceData.getLong("Id");
+                                sourceData.put("Id", newObjectiveIdMap.get(oldObjectiveId));
+                            }
+                            else if(sourceType.equals("ObjectiveChain"))
+                            {
+                                long oldChainId = sourceData.getLong("Id");
+                                sourceData.put("Id", newChainIdMap.get(oldChainId));
+
+                                JSONArray chainObjectives = sourceData.getJSONArray("Objectives");
+                                for (int k = 0; k < chainObjectives.length(); k++)
+                                {
+                                    JSONObject objectiveJson = chainObjectives.getJSONObject(k);
+                                    long oldObjectiveId = objectiveJson.getLong("Id");
+                                    objectiveJson.put("Id", newObjectiveIdMap.get(oldObjectiveId));
+
+                                    chainObjectives.put(k, objectiveJson);
+                                }
+
+                                JSONArray chainHistory = sourceData.getJSONArray("ObjectiveHistory");
+                                for(int k = 0; k < chainHistory.length(); k++)
+                                {
+                                    long oldObjectiveId = chainHistory.optLong(k, -1);
+                                    if(oldObjectiveId != -1)
+                                    {
+                                        chainHistory.put(k, newObjectiveIdMap.get(oldObjectiveId));
+                                    }
+                                }
+
+                                sourceData.put("Objectives", chainObjectives);
+                                sourceData.put("ObjectiveHistory", chainHistory);
+                            }
+
+                            sourceJson.put("Data", sourceData);
+
+                            poolSources.put(j, sourceJson);
+                        }
+
+                        elementData.put("Sources", poolSources);
+
                         break;
                     }
                 }
 
-                elementsJsonArray.put(elementObject);
+                elementObject.put("Data", elementData);
+                elementsArray.put(i, elementObject);
             }
 
-            mShedulerJsonObject.put("ELEMENTS", elementsJsonArray);
+            mShedulerJsonObject.put("ELEMENTS", elementsArray);
         }
         catch(JSONException e)
         {
