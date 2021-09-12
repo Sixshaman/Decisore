@@ -117,56 +117,63 @@ public class EnlistedObjective implements Comparable<Long>
     {
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss:nnnnnnnnn");
 
-        long id       = jsonObject.optLong(JSON_OBJECTIVE_ID, -1);
-        long parentId = jsonObject.optLong(JSON_OBJECTIVE_PARENT_ID, -1);
-
-        String name        = jsonObject.optString(JSON_OBJECTIVE_NAME);
-        String description = jsonObject.optString(JSON_OBJECTIVE_DESCRIPTION);
-
-        String createdDateString = jsonObject.optString(JSON_OBJECTIVE_CREATE_DATE);
-        String addedDateString   = jsonObject.optString(JSON_OBJECTIVE_ADD_DATE);
-
-        float charm = (float)jsonObject.optDouble(JSON_OBJECTIVE_CHARM, 0.5);
-
-        ArrayList<String> taskTags = new ArrayList<>();
-        JSONArray tagsJSONArray = jsonObject.optJSONArray(JSON_OBJECTIVE_TAGS);
-        if(tagsJSONArray != null)
-        {
-            for(int i = 0; i < tagsJSONArray.length(); i++)
-            {
-                String tagStr = (String)tagsJSONArray.opt(i);
-                if(!tagStr.isEmpty())
-                {
-                    taskTags.add(tagStr);
-                }
-            }
-        }
-
-        LocalDateTime createdDate = null;
-        try //Dumb java, time formatting mistake IS NOT an exception, it's a normal situation that should be handled differently
-        {
-             createdDate = LocalDateTime.parse(createdDateString, dateTimeFormatter);
-        }
-        catch (DateTimeParseException e)
-        {
-            e.printStackTrace();
-        }
-
-        LocalDateTime addedDate = null;
         try
         {
-            addedDate = LocalDateTime.parse(addedDateString, dateTimeFormatter);
+            long id       = jsonObject.getLong(JSON_OBJECTIVE_ID);
+            long parentId = jsonObject.getLong(JSON_OBJECTIVE_PARENT_ID);
+
+            String name        = jsonObject.getString(JSON_OBJECTIVE_NAME);
+            String description = jsonObject.getString(JSON_OBJECTIVE_DESCRIPTION);
+
+            String createdDateString = jsonObject.getString(JSON_OBJECTIVE_CREATE_DATE);
+            String addedDateString   = jsonObject.getString(JSON_OBJECTIVE_ADD_DATE);
+
+            float charm = (float)jsonObject.optDouble(JSON_OBJECTIVE_CHARM, 0.5);
+
+            ArrayList<String> taskTags = new ArrayList<>();
+            JSONArray tagsJSONArray = jsonObject.optJSONArray(JSON_OBJECTIVE_TAGS);
+            if(tagsJSONArray != null)
+            {
+                for(int i = 0; i < tagsJSONArray.length(); i++)
+                {
+                    String tagStr = (String)tagsJSONArray.opt(i);
+                    if(!tagStr.isEmpty())
+                    {
+                        taskTags.add(tagStr);
+                    }
+                }
+            }
+
+            LocalDateTime createdDate = null;
+            try //Dumb java, time formatting mistake IS NOT an exception, it's a normal situation that should be handled differently
+            {
+                 createdDate = LocalDateTime.parse(createdDateString, dateTimeFormatter);
+            }
+            catch (DateTimeParseException e)
+            {
+                e.printStackTrace();
+            }
+
+            LocalDateTime addedDate = null;
+            try
+            {
+                addedDate = LocalDateTime.parse(addedDateString, dateTimeFormatter);
+            }
+            catch (DateTimeParseException e)
+            {
+                e.printStackTrace();
+            }
+
+            if(id != -1 && !name.isEmpty() && createdDate != null && addedDate != null)
+            {
+                EnlistedObjective objective = new EnlistedObjective(id, parentId, createdDate, addedDate, name, description, taskTags);
+                objective.setCharm(charm);
+                return objective;
+            }
         }
-        catch (DateTimeParseException e)
+        catch (JSONException e)
         {
             e.printStackTrace();
-        }
-
-        if(id != -1 && !name.isEmpty() && createdDate != null && addedDate != null)
-        {
-            EnlistedObjective objective = new EnlistedObjective(id, parentId, createdDate, addedDate, name, description, taskTags);
-            objective.setCharm(charm);
-            return objective;
         }
 
         return null; //Can't create even a basic objective

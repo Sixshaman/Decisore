@@ -1,5 +1,6 @@
 package com.sixshaman.decisore.list;
 
+import com.sixshaman.decisore.scheduler.ObjectiveSchedulerCache;
 import com.sixshaman.decisore.utils.LockedReadFile;
 import com.sixshaman.decisore.utils.LockedWriteFile;
 import org.json.JSONArray;
@@ -8,6 +9,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 
 //Recalculates id based on the fact that chains, pools, and objectives now share a common id s[ace
@@ -54,15 +56,15 @@ public class List10To11Converter
             e.printStackTrace();
         }
 
+        Collections.sort(objectiveIds);
         return objectiveIds;
     }
 
-    public void patchIds(HashMap<Long, Long> newIdMap)
+    @SuppressWarnings("ConstantConditions")
+    public boolean patchIds(HashMap<Long, Long> newIdMap)
     {
         try
         {
-            mListJsonObject.put("VERSION", ObjectiveListCache.LIST_VERSION_1_1);
-
             JSONArray oldObjectivesJsonArray = mListJsonObject.getJSONArray("TASKS");
             mListJsonObject.remove("TASKS");
 
@@ -72,18 +74,69 @@ public class List10To11Converter
                 JSONObject objectiveObject = oldObjectivesJsonArray.optJSONObject(i);
 
                 long oldId = objectiveObject.getLong("Id");
-                objectiveObject.put("Id", newIdMap.get(oldId));
+                long newId = newIdMap.get(oldId);
 
+                objectiveObject.put("Id", newId);
                 newObjectivesJsonArray.put(objectiveObject);
             }
 
             mListJsonObject.put("OBJECTIVES", newObjectivesJsonArray);
         }
-        catch(JSONException e)
+        catch(JSONException | NullPointerException e)
         {
             e.printStackTrace();
+            return false;
         }
 
+        return true;
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    public boolean patchParentIds(HashMap<Long, Long> parentIdMap)
+    {
+        try
+        {
+            JSONArray oldObjectivesJsonArray = mListJsonObject.getJSONArray("OBJECTIVES");
+
+            JSONArray newObjectivesJsonArray = new JSONArray();
+            for(int i = 0; i < oldObjectivesJsonArray.length(); i++)
+            {
+                JSONObject objectiveObject = oldObjectivesJsonArray.optJSONObject(i);
+
+                long objectiveId = objectiveObject.getLong("Id");
+                long parentId    = parentIdMap.get(objectiveId);
+
+                objectiveObject.put("ParentId", parentId);
+                newObjectivesJsonArray.put(objectiveObject);
+            }
+
+            mListJsonObject.put("OBJECTIVES", newObjectivesJsonArray);
+        }
+        catch(JSONException | NullPointerException e)
+        {
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
+    }
+
+    public boolean updateVersion()
+    {
+        try
+        {
+            mListJsonObject.put("VERSION", ObjectiveListCache.LIST_VERSION_1_1);
+        }
+        catch(JSONException e)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    public void save()
+    {
         LockedWriteFile listFile = new LockedWriteFile(mListFilePath);
         listFile.write(mListJsonObject.toString());
         listFile.close();

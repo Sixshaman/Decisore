@@ -119,116 +119,124 @@ public class ScheduledObjective extends PoolElement
 
     public static ScheduledObjective fromJSON(JSONObject jsonObject)
     {
-        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss:nnnnnnnnn");
-
-        long id       = jsonObject.optLong("Id", -1);
-        long parentId = jsonObject.optLong("ParentId", -1);
-
-        String name        = jsonObject.optString("Name");
-        String description = jsonObject.optString("Description");
-
-        String createdDateString          = jsonObject.optString("DateCreated");
-        String scheduledDateString        = jsonObject.optString("DateScheduled");
-        String regularScheduledDateString = jsonObject.optString("DateScheduledRegular");
-
-        String isActiveString = jsonObject.optString("IsActive");
-
-        String repeatDurationString    = jsonObject.optString("RepeatDuration");
-        String repeatProbabilityString = jsonObject.optString("RepeatProbability");
-
-        ArrayList<String> objectiveTags = new ArrayList<>();
-        JSONArray tagsJSONArray = jsonObject.optJSONArray("Tags");
-        if(tagsJSONArray != null)
+        try
         {
-            for(int i = 0; i < tagsJSONArray.length(); i++)
+            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss:nnnnnnnnn");
+
+            long id       = jsonObject.getLong("Id");
+            long parentId = jsonObject.getLong("ParentId");
+
+            String name        = jsonObject.getString("Name");
+            String description = jsonObject.getString("Description");
+
+            String createdDateString          = jsonObject.getString("DateCreated");
+            String scheduledDateString        = jsonObject.getString("DateScheduled");
+            String regularScheduledDateString = jsonObject.getString("DateScheduledRegular");
+
+            String isActiveString = jsonObject.getString("IsActive");
+
+            String repeatDurationString    = jsonObject.getString("RepeatDuration");
+            String repeatProbabilityString = jsonObject.getString("RepeatProbability");
+
+            ArrayList<String> objectiveTags = new ArrayList<>();
+            JSONArray tagsJSONArray = jsonObject.optJSONArray("Tags");
+            if(tagsJSONArray != null)
             {
-                String tagStr = (String)tagsJSONArray.opt(i);
-                if(!tagStr.isEmpty())
+                for(int i = 0; i < tagsJSONArray.length(); i++)
                 {
-                    objectiveTags.add(tagStr);
+                    String tagStr = (String)tagsJSONArray.opt(i);
+                    if(!tagStr.isEmpty())
+                    {
+                        objectiveTags.add(tagStr);
+                    }
                 }
             }
-        }
 
-        LocalDateTime createdDate = null;
-        try //Dumb java, time formatting mistake IS NOT an exception, it's a normal situation that should be handled differently
-        {
-            createdDate = LocalDateTime.parse(createdDateString, dateTimeFormatter);
-        }
-        catch (DateTimeParseException e)
-        {
-            e.printStackTrace();
-        }
-
-        LocalDateTime scheduledDate = null;
-        try
-        {
-            scheduledDate = LocalDateTime.parse(scheduledDateString, dateTimeFormatter);
-        }
-        catch (DateTimeParseException e)
-        {
-            e.printStackTrace();
-        }
-
-        LocalDateTime regularScheduleDate = null;
-        try
-        {
-            regularScheduleDate = LocalDateTime.parse(regularScheduledDateString, dateTimeFormatter);
-        }
-        catch (DateTimeParseException e)
-        {
-            e.printStackTrace();
-        }
-
-        //Java can't into proper parsing... And I thought C++ is bad
-        boolean isActive = true;
-        if(!isActiveString.isEmpty())
-        {
-            if(isActiveString.equalsIgnoreCase("false"))
+            LocalDateTime createdDate = null;
+            try //Dumb java, time formatting mistake IS NOT an exception, it's a normal situation that should be handled differently
             {
-                isActive = false;
+                createdDate = LocalDateTime.parse(createdDateString, dateTimeFormatter);
             }
-        }
-
-        Long repeatDurationMinutes = null;
-        try
-        {
-            repeatDurationMinutes = Long.parseLong(repeatDurationString);
-        }
-        catch(NumberFormatException e)
-        {
-            e.printStackTrace();
-        }
-
-        Float repeatProbability = null;
-        try
-        {
-            repeatProbability = Float.parseFloat(repeatProbabilityString);
-        }
-        catch(NumberFormatException e)
-        {
-            e.printStackTrace();
-        }
-
-        ScheduledObjective objective = null;
-        if(id != -1 && !name.isEmpty() && createdDate != null && scheduledDate != null && repeatDurationMinutes != null && repeatProbability != null)
-        {
-            Duration repeatDuration = Duration.ofMinutes(repeatDurationMinutes);
-            objective = new ScheduledObjective(id, name, description, createdDate, scheduledDate, objectiveTags, repeatDuration, repeatProbability);
-
-            objective.setParentId(parentId);
-            if(regularScheduleDate != null)
+            catch (DateTimeParseException e)
             {
-                objective.mRegularScheduledAddDate = regularScheduleDate; //Can be different from scheduledDate
+                e.printStackTrace();
             }
 
-            if(!isActive)
+            LocalDateTime scheduledDate = null;
+            try
             {
-                objective.setPaused(true);
+                scheduledDate = LocalDateTime.parse(scheduledDateString, dateTimeFormatter);
+            }
+            catch (DateTimeParseException e)
+            {
+                e.printStackTrace();
+            }
+
+            LocalDateTime regularScheduleDate = null;
+            try
+            {
+                regularScheduleDate = LocalDateTime.parse(regularScheduledDateString, dateTimeFormatter);
+            }
+            catch (DateTimeParseException e)
+            {
+                e.printStackTrace();
+            }
+
+            //Java can't into proper parsing... And I thought C++ is bad
+            boolean isActive = true;
+            if(!isActiveString.isEmpty())
+            {
+                if(isActiveString.equalsIgnoreCase("false"))
+                {
+                    isActive = false;
+                }
+            }
+
+            Long repeatDurationMinutes = null;
+            try
+            {
+                repeatDurationMinutes = Long.parseLong(repeatDurationString);
+            }
+            catch(NumberFormatException e)
+            {
+                e.printStackTrace();
+            }
+
+            Float repeatProbability = null;
+            try
+            {
+                repeatProbability = Float.parseFloat(repeatProbabilityString);
+            }
+            catch(NumberFormatException e)
+            {
+                e.printStackTrace();
+            }
+
+            if(id != -1 && !name.isEmpty() && createdDate != null && scheduledDate != null && repeatDurationMinutes != null && repeatProbability != null)
+            {
+                Duration repeatDuration = Duration.ofMinutes(repeatDurationMinutes);
+                ScheduledObjective objective = new ScheduledObjective(id, name, description, createdDate, scheduledDate, objectiveTags, repeatDuration, repeatProbability);
+
+                objective.setParentId(parentId);
+                if(regularScheduleDate != null)
+                {
+                    objective.mRegularScheduledAddDate = regularScheduleDate; //Can be different from scheduledDate
+                }
+
+                if(!isActive)
+                {
+                    objective.setPaused(true);
+                }
+
+                return objective;
             }
         }
+        catch(JSONException e)
+        {
+            e.printStackTrace();
+        }
 
-        return objective;
+        return null;
     }
 
     //Reschedules the objective to the new enlist date

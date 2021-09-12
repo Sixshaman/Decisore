@@ -861,11 +861,6 @@ public class TransactionDispatcher
         ArrayList<Long> scheduledObjectiveIds = schedulerConverter.gatherObjectiveIds();
         ArrayList<Long> enlistedObjectiveIds  = listConverter.gatherObjectiveIds();
 
-        Collections.sort(poolIds);
-        Collections.sort(chainIds);
-        Collections.sort(scheduledObjectiveIds);
-        Collections.sort(enlistedObjectiveIds);
-
         HashMap<Long, Long> poolPatchedIdMap      = new HashMap<>();
         HashMap<Long, Long> chainPatchedIdMap     = new HashMap<>();
         HashMap<Long, Long> objectivePatchedIdMap = new HashMap<>();
@@ -899,9 +894,19 @@ public class TransactionDispatcher
             }
         }
 
-        listConverter.patchIds(objectivePatchedIdMap);
-        schedulerConverter.patchIds(objectivePatchedIdMap, chainPatchedIdMap, poolPatchedIdMap);
+        if(schedulerConverter.patchIds(objectivePatchedIdMap, chainPatchedIdMap, poolPatchedIdMap) && listConverter.patchIds(objectivePatchedIdMap))
+        {
+            HashMap<Long, Long> parentIdMap = schedulerConverter.gatherParentIds();
+            if(schedulerConverter.patchParentIds(parentIdMap) && listConverter.patchParentIds(parentIdMap))
+            {
+                if(schedulerConverter.updateVersion() && listConverter.updateVersion())
+                {
+                    listConverter.save();
+                    schedulerConverter.save();
 
-        invalidateCaches(true, true, false);
+                    invalidateCaches(true, true, false);
+                }
+            }
+        }
     }
 }

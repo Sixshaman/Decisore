@@ -181,12 +181,12 @@ public class ObjectiveChain extends PoolElement
         try
         {
             long id       = jsonObject.getLong("Id");
-            long parentId = jsonObject.optLong("ParentId", -1);
+            long parentId = jsonObject.getLong("ParentId");
 
-            String name        = jsonObject.optString("Name");
-            String description = jsonObject.optString("Description");
+            String name        = jsonObject.getString("Name");
+            String description = jsonObject.getString("Description");
 
-            String isActiveString = jsonObject.optString("IsActive");
+            String isActiveString = jsonObject.getString("IsActive");
 
             String isAutoDeleteString  = jsonObject.optString("IsAutoDelete");
             String isUnstoppableString = jsonObject.optString("IsUnstoppable");

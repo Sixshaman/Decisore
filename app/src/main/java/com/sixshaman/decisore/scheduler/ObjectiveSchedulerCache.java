@@ -165,6 +165,10 @@ public class ObjectiveSchedulerCache
 
                                 pool.attachAllChainViews(mChainItemViews, this);
                             }
+                            else
+                            {
+                                return InvalidateResult.INVALIDATE_ERROR;
+                            }
                             break;
                         }
                         case "ObjectiveChain":
@@ -180,6 +184,10 @@ public class ObjectiveSchedulerCache
                                     chain.attachToChainView(chainView, this);
                                 }
                             }
+                            else
+                            {
+                                return InvalidateResult.INVALIDATE_ERROR;
+                            }
                             break;
                         }
                         case "ScheduledObjective":
@@ -188,6 +196,10 @@ public class ObjectiveSchedulerCache
                             if(objective != null)
                             {
                                 mSchedulerElements.add(objective);
+                            }
+                            else
+                            {
+                                return InvalidateResult.INVALIDATE_ERROR;
                             }
                             break;
                         }
