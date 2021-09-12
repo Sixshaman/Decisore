@@ -69,10 +69,10 @@ public class EditChainDialogFragment extends DialogFragment
 
                 String configFolder = Objects.requireNonNull(activity.getExternalFilesDir("/app")).getAbsolutePath();
 
-                TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
+                TransactionDispatcher transactionDispatcher = new TransactionDispatcher(configFolder);
                 transactionDispatcher.setSchedulerCache(mSchedulerCache);
 
-                transactionDispatcher.editChainTransaction(configFolder, mChainId, nameText, descriptionText);
+                transactionDispatcher.editChainTransaction(mChainId, nameText, descriptionText);
             }
         });
 

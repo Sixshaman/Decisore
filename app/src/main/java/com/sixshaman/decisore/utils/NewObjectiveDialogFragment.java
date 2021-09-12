@@ -16,7 +16,6 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 import androidx.preference.PreferenceManager;
 import com.sixshaman.decisore.R;
-import com.sixshaman.decisore.list.EnlistedObjective;
 import com.sixshaman.decisore.list.ObjectiveListCache;
 import com.sixshaman.decisore.scheduler.ObjectiveSchedulerCache;
 
@@ -28,8 +27,7 @@ import java.util.Objects;
 
 public class NewObjectiveDialogFragment extends DialogFragment
 {
-    private long    mPoolIdToAddTo;
-    private long    mChainIdToAddTo;
+    private long    mParentIdToAddTo;
     private boolean mAddToChainBeginning;
     private boolean mTomorrowDefault;
 
@@ -41,8 +39,7 @@ public class NewObjectiveDialogFragment extends DialogFragment
 
     public NewObjectiveDialogFragment()
     {
-        mPoolIdToAddTo  = -1;
-        mChainIdToAddTo = -1;
+        mParentIdToAddTo = -1;
 
         mBeforeObjectiveCreatedListener = ()          -> {};
         mAfterObjectiveCreatedListener  = objectiveId -> {};
@@ -62,12 +59,12 @@ public class NewObjectiveDialogFragment extends DialogFragment
 
     public void setPoolIdToAddTo(long poolId)
     {
-        mPoolIdToAddTo = poolId;
+        mParentIdToAddTo = poolId;
     }
 
     public void setChainIdToAddTo(long chainId, boolean addToBeginning)
     {
-        mChainIdToAddTo      = chainId;
+        mParentIdToAddTo     = chainId;
         mAddToChainBeginning = addToBeginning;
     }
 
@@ -103,7 +100,8 @@ public class NewObjectiveDialogFragment extends DialogFragment
         LocalDateTime objectiveCreateDate = LocalDateTime.now();
 
         //I blamed Java for necessity to make hacks like ValueHolder... Then I learned about RefCell in Rust. Lol. Apparently good languages have this too
-        final ValueHolder<LocalDateTime> objectiveScheduleDate = new ValueHolder<>(objectiveCreateDate);
+        final ValueHolder<LocalDateTime> objectiveScheduleDate   = new ValueHolder<>(objectiveCreateDate);
+        final ValueHolder<Duration>      objectiveRepeatDuration = new ValueHolder<>(Duration.ofDays(1));
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(Objects.requireNonNull(getContext()).getApplicationContext());
         String dayStartTimeString  = sharedPreferences.getString("day_start_time", "6");
@@ -114,13 +112,11 @@ public class NewObjectiveDialogFragment extends DialogFragment
 
         builder.setPositiveButton(R.string.createObjective, (dialog, id) ->
         {
-            final EditText editTextName         = resultDialog.getValue().findViewById(R.id.editObjectiveName);
-            final EditText editTextNDescription = resultDialog.getValue().findViewById(R.id.editObjectiveDescription);
+            final EditText editTextName         = resultDialog.getValue().findViewById(R.id.edit_objective_name);
+            final EditText editTextNDescription = resultDialog.getValue().findViewById(R.id.edit_objective_description);
 
-            final AlwaysItemSelectedSpinner scheduleSpinner    = resultDialog.getValue().findViewById(R.id.spinnerObjectiveSchedule);
-            final Spinner                   repeatSpinner      = resultDialog.getValue().findViewById(R.id.spinnerObjectiveRepeats);
-            final Spinner                   intervalSpinner    = resultDialog.getValue().findViewById(R.id.spinnerObjectiveInterval);
-            final CheckBox                  occasionalCheckbox = resultDialog.getValue().findViewById(R.id.checkboxOccasional);
+            final Spinner  repeatSpinner      = resultDialog.getValue().findViewById(R.id.spinner_objective_repeats);
+            final CheckBox occasionalCheckbox = resultDialog.getValue().findViewById(R.id.checkbox_occasional);
 
             String nameText = editTextName.getEditableText().toString();
             if(nameText.isEmpty())
@@ -131,38 +127,7 @@ public class NewObjectiveDialogFragment extends DialogFragment
             else
             {
                 String descriptionText = editTextNDescription.getEditableText().toString();
-
-                Duration objectiveRepeatDuration = Duration.ZERO;
                 float objectiveRepeatProbability;
-
-                int objectiveScheduleIndex = scheduleSpinner.getSelectedItemPosition();
-                switch(objectiveScheduleIndex)
-                {
-                    case 0: //Now
-                    {
-                        objectiveScheduleDate.setValue(objectiveCreateDate);
-                        break;
-                    }
-                    case 1: //Tomorrow
-                    {
-                        //Day starts at 6 AM
-                        objectiveScheduleDate.setValue(objectiveCreateDate.minusHours(dayStartTime).plusDays(1).truncatedTo(ChronoUnit.DAYS).plusHours(dayStartTime));
-                        break;
-                    }
-                    case 2: //In a week
-                    {
-                        //Day starts at 6 AM
-                        objectiveScheduleDate.setValue(objectiveCreateDate.minusHours(dayStartTime).plusDays(7).truncatedTo(ChronoUnit.DAYS).plusHours(dayStartTime));
-                        break;
-                    }
-                    case 3: //Custom
-                    {
-                        //Set in setOnItemClickListener
-                        break;
-                    }
-                    default:
-                        break;
-                }
 
                 boolean objectiveRepeatable = false;
 
@@ -181,26 +146,6 @@ public class NewObjectiveDialogFragment extends DialogFragment
                     }
                 }
 
-                int objectiveIntervalIndex = intervalSpinner.getSelectedItemPosition();
-                switch(objectiveIntervalIndex)
-                {
-                    case 0: //Day
-                    {
-                        objectiveRepeatDuration = Duration.ofDays(1);
-                        break;
-                    }
-                    case 1: //Week
-                    {
-                        objectiveRepeatDuration = Duration.ofDays(7);
-                        break;
-                    }
-                    case 2: //Month
-                    {
-                        objectiveRepeatDuration = Duration.ofDays(30);
-                        break;
-                    }
-                }
-
                 if(objectiveRepeatable)
                 {
                     if(occasionalCheckbox.isChecked())
@@ -215,21 +160,21 @@ public class NewObjectiveDialogFragment extends DialogFragment
                 else
                 {
                     //No repetition!
-                    objectiveRepeatDuration = Duration.ZERO;
+                    objectiveRepeatDuration.setValue(Duration.ZERO);
                     objectiveRepeatProbability = 0.0f;
                 }
 
                 String configFolder = Objects.requireNonNull(activity.getExternalFilesDir("/app")).getAbsolutePath();
 
-                TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
+                TransactionDispatcher transactionDispatcher = new TransactionDispatcher(configFolder);
                 transactionDispatcher.setSchedulerCache(mSchedulerCache);
                 transactionDispatcher.setListCache(mListCache);
 
                 mBeforeObjectiveCreatedListener.beforeObjectiveCreated();
 
-                long newObjectiveId = transactionDispatcher.addObjectiveTransaction(mPoolIdToAddTo, mChainIdToAddTo, mAddToChainBeginning,
-                                                                                    configFolder, objectiveCreateDate, objectiveScheduleDate.getValue(),
-                                                                                    objectiveRepeatDuration, objectiveRepeatProbability,
+                long newObjectiveId = transactionDispatcher.addObjectiveTransaction(mParentIdToAddTo, mAddToChainBeginning,
+                                                                                    objectiveCreateDate, objectiveScheduleDate.getValue(),
+                                                                                    objectiveRepeatDuration.getValue(), objectiveRepeatProbability,
                                                                                     nameText, descriptionText, new ArrayList<>(), dayStartTime);
 
                 mAfterObjectiveCreatedListener.afterObjectiveCreated(newObjectiveId);
@@ -244,10 +189,14 @@ public class NewObjectiveDialogFragment extends DialogFragment
         resultDialog.setValue(builder.create());
         resultDialog.getValue().setOnShowListener(dialogInterface ->
         {
-            final Spinner scheduleSpinner = resultDialog.getValue().findViewById(R.id.spinnerObjectiveSchedule);
+            final Spinner scheduleSpinner = resultDialog.getValue().findViewById(R.id.spinner_objective_schedule);
+            final Spinner intervalSpinner = resultDialog.getValue().findViewById(R.id.spinner_objective_interval);
 
-            DateSpinnerCustomTextAdapter customTextAdapter = new DateSpinnerCustomTextAdapter(scheduleSpinner.getContext());
-            scheduleSpinner.setAdapter(customTextAdapter);
+            SpinnerCustomTextAdapter dateCustomTextAdapter = new SpinnerCustomTextAdapter(scheduleSpinner.getContext(), R.array.objective_schedule_types);
+            scheduleSpinner.setAdapter(dateCustomTextAdapter);
+
+            SpinnerCustomTextAdapter intervalCustomTextAdapter = new SpinnerCustomTextAdapter(intervalSpinner.getContext(), R.array.objective_interval_types);
+            intervalSpinner.setAdapter(intervalCustomTextAdapter);
 
             //Default selection
             if(objectiveCreateDate.getHour() >= dayEndTime || mTomorrowDefault)
@@ -259,56 +208,185 @@ public class NewObjectiveDialogFragment extends DialogFragment
                 scheduleSpinner.setSelection(0);
             }
 
-            scheduleSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener()
-            {
-                @Override
-                public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
-                {
-                    if(position == 0) //Now
-                    {
-                        if(objectiveCreateDate.getHour() >= dayEndTime)
-                        {
-                            scheduleSpinner.setSelection(1);
-                            Toast.makeText(view.getContext(), R.string.doItTomorrowPrinciple, Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                    else if(position == 3) //Custom date
-                    {
-                        DatePickerDialog datePickerDialog = new DatePickerDialog(activity);
-                        datePickerDialog.setOnDateSetListener((datePicker, year, month, day) ->
-                        {
-                            //Day starts at 6 AM
-                            //Also Java numerates months from 0, not from 1
-                            LocalDateTime dateTime = LocalDateTime.of(year, month + 1, day, dayStartTime, 0, 0);
-                            objectiveScheduleDate.setValue(dateTime);
+            DateSelectListener dateSelectListener = new DateSelectListener(objectiveScheduleDate, objectiveCreateDate);
+            dateSelectListener.setDayStartTime(dayStartTime);
+            dateSelectListener.setDayEndTime(dayEndTime);
 
-                            customTextAdapter.setCustomText(dateTime.toLocalDate().toString());
-                        });
-
-                        datePickerDialog.show();
-                    }
-                }
-
-                @Override
-                public void onNothingSelected(AdapterView<?> parent)
-                {
-
-                }
-            });
+            scheduleSpinner.setOnItemSelectedListener(dateSelectListener);
+            intervalSpinner.setOnItemSelectedListener(new IntervalSelectListener(objectiveRepeatDuration));
         });
 
         return resultDialog.getValue();
     }
 
-    private static class DateSpinnerCustomTextAdapter extends ArrayAdapter<String>
+    private static class DateSelectListener implements AdapterView.OnItemSelectedListener
+    {
+        private final ValueHolder<LocalDateTime> mScheduleDate;
+        private final LocalDateTime              mCreateDate;
+
+        private int mDayStartTime;
+        private int mDayEndTime;
+
+        DateSelectListener(final ValueHolder<LocalDateTime> scheduleDate, LocalDateTime createDate)
+        {
+            mScheduleDate = scheduleDate;
+            mCreateDate   = createDate;
+
+            mDayStartTime = 0;
+            mDayEndTime   = 24;
+        }
+
+        void setDayStartTime(int dayStartTime)
+        {
+            mDayStartTime = dayStartTime;
+        }
+
+        void setDayEndTime(int dayEndTime)
+        {
+            mDayEndTime = dayEndTime;
+        }
+
+        @Override
+        public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
+        {
+            switch(position)
+            {
+                case 0: //Now
+                {
+                    if(mCreateDate.getHour() >= mDayEndTime)
+                    {
+                        parent.setSelection(1);
+                        Toast.makeText(view.getContext(), R.string.do_it_tomorrow_principle, Toast.LENGTH_SHORT).show();
+                    }
+                    else
+                    {
+                        mScheduleDate.setValue(mCreateDate);
+                    }
+
+                    break;
+                }
+                case 1: //Tomorrow
+                {
+                    //Day starts at 6 AM
+                    mScheduleDate.setValue(mCreateDate.minusHours(mDayStartTime).plusDays(1).truncatedTo(ChronoUnit.DAYS).plusHours(mDayStartTime));
+                    break;
+                }
+                case 2: //In a week
+                {
+                    //Day starts at 6 AM
+                    mScheduleDate.setValue(mCreateDate.minusHours(mDayStartTime).plusDays(7).truncatedTo(ChronoUnit.DAYS).plusHours(mDayStartTime));
+                    break;
+                }
+                case 3: //Custom
+                {
+                    DatePickerDialog datePickerDialog = new DatePickerDialog(view.getContext());
+                    datePickerDialog.setOnDateSetListener((datePicker, year, month, day) ->
+                    {
+                        //Day starts at 6 AM
+                        //Also Java numerates months from 0, not from 1
+                        LocalDateTime dateTime = LocalDateTime.of(year, month + 1, day, mDayStartTime, 0, 0);
+                        mScheduleDate.setValue(dateTime);
+
+                        ((SpinnerCustomTextAdapter)parent.getAdapter()).setCustomText(dateTime.toLocalDate().toString());
+                    });
+
+                    datePickerDialog.show();
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
+
+        @Override
+        public void onNothingSelected(AdapterView<?> parent)
+        {
+        }
+    }
+
+    private class IntervalSelectListener implements AdapterView.OnItemSelectedListener
+    {
+        private final ValueHolder<Duration> mRepeatDuration;
+
+        IntervalSelectListener(final ValueHolder<Duration> repeatDuration)
+        {
+            mRepeatDuration = repeatDuration;
+        }
+
+        @Override
+        public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
+        {
+            switch(position)
+            {
+                case 0: //Day
+                {
+                    mRepeatDuration.setValue(Duration.ofDays(1));
+                    break;
+                }
+
+                case 1: //Week
+                {
+                    mRepeatDuration.setValue(Duration.ofDays(7));
+                    break;
+                }
+
+                case 2: //Month
+                {
+                    mRepeatDuration.setValue(Duration.ofDays(30));
+                    break;
+                }
+
+                case 3: //Custom
+                {
+                    CustomPeriodDialogFragment customPeriodDialog = new CustomPeriodDialogFragment((int)mRepeatDuration.getValue().toDays());
+                    customPeriodDialog.setPeriodChosenListener(newPeriodDays ->
+                    {
+                        mRepeatDuration.setValue(Duration.ofDays(newPeriodDays));
+
+                        SpinnerCustomTextAdapter customTextAdapter = ((SpinnerCustomTextAdapter)parent.getAdapter());
+
+                        int periodInWeeks  = newPeriodDays / 7;
+                        int periodInMonths = newPeriodDays / 30;
+                        if(newPeriodDays == periodInMonths * 30) //Exact amount of months
+                        {
+                            customTextAdapter.setCustomText(periodInMonths + " " + getResources().getQuantityString(R.plurals.plural_months, periodInMonths));
+                        }
+                        else if(newPeriodDays == periodInWeeks * 7) //Exact amount of weeks
+                        {
+                            customTextAdapter.setCustomText(periodInWeeks + " " + getResources().getQuantityString(R.plurals.plural_weeks, periodInWeeks));
+                        }
+                        else
+                        {
+                            customTextAdapter.setCustomText(newPeriodDays + " " + getResources().getQuantityString(R.plurals.plural_days, newPeriodDays));
+                        }
+                    });
+
+                    customPeriodDialog.show(getParentFragmentManager(), getString(R.string.choose_period));
+                    break;
+                }
+
+                default:
+                {
+                    break;
+                }
+            }
+        }
+
+        @Override
+        public void onNothingSelected(AdapterView<?> parent)
+        {
+        }
+    }
+
+    private static class SpinnerCustomTextAdapter extends ArrayAdapter<String>
     {
         //https://stackoverflow.com/a/25234785/2857541
 
         private String mCustomText = "";
 
-        DateSpinnerCustomTextAdapter(Context context)
+        SpinnerCustomTextAdapter(Context context, int arrayId)
         {
-            super(context, android.R.layout.simple_spinner_item, context.getResources().getStringArray(R.array.objectiveScheduleTypes));
+            super(context, android.R.layout.simple_spinner_item, context.getResources().getStringArray(arrayId));
             setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         }
 

@@ -15,16 +15,14 @@ import java.security.Provider;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Objects;
 
-public class ScheduledObjective implements PoolElement
+public class ScheduledObjective extends PoolElement
 {
-    //The objective ID
-    final long mId;
-
     //The date when the objective was created and added to the scheduler
     final LocalDateTime mDateCreated;
 
@@ -34,17 +32,8 @@ public class ScheduledObjective implements PoolElement
     //The date when the objective is regularly added to the main list
     LocalDateTime mRegularScheduledAddDate;
 
-    //The objective name
-    String mName;
-
-    //The objective description
-    String mDescription;
-
     //Objective tags (why not?)
     final ArrayList<String> mTags;
-
-    //Is it active or paused? If paused, the scheduler won't add it to the objective list even after the mScheduledAddDate
-    boolean mIsActive;
 
     //Is it valid?
     boolean mIsValid;
@@ -58,17 +47,13 @@ public class ScheduledObjective implements PoolElement
     //Creates a new active scheduled objective ready to be used by the scheduler
     public ScheduledObjective(long id, String name, String description, LocalDateTime createdDate, LocalDateTime scheduleDate, ArrayList<String> tags, Duration repeatDuration, float repeatProbability)
     {
-        mIsActive = true;
-        mIsValid  = true;
+        super(id, name, description);
 
-        mId = id;
+        mIsValid  = true;
 
         mDateCreated             = createdDate;
         mScheduledAddDate        = scheduleDate;
         mRegularScheduledAddDate = scheduleDate;
-
-        mName        = name;
-        mDescription = description;
 
         mRepeatDuration    = repeatDuration;
         mRepeatProbability = repeatProbability;
@@ -90,10 +75,11 @@ public class ScheduledObjective implements PoolElement
 
         try
         {
-            result.put("Id", Long.toString(mId));
+            result.put("Id",       Long.toString(getId()));
+            result.put("ParentId", Long.toString(getParentId()));
 
-            result.put("Name",        mName);
-            result.put("Description", mDescription);
+            result.put("Name",        getName());
+            result.put("Description", getDescription());
 
             JSONArray jsonTagArray = new JSONArray(mTags);
             result.put("Tags", jsonTagArray);
@@ -118,7 +104,7 @@ public class ScheduledObjective implements PoolElement
                 result.put("DateScheduledRegular", regularScheduledDateString);
             }
 
-            result.put("IsActive", Boolean.toString(mIsActive));
+            result.put("IsActive", Boolean.toString(!isPaused()));
 
             result.put("RepeatDuration",    Long.toString(mRepeatDuration.toMinutes()));
             result.put("RepeatProbability", Float.toString(mRepeatProbability));
@@ -131,11 +117,133 @@ public class ScheduledObjective implements PoolElement
         return result;
     }
 
+    public static ScheduledObjective fromJSON(JSONObject jsonObject)
+    {
+        try
+        {
+            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss:nnnnnnnnn");
+
+            long id       = jsonObject.getLong("Id");
+            long parentId = jsonObject.getLong("ParentId");
+
+            String name        = jsonObject.getString("Name");
+            String description = jsonObject.getString("Description");
+
+            String createdDateString          = jsonObject.getString("DateCreated");
+            String scheduledDateString        = jsonObject.getString("DateScheduled");
+            String regularScheduledDateString = jsonObject.getString("DateScheduledRegular");
+
+            String isActiveString = jsonObject.getString("IsActive");
+
+            String repeatDurationString    = jsonObject.getString("RepeatDuration");
+            String repeatProbabilityString = jsonObject.getString("RepeatProbability");
+
+            ArrayList<String> objectiveTags = new ArrayList<>();
+            JSONArray tagsJSONArray = jsonObject.optJSONArray("Tags");
+            if(tagsJSONArray != null)
+            {
+                for(int i = 0; i < tagsJSONArray.length(); i++)
+                {
+                    String tagStr = (String)tagsJSONArray.opt(i);
+                    if(!tagStr.isEmpty())
+                    {
+                        objectiveTags.add(tagStr);
+                    }
+                }
+            }
+
+            LocalDateTime createdDate = null;
+            try //Dumb java, time formatting mistake IS NOT an exception, it's a normal situation that should be handled differently
+            {
+                createdDate = LocalDateTime.parse(createdDateString, dateTimeFormatter);
+            }
+            catch (DateTimeParseException e)
+            {
+                e.printStackTrace();
+            }
+
+            LocalDateTime scheduledDate = null;
+            try
+            {
+                scheduledDate = LocalDateTime.parse(scheduledDateString, dateTimeFormatter);
+            }
+            catch (DateTimeParseException e)
+            {
+                e.printStackTrace();
+            }
+
+            LocalDateTime regularScheduleDate = null;
+            try
+            {
+                regularScheduleDate = LocalDateTime.parse(regularScheduledDateString, dateTimeFormatter);
+            }
+            catch (DateTimeParseException e)
+            {
+                e.printStackTrace();
+            }
+
+            //Java can't into proper parsing... And I thought C++ is bad
+            boolean isActive = true;
+            if(!isActiveString.isEmpty())
+            {
+                if(isActiveString.equalsIgnoreCase("false"))
+                {
+                    isActive = false;
+                }
+            }
+
+            Long repeatDurationMinutes = null;
+            try
+            {
+                repeatDurationMinutes = Long.parseLong(repeatDurationString);
+            }
+            catch(NumberFormatException e)
+            {
+                e.printStackTrace();
+            }
+
+            Float repeatProbability = null;
+            try
+            {
+                repeatProbability = Float.parseFloat(repeatProbabilityString);
+            }
+            catch(NumberFormatException e)
+            {
+                e.printStackTrace();
+            }
+
+            if(id != -1 && !name.isEmpty() && createdDate != null && scheduledDate != null && repeatDurationMinutes != null && repeatProbability != null)
+            {
+                Duration repeatDuration = Duration.ofMinutes(repeatDurationMinutes);
+                ScheduledObjective objective = new ScheduledObjective(id, name, description, createdDate, scheduledDate, objectiveTags, repeatDuration, repeatProbability);
+
+                objective.setParentId(parentId);
+                if(regularScheduleDate != null)
+                {
+                    objective.mRegularScheduledAddDate = regularScheduleDate; //Can be different from scheduledDate
+                }
+
+                if(!isActive)
+                {
+                    objective.setPaused(true);
+                }
+
+                return objective;
+            }
+        }
+        catch(JSONException e)
+        {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
     //Reschedules the objective to the new enlist date
     public void reschedule(LocalDateTime referenceTime, int dayStartTime)
     {
         //Cannot reschedule non-repeated objectives and won't reschedule paused objectives
-        if(mRepeatProbability < 0.0001f || !mIsActive)
+        if(mRepeatProbability < 0.0001f || isPaused())
         {
             return;
         }
@@ -175,18 +283,6 @@ public class ScheduledObjective implements PoolElement
     }
 
     @Override
-    public boolean isPaused()
-    {
-        return !mIsActive;
-    }
-
-    @Override
-    public void setPaused(boolean paused)
-    {
-        mIsActive = !paused;
-    }
-
-    @Override
     public boolean isValid()
     {
         return mIsValid;
@@ -199,11 +295,11 @@ public class ScheduledObjective implements PoolElement
     }
 
     @Override
-    public EnlistedObjective obtainEnlistedObjective(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime, int dayStartHour)
+    public EnlistedObjective obtainEnlistedObjective(HashSet<Long> ignoredObjectiveIds, LocalDateTime referenceTime, int dayStartHour)
     {
-        if(!isAvailable(blockingObjectiveIds, referenceTime, dayStartHour))
+        if(!isAvailable(ignoredObjectiveIds, referenceTime, dayStartHour))
         {
-            if(isRepeatable() && blockingObjectiveIds.contains(getId()))
+            if(isRepeatable() && ignoredObjectiveIds.contains(getId()))
             {
                 //Need to reschedule the objective so that next time no new objective gets added
                 reschedule(referenceTime, dayStartHour);
@@ -212,7 +308,7 @@ public class ScheduledObjective implements PoolElement
             return null;
         }
 
-        EnlistedObjective enlistedObjective = new EnlistedObjective(mId, mDateCreated, referenceTime, mName, mDescription, mTags);
+        EnlistedObjective enlistedObjective = new EnlistedObjective(getId(), getParentId(), mDateCreated, referenceTime, getName(), getDescription(), mTags);
         if(!isRepeatable())
         {
             mIsValid = false;
@@ -238,7 +334,7 @@ public class ScheduledObjective implements PoolElement
     @Override
     public boolean isRelatedToObjective(long objectiveId)
     {
-        return mId == objectiveId;
+        return getId() == objectiveId;
     }
 
     @Override
@@ -256,7 +352,7 @@ public class ScheduledObjective implements PoolElement
     @Override
     public ScheduledObjective getRelatedObjectiveById(long objectiveId)
     {
-        if(mId == objectiveId)
+        if(isRelatedToObjective(objectiveId))
         {
             return this;
         }
@@ -279,27 +375,15 @@ public class ScheduledObjective implements PoolElement
     }
 
     @Override
-    public long getMaxRelatedObjectiveId()
+    public long getLargestRelatedId()
     {
         return getId();
     }
 
     @Override
-    public long getMaxRelatedChainId()
-    {
-        //There's never a chain related
-        return -1;
-    }
-
-    @Override
     public boolean isAvailable(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime, int dayStartHour)
     {
-        return !isPaused() && referenceTime.isAfter(getScheduledEnlistDate()) && !blockingObjectiveIds.contains(mId);
-    }
-
-    public long getId()
-    {
-        return mId;
+        return !isPaused() && referenceTime.isAfter(getScheduledEnlistDate()) && !blockingObjectiveIds.contains(getId());
     }
 
     @SuppressWarnings("unused")
@@ -311,41 +395,6 @@ public class ScheduledObjective implements PoolElement
     public LocalDateTime getScheduledEnlistDate()
     {
         return mScheduledAddDate;
-    }
-
-    @Override
-    public String getName()
-    {
-        return mName;
-    }
-
-    @Override
-    public String getDescription()
-    {
-        return mDescription;
-    }
-
-    public void setName(String name)
-    {
-        mName = name;
-    }
-
-    public void setDescription(String description)
-    {
-        mDescription = description;
-    }
-
-    //Pauses the objective so it's not repeated anymore
-    void pause()
-    {
-        mIsActive = false;
-    }
-
-    //Unpauses the objective
-    @SuppressWarnings("unused")
-    void unpause()
-    {
-        mIsActive = false;
     }
 
     @SuppressWarnings("unused")

@@ -81,10 +81,10 @@ public class ListActivity extends AppCompatActivity implements ListObjectiveCoun
             e.printStackTrace();
         }
 
-        TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
+        TransactionDispatcher transactionDispatcher = new TransactionDispatcher(configFolder);
         transactionDispatcher.setListCache(mListCache);
 
-        transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now(), dayStartTime);
+        transactionDispatcher.updateObjectiveListTransaction(LocalDateTime.now(), dayStartTime);
     }
 
     @Override
@@ -128,11 +128,12 @@ public class ListActivity extends AppCompatActivity implements ListObjectiveCoun
             String dayStartTimeString = sharedPreferences.getString("day_start_time", "6");
             int dayStartTime = ParseUtils.parseInt(dayStartTimeString, 6);
 
-            TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
+            String configFolder = Objects.requireNonNull(getExternalFilesDir("/app")).getAbsolutePath();
+
+            TransactionDispatcher transactionDispatcher = new TransactionDispatcher(configFolder);
             transactionDispatcher.setListCache(mListCache);
 
-            String configFolder = Objects.requireNonNull(getExternalFilesDir("/app")).getAbsolutePath();
-            transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now(), dayStartTime);
+            transactionDispatcher.updateObjectiveListTransaction(LocalDateTime.now(), dayStartTime);
         });
 
         newObjectiveDialogFragment.show(getSupportFragmentManager(), getString(R.string.newObjectiveDialogName));

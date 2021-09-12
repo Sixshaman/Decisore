@@ -69,10 +69,10 @@ public class EditPoolDialogFragment extends DialogFragment
 
                 String configFolder = Objects.requireNonNull(activity.getExternalFilesDir("/app")).getAbsolutePath();
 
-                TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
+                TransactionDispatcher transactionDispatcher = new TransactionDispatcher(configFolder);
                 transactionDispatcher.setSchedulerCache(mSchedulerCache);
 
-                transactionDispatcher.editPoolTransaction(configFolder, mPoolId, nameText, descriptionText);
+                transactionDispatcher.editPoolTransaction(mPoolId, nameText, descriptionText);
             }
         });
 

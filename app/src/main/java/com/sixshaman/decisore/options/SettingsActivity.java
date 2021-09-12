@@ -79,8 +79,8 @@ public class SettingsActivity extends AppCompatActivity
 
                 String configFolder = Objects.requireNonNull(requireContext().getExternalFilesDir("/app")).getAbsolutePath();
 
-                TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
-                transactionDispatcher.updateNewDayStart(configFolder, oldStartHour.getValue(), newHour);
+                TransactionDispatcher transactionDispatcher = new TransactionDispatcher(configFolder);
+                transactionDispatcher.updateNewDayStart(oldStartHour.getValue(), newHour);
 
                 oldStartHour.setValue(newHour);
                 return true;

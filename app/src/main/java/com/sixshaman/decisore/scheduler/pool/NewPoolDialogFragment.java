@@ -96,10 +96,10 @@ public class NewPoolDialogFragment extends DialogFragment
             {
                 String configFolder = Objects.requireNonNull(activity.getExternalFilesDir("/app")).getAbsolutePath();
 
-                TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
+                TransactionDispatcher transactionDispatcher = new TransactionDispatcher(configFolder);
                 transactionDispatcher.setSchedulerCache(mSchedulerCache);
 
-                transactionDispatcher.addPoolTransaction(configFolder, nameText, descriptionText, poolProduceFrequency, isAutoDelete, isUnstoppable);
+                transactionDispatcher.addPoolTransaction(nameText, descriptionText, poolProduceFrequency, isAutoDelete, isUnstoppable);
             }
         });
 

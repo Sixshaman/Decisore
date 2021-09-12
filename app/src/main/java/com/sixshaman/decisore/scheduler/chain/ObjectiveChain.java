@@ -18,25 +18,14 @@ import org.json.JSONObject;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
-public class ObjectiveChain implements PoolElement
+public class ObjectiveChain extends PoolElement
 {
     //View holder
     private ChainViewHolder mChainViewHolder;
-
-    //Objective chain id
-    private final long mId;
-
-    //Objective chain name
-    private String mName;
-
-    //Objective chain description
-    private String mDescription;
-
-    //Is this chain active?
-    private boolean mIsActive;
 
     //Does this chain get deleted immediately after finishing every objective?
     private boolean mIsAutoDelete;
@@ -62,15 +51,10 @@ public class ObjectiveChain implements PoolElement
     //Creates a new objective chain
     public ObjectiveChain(long id, String name, String description)
     {
-        mId = id;
-
-        mName        = name;
-        mDescription = description;
+        super(id, name, description);
 
         mObjectives      = new TwoSidedArrayList<>();
         mBoundObjectives = new HashSet<>();
-
-        mIsActive = true;
 
         mIsAutoDelete  = false;
         mIsUnstoppable = false;
@@ -149,12 +133,13 @@ public class ObjectiveChain implements PoolElement
 
         try
         {
-            result.put("Id", mId);
+            result.put("Id",       getId());
+            result.put("ParentId", getParentId());
 
-            result.put("Name",        mName);
-            result.put("Description", mDescription);
+            result.put("Name",        getName());
+            result.put("Description", getDescription());
 
-            result.put("IsActive", Boolean.toString(mIsActive));
+            result.put("IsActive", Boolean.toString(!isPaused()));
 
             result.put("IsAutoDelete",  Boolean.toString(mIsAutoDelete));
             result.put("IsUnstoppable", Boolean.toString(mIsUnstoppable));
@@ -189,6 +174,92 @@ public class ObjectiveChain implements PoolElement
         }
 
         return result;
+    }
+
+    public static ObjectiveChain fromJSON(JSONObject jsonObject)
+    {
+        try
+        {
+            long id       = jsonObject.getLong("Id");
+            long parentId = jsonObject.getLong("ParentId");
+
+            String name        = jsonObject.getString("Name");
+            String description = jsonObject.getString("Description");
+
+            String isActiveString = jsonObject.getString("IsActive");
+
+            String isAutoDeleteString  = jsonObject.optString("IsAutoDelete");
+            String isUnstoppableString = jsonObject.optString("IsUnstoppable");
+
+            String produceFrequencyString = jsonObject.optString("ProduceFrequency");
+            String lastProducedDateString = jsonObject.optString("LastUpdate");
+
+            int instantCount = jsonObject.optInt("InstantCount", 0);
+
+            ObjectiveChain objectiveChain = new ObjectiveChain(id, name, description);
+            objectiveChain.setParentId(parentId);
+
+            JSONArray objectivesJsonArray = jsonObject.getJSONArray("Objectives");
+            for(int i = 0; i < objectivesJsonArray.length(); i++)
+            {
+                JSONObject objectiveObject = objectivesJsonArray.optJSONObject(i);
+                if(objectiveObject != null)
+                {
+                    ScheduledObjective objective = ScheduledObjective.fromJSON(objectiveObject);
+                    if(objective != null)
+                    {
+                        objectiveChain.addObjectiveToChain(objective);
+                    }
+                }
+            }
+
+            JSONArray idHistoryArray = jsonObject.getJSONArray("ObjectiveHistory");
+            for(int i = 0; i < idHistoryArray.length(); i++)
+            {
+                long objectiveId = idHistoryArray.optLong(i, -1);
+                if(objectiveId != -1)
+                {
+                    objectiveChain.mBoundObjectives.add(objectiveId);
+                }
+            }
+
+            objectiveChain.setPaused(!isActiveString.isEmpty()           && isActiveString.equalsIgnoreCase("false"));
+            objectiveChain.setAutoDelete(!isAutoDeleteString.isEmpty()   && isAutoDeleteString.equalsIgnoreCase("true"));
+            objectiveChain.setUnstoppable(!isUnstoppableString.isEmpty() && isUnstoppableString.equalsIgnoreCase("true"));
+
+            if(!produceFrequencyString.isEmpty())
+            {
+                try
+                {
+                    long produceFrequencyMinutes = Long.parseLong(produceFrequencyString);
+                    Duration produceFrequency = Duration.ofMinutes(produceFrequencyMinutes);
+
+                    objectiveChain.setProduceFrequency(produceFrequency);
+
+                    if(!lastProducedDateString.isEmpty())
+                    {
+                        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss:nnnnnnnnn");
+                        LocalDateTime lastProducedDate = LocalDateTime.parse(lastProducedDateString, dateTimeFormatter);
+
+                        objectiveChain.setLastUpdate(lastProducedDate);
+                    }
+
+                    objectiveChain.setInstantCount(instantCount);
+                }
+                catch(NumberFormatException | DateTimeParseException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+
+            return objectiveChain;
+        }
+        catch(JSONException e)
+        {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 
     @Override
@@ -228,16 +299,16 @@ public class ObjectiveChain implements PoolElement
     }
 
     @Override
-    public EnlistedObjective obtainEnlistedObjective(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime, int dayStartHour)
+    public EnlistedObjective obtainEnlistedObjective(HashSet<Long> ignoredObjectiveIds, LocalDateTime referenceTime, int dayStartHour)
     {
-        if(!isAvailable(blockingObjectiveIds, referenceTime, dayStartHour))
+        if(!isAvailable(ignoredObjectiveIds, referenceTime, dayStartHour))
         {
             return null;
         }
 
         ScheduledObjective firstChainObjective = mObjectives.getFront();
 
-        EnlistedObjective enlistedObjective = firstChainObjective.obtainEnlistedObjective(blockingObjectiveIds, referenceTime, dayStartHour);
+        EnlistedObjective enlistedObjective = firstChainObjective.obtainEnlistedObjective(ignoredObjectiveIds, referenceTime, dayStartHour);
         if(enlistedObjective == null)
         {
             return null;
@@ -340,12 +411,12 @@ public class ObjectiveChain implements PoolElement
     }
 
     @Override
-    public long getMaxRelatedObjectiveId()
+    public long getLargestRelatedId()
     {
-        long maxId = -1;
+        long maxId = getId();
         for(ScheduledObjective objective: mObjectives)
         {
-            long objectiveId = objective.getId();
+            long objectiveId = objective.getLargestRelatedId();
             if(objectiveId > maxId)
             {
                 maxId = objectiveId;
@@ -361,12 +432,6 @@ public class ObjectiveChain implements PoolElement
         }
 
         return maxId;
-    }
-
-    @Override
-    public long getMaxRelatedChainId()
-    {
-        return getId();
     }
 
     public boolean containedObjective(long objectiveId)
@@ -397,6 +462,7 @@ public class ObjectiveChain implements PoolElement
         return null;
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     public boolean putBack(ScheduledObjective objective)
     {
         if(!mObjectives.isEmpty())
@@ -434,54 +500,15 @@ public class ObjectiveChain implements PoolElement
         return !mObjectives.isEmpty();
     }
 
-    public long getId()
-    {
-        return mId;
-    }
-
-    @Override
-    public String getName()
-    {
-        return mName;
-    }
-
-    @Override
-    public String getDescription()
-    {
-        return mDescription;
-    }
-
     @SuppressWarnings("unused")
     public int getObjectiveCount()
     {
         return mObjectives.size();
     }
 
-    public void setName(String chainName)
-    {
-        mName = chainName;
-    }
-
-    public void setDescription(String chainDescription)
-    {
-        mDescription = chainDescription;
-    }
-
     public void setProduceFrequency(Duration produceFrequency)
     {
         mProduceFrequency = produceFrequency;
-    }
-
-    @Override
-    public boolean isPaused()
-    {
-        return !mIsActive;
-    }
-
-    @Override
-    public void setPaused(boolean paused)
-    {
-        mIsActive = !paused;
     }
 
     public void setAutoDelete(boolean autoDelete)

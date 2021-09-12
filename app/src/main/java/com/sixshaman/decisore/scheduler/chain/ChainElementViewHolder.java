@@ -74,10 +74,10 @@ public class ChainElementViewHolder extends RecyclerView.ViewHolder implements V
         String dayStartTimeString = sharedPreferences.getString("day_start_time", "6");
         int dayStartTime = ParseUtils.parseInt(dayStartTimeString, 6);
 
-        TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
-        transactionDispatcher.setSchedulerCache(mObjectiveSchedulerCache);
-
         String configFolder = Objects.requireNonNull(view.getContext().getExternalFilesDir("/app")).getAbsolutePath();
+
+        TransactionDispatcher transactionDispatcher = new TransactionDispatcher(configFolder);
+        transactionDispatcher.setSchedulerCache(mObjectiveSchedulerCache);
 
         String pauseString;
         if(mScheduledObjective.isPaused())
@@ -96,7 +96,7 @@ public class ChainElementViewHolder extends RecyclerView.ViewHolder implements V
         {
             LocalDateTime enlistDateTime = LocalDateTime.now();
 
-            transactionDispatcher.rescheduleScheduledObjectiveTransaction(configFolder, mScheduledObjective.getId(), enlistDateTime);
+            transactionDispatcher.rescheduleScheduledObjectiveTransaction(mScheduledObjective.getId(), enlistDateTime);
             return true;
         });
 
@@ -109,8 +109,8 @@ public class ChainElementViewHolder extends RecyclerView.ViewHolder implements V
                 //Java numerates months from 0, not from 1
                 LocalDateTime dateTime = LocalDateTime.of(year, month + 1, day, dayStartTime, 0, 0);
 
-                transactionDispatcher.rescheduleScheduledObjectiveTransaction(configFolder, mScheduledObjective.getId(), dateTime);
-                transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now(), dayStartTime);
+                transactionDispatcher.rescheduleScheduledObjectiveTransaction(mScheduledObjective.getId(), dateTime);
+                transactionDispatcher.updateObjectiveListTransaction(LocalDateTime.now(), dayStartTime);
             });
 
             datePickerDialog.show();
@@ -122,7 +122,7 @@ public class ChainElementViewHolder extends RecyclerView.ViewHolder implements V
             MenuItem pauseItem = contextMenu.add(menuIndex++, MENU_PAUSE_OBJECTIVE, Menu.NONE, pauseString);
             pauseItem.setOnMenuItemClickListener(menuItem ->
             {
-                transactionDispatcher.flipPauseObjective(configFolder, mScheduledObjective.getId());
+                transactionDispatcher.flipPauseObjective(mScheduledObjective.getId());
                 return true;
             });
         }
@@ -146,7 +146,7 @@ public class ChainElementViewHolder extends RecyclerView.ViewHolder implements V
         {
             AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(view.getContext());
             alertDialogBuilder.setMessage(view.getContext().getString(R.string.deleteObjectiveAreYouSure) + " " + mScheduledObjective.getName() + "?");
-            alertDialogBuilder.setPositiveButton("Yes", (dialogInterface, i) -> transactionDispatcher.deleteObjectiveFromSchedulerTransaction(configFolder, mScheduledObjective));
+            alertDialogBuilder.setPositiveButton("Yes", (dialogInterface, i) -> transactionDispatcher.deleteObjectiveFromSchedulerTransaction(mScheduledObjective));
             alertDialogBuilder.setNegativeButton("No", (dialogInterface, i) -> {});
 
             alertDialogBuilder.show();

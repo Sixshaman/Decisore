@@ -91,10 +91,10 @@ public class PoolFragment extends Fragment
             String dayStartTimeString = sharedPreferences.getString("day_start_time", "6");
             int dayStartTime = ParseUtils.parseInt(dayStartTimeString, 6);
 
-            TransactionDispatcher transactionDispatcher = new TransactionDispatcher();
+            TransactionDispatcher transactionDispatcher = new TransactionDispatcher(configFolder);
             transactionDispatcher.setSchedulerCache(mSchedulerCache);
 
-            transactionDispatcher.updateObjectiveListTransaction(configFolder, LocalDateTime.now(), dayStartTime);
+            transactionDispatcher.updateObjectiveListTransaction(LocalDateTime.now(), dayStartTime);
         }
         catch(IOException e)
         {

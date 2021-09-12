@@ -8,7 +8,6 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.sixshaman.decisore.R;
 import com.sixshaman.decisore.list.EnlistedObjective;
-import com.sixshaman.decisore.list.ObjectiveListCache;
 import com.sixshaman.decisore.scheduler.chain.ObjectiveChain;
 import com.sixshaman.decisore.scheduler.ObjectiveSchedulerCache;
 import com.sixshaman.decisore.scheduler.objective.ScheduledObjective;
@@ -22,26 +21,16 @@ import org.json.JSONObject;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Objects;
 
 //A pool that can randomly choose from several objective sources
-public class ObjectivePool implements SchedulerElement
+public class ObjectivePool extends SchedulerElement
 {
     ///The view holder of the pool
     private PoolViewHolder mPoolViewHolder;
-
-    //The id of the pool
-    private final long mId;
-
-    //The name of the pool
-    private String mName;
-
-    //The description of the pool
-    private String mDescription;
 
     //The list of all the objective sources the pool can choose from
     private final ArrayList<PoolElement> mObjectiveSources;
@@ -55,9 +44,6 @@ public class ObjectivePool implements SchedulerElement
     //The id of the objective that was most recently provided by this pool.
     private long mLastProvidedObjectiveId;
 
-    //The flag that shows that the pool is active (i.e. not paused)
-    private boolean mIsActive;
-
     //Does this pool get deleted immediately after finishing every objective?
     private boolean mIsAutoDelete;
 
@@ -67,16 +53,11 @@ public class ObjectivePool implements SchedulerElement
     //Constructs a new objective pool
     public ObjectivePool(long id, String name, String description)
     {
-        mId = id;
-
-        mName        = name;
-        mDescription = description;
+        super(id, name, description);
 
         mObjectiveSources = new ArrayList<>();
 
         mLastProvidedObjectiveId = -1;
-
-        mIsActive = true;
 
         mIsAutoDelete  = false;
         mIsUnstoppable = false;
@@ -205,14 +186,15 @@ public class ObjectivePool implements SchedulerElement
 
         try
         {
-            result.put("Id", mId);
+            result.put("Id",       getId());
+            result.put("ParentId", getParentId());
 
-            result.put("Name",        mName);
-            result.put("Description", mDescription);
+            result.put("Name",        getName());
+            result.put("Description", getDescription());
 
             result.put("LastId", Long.toString(mLastProvidedObjectiveId));
 
-            result.put("IsActive", Boolean.toString(mIsActive));
+            result.put("IsActive", Boolean.toString(!isPaused()));
 
             result.put("IsAutoDelete",  Boolean.toString(mIsAutoDelete));
             result.put("IsUnstoppable", Boolean.toString(mIsUnstoppable));
@@ -250,17 +232,123 @@ public class ObjectivePool implements SchedulerElement
         return result;
     }
 
+    public static ObjectivePool fromJSON(JSONObject jsonObject)
+    {
+        try
+        {
+            long id       = jsonObject.getLong("Id");
+            long parentId = jsonObject.getLong("ParentId");
+
+            String name        = jsonObject.optString("Name");
+            String description = jsonObject.optString("Description");
+
+            String lastIdString = jsonObject.optString("LastId");
+            Long lastId = null;
+            try
+            {
+                lastId = Long.parseLong(lastIdString);
+            }
+            catch(NumberFormatException e)
+            {
+                e.printStackTrace();
+            }
+
+            if(lastId == null)
+            {
+                return null;
+            }
+
+            String produceFrequencyString = jsonObject.optString("ProduceFrequency");
+            String lastProducedDateString = jsonObject.optString("LastUpdate");
+
+            String isAutoDeleteString  = jsonObject.optString("IsAutoDelete");
+            String isUnstoppableString = jsonObject.optString("IsUnstoppable");
+
+            ObjectivePool objectivePool = new ObjectivePool(id, name, description);
+            objectivePool.setParentId(parentId);
+            objectivePool.setLastProvidedObjectiveId(lastId);
+
+            String isActiveString = jsonObject.optString("IsActive");
+
+            objectivePool.setPaused(!isActiveString.isEmpty()           && isActiveString.equalsIgnoreCase("false"));
+            objectivePool.setAutoDelete(!isAutoDeleteString.isEmpty()   && isAutoDeleteString.equalsIgnoreCase("true"));
+            objectivePool.setUnstoppable(!isUnstoppableString.isEmpty() && isUnstoppableString.equalsIgnoreCase("true"));
+
+            JSONArray sourcesJsonArray = jsonObject.getJSONArray("Sources");
+            for(int i = 0; i < sourcesJsonArray.length(); i++)
+            {
+                JSONObject sourceObject = sourcesJsonArray.optJSONObject(i);
+                if(sourceObject != null)
+                {
+                    String     sourceType = sourceObject.optString("Type");
+                    JSONObject sourceData = sourceObject.optJSONObject("Data");
+
+                    if(sourceData != null)
+                    {
+                        if(sourceType.equals("ObjectiveChain"))
+                        {
+                            ObjectiveChain chain = ObjectiveChain.fromJSON(sourceData);
+                            if(chain != null)
+                            {
+                                objectivePool.addObjectiveSource(chain);
+                            }
+                        }
+                        else if(sourceType.equals("ScheduledObjective"))
+                        {
+                            ScheduledObjective objective = ScheduledObjective.fromJSON(sourceData);
+                            if(objective != null)
+                            {
+                                objectivePool.addObjectiveSource(objective);
+                            }
+                        }
+                    }
+                }
+            }
+
+            if(!produceFrequencyString.isEmpty())
+            {
+                try
+                {
+                    long produceFrequencyMinutes = Long.parseLong(produceFrequencyString);
+                    Duration produceFrequency = Duration.ofMinutes(produceFrequencyMinutes);
+
+                    objectivePool.setProduceFrequency(produceFrequency);
+
+                    if(!lastProducedDateString.isEmpty())
+                    {
+                        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss:nnnnnnnnn");
+                        LocalDateTime lastProducedDate = LocalDateTime.parse(lastProducedDateString, dateTimeFormatter);
+
+                        objectivePool.setLastUpdate(lastProducedDate);
+                    }
+                }
+                catch(NumberFormatException | DateTimeParseException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+
+            return objectivePool;
+        }
+        catch(JSONException e)
+        {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
     //Gets an objective from a random source
     @Override
-    public EnlistedObjective obtainEnlistedObjective(HashSet<Long> blockingObjectiveIds, LocalDateTime referenceTime, int dayStartHour)
+    public EnlistedObjective obtainEnlistedObjective(HashSet<Long> ignoredObjectiveIds, LocalDateTime referenceTime, int dayStartHour)
     {
-        if(!mIsActive)
+        if(isPaused())
         {
             return null;
         }
 
         //Only add the objective to the list if the previous objective from the pool is finished (i.e. isn't in blockingObjectiveIds)
-        if(!isAvailable(blockingObjectiveIds, referenceTime, dayStartHour))
+        if(!isAvailable(ignoredObjectiveIds, referenceTime, dayStartHour))
         {
             return null;
         }
@@ -269,7 +357,7 @@ public class ObjectivePool implements SchedulerElement
         ArrayList<Integer> availableSourceIndices = new ArrayList<>();
         for(int i = 0; i < mObjectiveSources.size(); i++)
         {
-            if(mObjectiveSources.get(i).isAvailable(blockingObjectiveIds, referenceTime, dayStartHour))
+            if(mObjectiveSources.get(i).isAvailable(ignoredObjectiveIds, referenceTime, dayStartHour))
             {
                 availableSourceIndices.add(i);
             }
@@ -283,7 +371,7 @@ public class ObjectivePool implements SchedulerElement
         int  randomSourceIndexIndex = (int) RandomUtils.getInstance().getRandomUniform(0, availableSourceIndices.size() - 1);
         PoolElement randomPoolElement = mObjectiveSources.get(availableSourceIndices.get(randomSourceIndexIndex));
 
-        EnlistedObjective resultObjective = randomPoolElement.obtainEnlistedObjective(blockingObjectiveIds, referenceTime, dayStartHour);
+        EnlistedObjective resultObjective = randomPoolElement.obtainEnlistedObjective(ignoredObjectiveIds, referenceTime, dayStartHour);
         if(!randomPoolElement.isValid())
         {
             //Delete finished objectives
@@ -345,33 +433,12 @@ public class ObjectivePool implements SchedulerElement
     }
 
     @Override
-    public long getMaxRelatedObjectiveId()
+    public long getLargestRelatedId()
     {
         long maxId = 0;
         for(PoolElement source: mObjectiveSources)
         {
-            long sourceMaxId = source.getMaxRelatedObjectiveId();
-            if(sourceMaxId > maxId)
-            {
-                maxId = sourceMaxId;
-            }
-        }
-
-        return maxId;
-    }
-
-    @Override
-    public long getMaxRelatedChainId()
-    {
-        long maxId = 0;
-        for(PoolElement source: mObjectiveSources)
-        {
-            if(source instanceof ScheduledObjective)
-            {
-                continue;
-            }
-
-            long sourceMaxId = source.getMaxRelatedChainId();
+            long sourceMaxId = source.getLargestRelatedId();
             if(sourceMaxId > maxId)
             {
                 maxId = sourceMaxId;
@@ -460,49 +527,10 @@ public class ObjectivePool implements SchedulerElement
         return !blockingObjectiveIds.contains(mLastProvidedObjectiveId);
     }
 
-    public long getId()
-    {
-        return mId;
-    }
-
-    @Override
-    public boolean isPaused()
-    {
-        return !mIsActive;
-    }
-
-    @Override
-    public void setPaused(boolean paused)
-    {
-        mIsActive = !paused;
-    }
-
     @Override
     public boolean isValid()
     {
         return !mIsAutoDelete || !mObjectiveSources.isEmpty() || (mLastProvidedObjectiveId == -1); //Do not allow to delete a pool that was just created
-    }
-
-    @Override
-    public String getName()
-    {
-        return mName;
-    }
-
-    @Override
-    public String getDescription()
-    {
-        return mDescription;
-    }
-
-    public void setName(String name)
-    {
-        mName = name;
-    }
-
-    public void setDescription(String description)
-    {
-        mDescription = description;
     }
 
     //Returns the number of objective sources in pool

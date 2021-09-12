@@ -23,15 +23,9 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.sixshaman.decisore.R;
 import com.sixshaman.decisore.list.EnlistedObjective;
-import com.sixshaman.decisore.scheduler.chain.ChainElementViewHolder;
 import com.sixshaman.decisore.scheduler.chain.ObjectiveChain;
-import com.sixshaman.decisore.scheduler.chain.ObjectiveChainLatestLoader;
 import com.sixshaman.decisore.scheduler.pool.ObjectivePool;
-import com.sixshaman.decisore.scheduler.pool.ObjectivePoolLatestLoader;
-import com.sixshaman.decisore.scheduler.pool.PoolElement;
 import com.sixshaman.decisore.scheduler.objective.ScheduledObjective;
-import com.sixshaman.decisore.scheduler.objective.ScheduledObjectiveLatestLoader;
-import com.sixshaman.decisore.scheduler.pool.PoolElementViewHolder;
 import com.sixshaman.decisore.utils.LockedReadFile;
 import com.sixshaman.decisore.utils.LockedWriteFile;
 import com.sixshaman.decisore.utils.ValueHolder;
@@ -39,22 +33,27 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Objects;
 
 //The class to schedule all deferred objectives. The model for the scheduler UI
 public class ObjectiveSchedulerCache
 {
+    public enum InvalidateResult
+    {
+        INVALIDATE_OK,          //Success
+        INVALIDATE_VERSION_1_1, //Old version, need to recalculate ids and parent ids
+        INVALIDATE_ERROR        //Unknown error
+    }
+
     public static final String SCHEDULER_FILENAME = "TaskScheduler.json";
 
     static final int SCHEDULER_VERSION_1_0 = 1000;
     static final int SCHEDULER_VERSION_1_1 = 1001;
+    static final int SCHEDULER_VERSION_1_2 = 1002;
 
-    static final int SCHEDULER_VERSION_CURRENT = SCHEDULER_VERSION_1_1;
+    static final int SCHEDULER_VERSION_CURRENT = SCHEDULER_VERSION_1_2;
 
     //The list of all the scheduler elements
     private ArrayList<SchedulerElement> mSchedulerElements;
@@ -104,14 +103,14 @@ public class ObjectiveSchedulerCache
     }
 
     //Updates the objective scheduler. Returns the list of objectives ready to-do
-    public ArrayList<EnlistedObjective> dumpReadyObjectives(final HashSet<Long> blockingObjectiveIds, LocalDateTime enlistDateTime, int dayStartHour)
+    public ArrayList<EnlistedObjective> dumpReadyObjectives(final HashSet<Long> ignoredObjectiveIds, LocalDateTime enlistDateTime, int dayStartHour)
     {
         ArrayList<EnlistedObjective> result = new ArrayList<>();
 
         ArrayList<SchedulerElement> changedElements = new ArrayList<>(); //Rebuild objective source list after each update event
         for(SchedulerElement element: mSchedulerElements)
         {
-            EnlistedObjective enlistedObjective = element.obtainEnlistedObjective(blockingObjectiveIds, enlistDateTime, dayStartHour);
+            EnlistedObjective enlistedObjective = element.obtainEnlistedObjective(ignoredObjectiveIds, enlistDateTime, dayStartHour);
             if(enlistedObjective != null)
             {
                 result.add(enlistedObjective);
@@ -128,7 +127,7 @@ public class ObjectiveSchedulerCache
     }
 
     //Loads objectives from JSON config file
-    public void invalidate(LockedReadFile schedulerReadFile)
+    public InvalidateResult invalidate(LockedReadFile schedulerReadFile)
     {
         mSchedulerElements.clear();
 
@@ -140,10 +139,6 @@ public class ObjectiveSchedulerCache
             int version = jsonObject.optInt("VERSION", SCHEDULER_VERSION_1_0);
             if(version == SCHEDULER_VERSION_CURRENT)
             {
-                ScheduledObjectiveLatestLoader objectiveLatestLoader = new ScheduledObjectiveLatestLoader();
-                ObjectiveChainLatestLoader     chainLatestLoader     = new ObjectiveChainLatestLoader();
-                ObjectivePoolLatestLoader      poolLatestLoader      = new ObjectivePoolLatestLoader();
-
                 JSONArray elementsArray = jsonObject.getJSONArray("ELEMENTS");
 
                 for(int i = 0; i < elementsArray.length(); i++)
@@ -153,55 +148,85 @@ public class ObjectiveSchedulerCache
                     String     elementType = elementObject.getString("Type");
                     JSONObject elementData = elementObject.getJSONObject("Data");
 
-                    switch (elementType)
+                    switch(elementType)
                     {
                         case "ObjectivePool":
-                            ObjectivePool pool = poolLatestLoader.fromJSON(elementData);
-                            mSchedulerElements.add(pool);
-
-                            RecyclerView poolView = mPoolItemViews.get(pool.getId(), null);
-                            if(poolView != null)
+                        {
+                            ObjectivePool pool = ObjectivePool.fromJSON(elementData);
+                            if (pool != null)
                             {
-                                pool.attachToPoolView(poolView, this);
-                            }
+                                mSchedulerElements.add(pool);
 
-                            pool.attachAllChainViews(mChainItemViews, this);
+                                RecyclerView poolView = mPoolItemViews.get(pool.getId(), null);
+                                if(poolView != null)
+                                {
+                                    pool.attachToPoolView(poolView, this);
+                                }
+
+                                pool.attachAllChainViews(mChainItemViews, this);
+                            }
+                            else
+                            {
+                                return InvalidateResult.INVALIDATE_ERROR;
+                            }
                             break;
+                        }
                         case "ObjectiveChain":
-                            ObjectiveChain chain = chainLatestLoader.fromJSON(elementData);
-                            mSchedulerElements.add(chain);
-
-                            RecyclerView chainView = mChainItemViews.get(chain.getId(), null);
-                            if(chainView != null)
+                        {
+                            ObjectiveChain chain = ObjectiveChain.fromJSON(elementData);
+                            if(chain != null)
                             {
-                                chain.attachToChainView(chainView, this);
-                            }
+                                mSchedulerElements.add(chain);
 
+                                RecyclerView chainView = mChainItemViews.get(chain.getId(), null);
+                                if(chainView != null)
+                                {
+                                    chain.attachToChainView(chainView, this);
+                                }
+                            }
+                            else
+                            {
+                                return InvalidateResult.INVALIDATE_ERROR;
+                            }
                             break;
+                        }
                         case "ScheduledObjective":
-                            ScheduledObjective objective = objectiveLatestLoader.fromJSON(elementData);
-                            mSchedulerElements.add(objective);
+                        {
+                            ScheduledObjective objective = ScheduledObjective.fromJSON(elementData);
+                            if(objective != null)
+                            {
+                                mSchedulerElements.add(objective);
+                            }
+                            else
+                            {
+                                return InvalidateResult.INVALIDATE_ERROR;
+                            }
                             break;
-                        default:
-                            return;
+                        }
                     }
                 }
             }
-            else
+            else if(version == SCHEDULER_VERSION_1_0)
             {
-                mSchedulerElements = SchedulerOldVersionLoader.loadSchedulerElementsOld(this, jsonObject, version);
+                return InvalidateResult.INVALIDATE_ERROR; //Not supported anymore
+            }
+            else if(version <= SCHEDULER_VERSION_1_1)
+            {
+                return InvalidateResult.INVALIDATE_VERSION_1_1;
             }
         }
         catch(JSONException e)
         {
             e.printStackTrace();
-            return;
+            return InvalidateResult.INVALIDATE_ERROR;
         }
 
         if(mSchedulerViewHolder != null)
         {
             mSchedulerViewHolder.notifyDataSetChanged();
         }
+
+        return InvalidateResult.INVALIDATE_OK;
     }
 
     //Saves scheduled objectives in JSON config file
@@ -237,8 +262,23 @@ public class ObjectiveSchedulerCache
         return true;
     }
 
-    //Creates a new objective chain
-    public long addObjectiveChain(long poolIdToAddTo, String name, String description, Duration produceFrequency, boolean autoDelete, boolean unstoppable)
+    //Creates a new objective pool
+    @SuppressWarnings("UnusedReturnValue")
+    public boolean addObjectivePool(ObjectivePool objectivePool)
+    {
+        mSchedulerElements.add(objectivePool);
+
+        if(mSchedulerViewHolder != null)
+        {
+            mSchedulerViewHolder.notifyItemInserted(mSchedulerElements.size() - 1);
+            mSchedulerViewHolder.notifyItemRangeChanged(mSchedulerElements.size() - 1, mSchedulerViewHolder.getItemCount());
+        }
+
+        return true;
+    }
+
+    //Adds a chain
+    public boolean addObjectiveChain(long poolIdToAddTo, ObjectiveChain objectiveChain)
     {
         ObjectivePool poolToAddTo = null;
         if(poolIdToAddTo != -1)
@@ -246,19 +286,13 @@ public class ObjectiveSchedulerCache
             poolToAddTo = getPoolById(poolIdToAddTo);
             if(poolToAddTo == null)
             {
-                return -1;
+                return false;
             }
         }
 
-        long chainId = getMaxChainId() + 1;
-        ObjectiveChain chain = new ObjectiveChain(chainId, name, description);
-        chain.setProduceFrequency(produceFrequency);
-        chain.setAutoDelete(autoDelete);
-        chain.setUnstoppable(unstoppable);
-
         if(poolToAddTo == null)
         {
-            mSchedulerElements.add(chain);
+            mSchedulerElements.add(objectiveChain);
             if(mSchedulerViewHolder != null)
             {
                 mSchedulerViewHolder.notifyItemInserted(mSchedulerElements.size() - 1);
@@ -267,7 +301,7 @@ public class ObjectiveSchedulerCache
         }
         else
         {
-            poolToAddTo.addObjectiveSource(chain);
+            poolToAddTo.addObjectiveSource(objectiveChain);
             if(mSchedulerViewHolder != null)
             {
                 int index = mSchedulerElements.indexOf(poolToAddTo);
@@ -275,52 +309,28 @@ public class ObjectiveSchedulerCache
             }
         }
 
-        return chainId;
-    }
-
-    //Creates a new objective pool
-    public void addObjectivePool(String name, String description, Duration produceFrequency, boolean autoDelete, boolean unstoppable)
-    {
-        long poolId = getMaxPoolId() + 1;
-
-        ObjectivePool pool = new ObjectivePool(poolId, name, description);
-        pool.setProduceFrequency(produceFrequency);
-        pool.setAutoDelete(autoDelete);
-        pool.setUnstoppable(unstoppable);
-
-        mSchedulerElements.add(pool);
-
-        if(mSchedulerViewHolder != null)
-        {
-            mSchedulerViewHolder.notifyItemInserted(mSchedulerElements.size() - 1);
-            mSchedulerViewHolder.notifyItemRangeChanged(mSchedulerElements.size() - 1, mSchedulerViewHolder.getItemCount());
-        }
+        return true;
     }
 
     //Adds a general task to task pool pool or task chain chain scheduled to be added at deferTime with repeat duration repeatDuration and repeat probability repeatProbability
-    public boolean addObjective(long poolId, long chainId, boolean addToChainBeginning, ScheduledObjective scheduledObjective)
+    public boolean addObjective(ScheduledObjective scheduledObjective, boolean addToChainBeginning)
     {
-        ObjectivePool poolToAddTo = null;
-        if(poolId != -1)
-        {
-            poolToAddTo = getPoolById(poolId);
-            if(poolToAddTo == null)
-            {
-                return false;
-            }
-        }
+        long parentId = scheduledObjective.getParentId();
 
+        ObjectivePool  poolToAddTo  = null;
         ObjectiveChain chainToAddTo = null;
-        if(chainId != -1)
+        if(parentId != -1)
         {
-            chainToAddTo = getChainById(chainId);
-            if(chainToAddTo == null)
+            poolToAddTo  = getPoolById(parentId);
+            chainToAddTo = getChainById(parentId);
+
+            if(poolToAddTo == null && chainToAddTo == null)
             {
                 return false;
             }
         }
 
-        if(poolToAddTo == null && chainToAddTo == null) //Add a single task source
+        if(poolToAddTo == null && chainToAddTo == null) //Add a single objective
         {
             //Neither task chain nor pool is provided
             mSchedulerElements.add(scheduledObjective);
@@ -396,61 +406,21 @@ public class ObjectiveSchedulerCache
         //Simply add the objective if no source contains it
         if(!isAnyRelated)
         {
-            return addObjective(-1, -1, false, objective);
+            return addObjective(objective, false);
         }
 
         return true;
     }
 
-    public long getMaxObjectiveId()
+    public long getLargestUsedId()
     {
         long maxId = 0;
         for(SchedulerElement schedulerElement: mSchedulerElements)
         {
-            long elementMaxId = schedulerElement.getMaxRelatedObjectiveId();
+            long elementMaxId = schedulerElement.getLargestRelatedId();
             if(elementMaxId > maxId)
             {
                 maxId = elementMaxId;
-            }
-        }
-
-        return maxId;
-    }
-
-    public long getMaxChainId()
-    {
-        long maxId = 0;
-        for(SchedulerElement schedulerElement: mSchedulerElements)
-        {
-            if(schedulerElement instanceof ScheduledObjective)
-            {
-                continue;
-            }
-
-            long chainMaxId = schedulerElement.getMaxRelatedChainId();
-            if(chainMaxId > maxId)
-            {
-                maxId = chainMaxId;
-            }
-        }
-
-        return maxId;
-    }
-
-    public long getMaxPoolId()
-    {
-        long maxId = 0;
-        for(SchedulerElement schedulerElement: mSchedulerElements)
-        {
-            if(schedulerElement instanceof ObjectivePool)
-            {
-                ObjectivePool objectivePool = (ObjectivePool)schedulerElement;
-
-                long poolId = objectivePool.getId();
-                if(poolId > maxId)
-                {
-                    maxId = poolId;
-                }
             }
         }
 

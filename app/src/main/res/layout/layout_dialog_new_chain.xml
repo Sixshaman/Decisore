@@ -51,7 +51,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/spinnerChainFrequency"
-            android:entries="@array/produceFrequencyTypes"
+            android:entries="@array/produce_frequency_types"
             app:layout_constraintTop_toBottomOf="@id/editNewChainDescription"
             app:layout_constraintEnd_toEndOf="@id/editNewChainDescription"/>
 
