@@ -69,6 +69,7 @@
     <string name="button_objective">Objective</string>
     <string name="placeholder_period">1</string>
     <string name="choose_period">Choose the period</string>
+    <string name="menu_open_parent">Open parent</string>
 
     <plurals name="plural_days">
         <item quantity="one">Day</item>

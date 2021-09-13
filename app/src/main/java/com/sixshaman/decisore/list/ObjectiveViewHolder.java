@@ -2,6 +2,7 @@ package com.sixshaman.decisore.list;
 
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.view.ContextMenu;
 import android.view.Menu;
@@ -15,6 +16,8 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.sixshaman.decisore.R;
+import com.sixshaman.decisore.archive.ArchiveActivity;
+import com.sixshaman.decisore.scheduler.SchedulerActivity;
 import com.sixshaman.decisore.scheduler.chain.ObjectiveChain;
 import com.sixshaman.decisore.scheduler.ObjectiveSchedulerCache;
 import com.sixshaman.decisore.utils.*;
@@ -30,8 +33,9 @@ class ObjectiveViewHolder extends RecyclerView.ViewHolder implements View.OnCrea
     final int MENU_SCHEDULE_FOR_ARBITRARY = 1;
     final int MENU_ADD_OBJECTIVE_BEFORE   = 2;
     final int MENU_ADD_OBJECTIVE_AFTER    = 3;
-    final int MENU_EDIT_OBJECTIVE         = 4;
-    final int MENU_DELETE_OBJECTIVE       = 5;
+    final int MENU_GO_TO_PARENT           = 4;
+    final int MENU_EDIT_OBJECTIVE         = 5;
+    final int MENU_DELETE_OBJECTIVE       = 6;
 
     final TextView mTextView;
     final CheckBox mCheckbox;
@@ -71,33 +75,42 @@ class ObjectiveViewHolder extends RecyclerView.ViewHolder implements View.OnCrea
     {
         contextMenu.setHeaderTitle(mTextView.getText());
 
-        MenuItem scheduleTomorrowItem = contextMenu.add(0, MENU_SCHEDULE_FOR_TOMORROW,  Menu.NONE, R.string.menu_schedule_for_tomorrow);
-        MenuItem scheduleItem         = contextMenu.add(0, MENU_SCHEDULE_FOR_ARBITRARY, Menu.NONE, R.string.menu_schedule_for_arbitrary);
-        MenuItem addBeforeItem        = contextMenu.add(1, MENU_ADD_OBJECTIVE_BEFORE,   Menu.NONE, R.string.menu_add_objective_before);
-        MenuItem addAfterItem         = contextMenu.add(1, MENU_ADD_OBJECTIVE_AFTER,    Menu.NONE, R.string.menu_add_objective_after);
-        MenuItem editItem             = contextMenu.add(2, MENU_EDIT_OBJECTIVE,         Menu.NONE, R.string.menu_edit_objective);
-        MenuItem deleteItem           = contextMenu.add(2, MENU_DELETE_OBJECTIVE,       Menu.NONE, R.string.menu_delete_objective);
+        String configFolder = Objects.requireNonNull(view.getContext().getExternalFilesDir("/app")).getAbsolutePath();
+
+        ObjectiveSchedulerCache objectiveSchedulerCache = new ObjectiveSchedulerCache();
+        try
+        {
+            LockedReadFile schedulerFile = new LockedReadFile(configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME);
+            objectiveSchedulerCache.invalidate(schedulerFile);
+            schedulerFile.close();
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+
+        TransactionDispatcher transactionDispatcher = new TransactionDispatcher(configFolder);
+        transactionDispatcher.setListCache(mObjectiveListCache);
+        transactionDispatcher.setSchedulerCache(objectiveSchedulerCache);
+
+        long objectiveParentId = mObjectiveListCache.getObjective(mObjectiveId).getParentId();
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(Objects.requireNonNull(view.getContext()).getApplicationContext());
         String dayStartTimeString = sharedPreferences.getString("day_start_time", "6");
         int dayStartTime = ParseUtils.parseInt(dayStartTimeString, 6);
 
+        MenuItem scheduleTomorrowItem = contextMenu.add(0, MENU_SCHEDULE_FOR_TOMORROW,  Menu.NONE, R.string.menu_schedule_for_tomorrow);
         scheduleTomorrowItem.setOnMenuItemClickListener(menuItem ->
         {
             LocalDateTime enlistDateTime = LocalDateTime.now().minusHours(dayStartTime);
             enlistDateTime = enlistDateTime.plusDays(1).truncatedTo(ChronoUnit.DAYS);
             enlistDateTime = enlistDateTime.plusHours(dayStartTime);
 
-            String configFolder = Objects.requireNonNull(view.getContext().getExternalFilesDir("/app")).getAbsolutePath();
-
-            TransactionDispatcher transactionDispatcher = new TransactionDispatcher(configFolder);
-            transactionDispatcher.setListCache(mObjectiveListCache);
-
             transactionDispatcher.rescheduleEnlistedObjectiveTransaction(mObjectiveListCache.getObjective(mObjectiveId), enlistDateTime);
-
             return true;
         });
 
+        MenuItem scheduleItem = contextMenu.add(0, MENU_SCHEDULE_FOR_ARBITRARY, Menu.NONE, R.string.menu_schedule_for_arbitrary);
         scheduleItem.setOnMenuItemClickListener(menuItem ->
         {
             DatePickerDialog datePickerDialog = new DatePickerDialog(view.getContext());
@@ -105,12 +118,6 @@ class ObjectiveViewHolder extends RecyclerView.ViewHolder implements View.OnCrea
             {
                 //Java numerates months from 0, not from 1
                 LocalDateTime dateTime = LocalDateTime.of(year, month + 1, day, dayStartTime, 0, 0);
-
-                String configFolder = Objects.requireNonNull(view.getContext().getExternalFilesDir("/app")).getAbsolutePath();
-
-                TransactionDispatcher transactionDispatcher = new TransactionDispatcher(configFolder);
-                transactionDispatcher.setListCache(mObjectiveListCache);
-
                 transactionDispatcher.rescheduleEnlistedObjectiveTransaction(mObjectiveListCache.getObjective(mObjectiveId), dateTime);
             });
 
@@ -118,35 +125,17 @@ class ObjectiveViewHolder extends RecyclerView.ViewHolder implements View.OnCrea
             return true;
         });
 
+        MenuItem addBeforeItem = contextMenu.add(1, MENU_ADD_OBJECTIVE_BEFORE, Menu.NONE, R.string.menu_add_objective_before);
         addBeforeItem.setOnMenuItemClickListener(menuItem ->
         {
-            //Find a chain the objective belonged to
+            //Find the chain the objective belonged to
             //If such chain exists, move it there
             //If not, create a new one with the moved objective name
-            String configFolder = Objects.requireNonNull(view.getContext().getExternalFilesDir("/app")).getAbsolutePath();
-
-            ObjectiveSchedulerCache objectiveSchedulerCache = new ObjectiveSchedulerCache();
-            try
-            {
-                LockedReadFile schedulerFile = new LockedReadFile(configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME);
-                objectiveSchedulerCache.invalidate(schedulerFile);
-                schedulerFile.close();
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace();
-                return false;
-            }
-
             final ValueHolder<Long> addedChainIdHolder = new ValueHolder<>((long)-1);
 
             NewObjectiveDialogFragment newObjectiveDialogFragment = new NewObjectiveDialogFragment();
             newObjectiveDialogFragment.setOnBeforeObjectiveCreatedListener(() ->
             {
-                TransactionDispatcher transactionDispatcher = new TransactionDispatcher(configFolder);
-                transactionDispatcher.setSchedulerCache(objectiveSchedulerCache);
-                transactionDispatcher.setListCache(mObjectiveListCache);
-
                 EnlistedObjective oldObjective = mObjectiveListCache.getObjective(mObjectiveId);
                 long chainId = transactionDispatcher.rechainEnlistedObjective(oldObjective);
 
@@ -155,10 +144,6 @@ class ObjectiveViewHolder extends RecyclerView.ViewHolder implements View.OnCrea
 
             newObjectiveDialogFragment.setOnAfterObjectiveCreatedListener(objectiveId ->
             {
-                TransactionDispatcher transactionDispatcher = new TransactionDispatcher(configFolder);
-                transactionDispatcher.setSchedulerCache(objectiveSchedulerCache);
-                transactionDispatcher.setListCache(mObjectiveListCache);
-
                 if(addedChainIdHolder.getValue() != -1)
                 {
                     transactionDispatcher.bindObjectiveToChain(addedChainIdHolder.getValue(), objectiveId);
@@ -176,31 +161,12 @@ class ObjectiveViewHolder extends RecyclerView.ViewHolder implements View.OnCrea
             return true;
         });
 
+        MenuItem addAfterItem = contextMenu.add(1, MENU_ADD_OBJECTIVE_AFTER, Menu.NONE, R.string.menu_add_objective_after);
         addAfterItem.setOnMenuItemClickListener(menuItem ->
         {
             //Find a chain the objective belonged to
             //If such chain exists, add the new objective there
             //If not, create a new one, make it as if it contained the given objective and add the new objective there
-
-            String configFolder = Objects.requireNonNull(view.getContext().getExternalFilesDir("/app")).getAbsolutePath();
-
-            ObjectiveSchedulerCache objectiveSchedulerCache = new ObjectiveSchedulerCache();
-            try
-            {
-                LockedReadFile schedulerFile = new LockedReadFile(configFolder + "/" + ObjectiveSchedulerCache.SCHEDULER_FILENAME);
-                objectiveSchedulerCache.invalidate(schedulerFile);
-                schedulerFile.close();
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace();
-                return false;
-            }
-
-            TransactionDispatcher transactionDispatcher = new TransactionDispatcher(configFolder);
-            transactionDispatcher.setSchedulerCache(objectiveSchedulerCache);
-            transactionDispatcher.setListCache(mObjectiveListCache);
-
             NewObjectiveDialogFragment newObjectiveDialogFragment = new NewObjectiveDialogFragment();
 
             newObjectiveDialogFragment.setSchedulerCache(objectiveSchedulerCache);
@@ -219,6 +185,33 @@ class ObjectiveViewHolder extends RecyclerView.ViewHolder implements View.OnCrea
             return true;
         });
 
+        if(objectiveParentId != -1)
+        {
+            String elementType = objectiveSchedulerCache.getElementTypeById(objectiveParentId);
+
+            String elementName = "";
+            if(elementType.equals("ObjectiveChain"))
+            {
+                elementName = "chain";
+            }
+            else if(elementType.equals("ObjectivePool"))
+            {
+                elementName = "pool";
+            }
+
+            String openParentString = view.getResources().getString(R.string.menu_open_parent) + " " + elementName;
+            MenuItem goToParentItem = contextMenu.add(2, MENU_GO_TO_PARENT, Menu.NONE, openParentString);
+            goToParentItem.setOnMenuItemClickListener(menuItem ->
+            {
+                Intent parentOpenIntent = new Intent(view.getContext(), SchedulerActivity.class);
+                parentOpenIntent.putExtra("ElementId", objectiveParentId);
+                parentOpenIntent.putExtra("ElementType", elementType);
+                view.getContext().startActivity(parentOpenIntent);
+                return true;
+            });
+        }
+
+        MenuItem editItem = contextMenu.add(3, MENU_EDIT_OBJECTIVE, Menu.NONE, R.string.menu_edit_objective);
         editItem.setOnMenuItemClickListener(menuItem ->
         {
             EnlistedObjective objective = mObjectiveListCache.getObjective(mObjectiveId);
@@ -233,6 +226,7 @@ class ObjectiveViewHolder extends RecyclerView.ViewHolder implements View.OnCrea
             return true;
         });
 
+        MenuItem deleteItem = contextMenu.add(3, MENU_DELETE_OBJECTIVE, Menu.NONE, R.string.menu_delete_objective);
         deleteItem.setOnMenuItemClickListener(menuItem ->
         {
             EnlistedObjective objective = mObjectiveListCache.getObjective(mObjectiveId);
@@ -241,11 +235,6 @@ class ObjectiveViewHolder extends RecyclerView.ViewHolder implements View.OnCrea
             alertDialogBuilder.setMessage(view.getContext().getString(R.string.deleteObjectiveAreYouSure) + " " + objective.getName() + "?");
             alertDialogBuilder.setPositiveButton("Yes", (dialogInterface, i) ->
             {
-                String configFolder = Objects.requireNonNull(view.getContext().getExternalFilesDir("/app")).getAbsolutePath();
-
-                TransactionDispatcher transactionDispatcher = new TransactionDispatcher(configFolder);
-                transactionDispatcher.setListCache(mObjectiveListCache);
-
                 transactionDispatcher.deleteObjectiveFromListTransaction(objective);
                 transactionDispatcher.updateObjectiveListTransaction(LocalDateTime.now(), dayStartTime);
             });
