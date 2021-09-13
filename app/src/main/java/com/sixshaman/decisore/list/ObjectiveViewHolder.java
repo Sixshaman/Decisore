@@ -199,12 +199,13 @@ class ObjectiveViewHolder extends RecyclerView.ViewHolder implements View.OnCrea
                 elementName = "pool";
             }
 
-            String openParentString = view.getResources().getString(R.string.menu_open_parent) + elementName;
+            String openParentString = view.getResources().getString(R.string.menu_open_parent) + " " + elementName;
             MenuItem goToParentItem = contextMenu.add(2, MENU_GO_TO_PARENT, Menu.NONE, openParentString);
             goToParentItem.setOnMenuItemClickListener(menuItem ->
             {
                 Intent parentOpenIntent = new Intent(view.getContext(), SchedulerActivity.class);
                 parentOpenIntent.putExtra("ElementId", objectiveParentId);
+                parentOpenIntent.putExtra("ElementType", elementType);
                 view.getContext().startActivity(parentOpenIntent);
                 return true;
             });
