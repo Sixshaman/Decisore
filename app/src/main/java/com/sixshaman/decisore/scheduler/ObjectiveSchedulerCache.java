@@ -477,6 +477,19 @@ public class ObjectiveSchedulerCache
         return null;
     }
 
+    public String getElementTypeById(long id)
+    {
+        for(SchedulerElement schedulerElement: mSchedulerElements)
+        {
+            if(schedulerElement.getId() == id)
+            {
+                return schedulerElement.getElementName();
+            }
+        }
+
+        return null;
+    }
+
     //Finds the id of a chain that contained an objective with that name
     public long findChainOfObjective(long objectiveId)
     {

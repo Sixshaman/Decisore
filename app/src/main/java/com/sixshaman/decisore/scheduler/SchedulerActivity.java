@@ -1,11 +1,14 @@
 package com.sixshaman.decisore.scheduler;
 
+import android.content.Intent;
 import android.os.Bundle;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import com.sixshaman.decisore.R;
+import com.sixshaman.decisore.scheduler.chain.ChainFragment;
+import com.sixshaman.decisore.scheduler.pool.PoolFragment;
 
 public class SchedulerActivity extends AppCompatActivity
 {
@@ -19,11 +22,30 @@ public class SchedulerActivity extends AppCompatActivity
 
         setTitle(R.string.title_activity_objective_scheduler);
 
-        FragmentManager fragmentManager = getSupportFragmentManager();
+        Intent intent = getIntent();
+        long elementId = intent.getLongExtra("ElementId", -1);
+        String elementType = intent.getStringExtra("ElementType");
 
+        Bundle bundle = new Bundle();
+        bundle.putLong("EyyDee", elementId);
+
+        FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.setReorderingAllowed(true);
-        fragmentTransaction.replace(R.id.scheduler_fragment_container_view, SchedulerFragment.class, null);
+
+        if(elementId != -1 && elementType.equals("ObjectivePool"))
+        {
+            fragmentTransaction.replace(R.id.scheduler_fragment_container_view, PoolFragment.class, bundle);
+        }
+        else if(elementId != -1 && elementType.equals("ObjectiveChain"))
+        {
+            fragmentTransaction.replace(R.id.scheduler_fragment_container_view, ChainFragment.class, bundle);
+        }
+        else
+        {
+            fragmentTransaction.replace(R.id.scheduler_fragment_container_view, SchedulerFragment.class, null);
+        }
+
         fragmentTransaction.commit();
     }
 }
