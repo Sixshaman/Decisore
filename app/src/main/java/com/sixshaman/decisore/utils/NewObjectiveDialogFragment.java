@@ -193,9 +193,11 @@ public class NewObjectiveDialogFragment extends DialogFragment
             final Spinner intervalSpinner = resultDialog.getValue().findViewById(R.id.spinner_objective_interval);
 
             SpinnerCustomTextAdapter dateCustomTextAdapter = new SpinnerCustomTextAdapter(scheduleSpinner.getContext(), R.array.objective_schedule_types);
+            dateCustomTextAdapter.setCustomText(scheduleSpinner.getSelectedItem().toString());
             scheduleSpinner.setAdapter(dateCustomTextAdapter);
 
             SpinnerCustomTextAdapter intervalCustomTextAdapter = new SpinnerCustomTextAdapter(intervalSpinner.getContext(), R.array.objective_interval_types);
+            intervalCustomTextAdapter.setCustomText(intervalSpinner.getSelectedItem().toString());
             intervalSpinner.setAdapter(intervalCustomTextAdapter);
 
             //Default selection
@@ -260,6 +262,7 @@ public class NewObjectiveDialogFragment extends DialogFragment
                     }
                     else
                     {
+                        ((SpinnerCustomTextAdapter)parent.getAdapter()).setCustomText(parent.getItemAtPosition(0).toString());
                         mScheduleDate.setValue(mCreateDate);
                     }
 
@@ -267,12 +270,16 @@ public class NewObjectiveDialogFragment extends DialogFragment
                 }
                 case 1: //Tomorrow
                 {
+                    ((SpinnerCustomTextAdapter)parent.getAdapter()).setCustomText(parent.getItemAtPosition(1).toString());
+
                     //Day starts at 6 AM
                     mScheduleDate.setValue(mCreateDate.minusHours(mDayStartTime).plusDays(1).truncatedTo(ChronoUnit.DAYS).plusHours(mDayStartTime));
                     break;
                 }
                 case 2: //In a week
                 {
+                    ((SpinnerCustomTextAdapter)parent.getAdapter()).setCustomText(parent.getItemAtPosition(2).toString());
+
                     //Day starts at 6 AM
                     mScheduleDate.setValue(mCreateDate.minusHours(mDayStartTime).plusDays(7).truncatedTo(ChronoUnit.DAYS).plusHours(mDayStartTime));
                     break;
@@ -320,18 +327,24 @@ public class NewObjectiveDialogFragment extends DialogFragment
             {
                 case 0: //Day
                 {
+                    SpinnerCustomTextAdapter customTextAdapter = ((SpinnerCustomTextAdapter)parent.getAdapter());
+                    customTextAdapter.setCustomText(parent.getItemAtPosition(0).toString());
                     mRepeatDuration.setValue(Duration.ofDays(1));
                     break;
                 }
 
                 case 1: //Week
                 {
+                    SpinnerCustomTextAdapter customTextAdapter = ((SpinnerCustomTextAdapter)parent.getAdapter());
+                    customTextAdapter.setCustomText(parent.getItemAtPosition(1).toString());
                     mRepeatDuration.setValue(Duration.ofDays(7));
                     break;
                 }
 
                 case 2: //Month
                 {
+                    SpinnerCustomTextAdapter customTextAdapter = ((SpinnerCustomTextAdapter)parent.getAdapter());
+                    customTextAdapter.setCustomText(parent.getItemAtPosition(2).toString());
                     mRepeatDuration.setValue(Duration.ofDays(30));
                     break;
                 }
